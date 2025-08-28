@@ -1,53 +1,17 @@
-
-<!DOCTYPE html><html lang="de"><head>
-<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Store – Andio Media Studio</title>
-<link rel="stylesheet" href="assets/styles.css" />
-</head><body>
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Catalog – Andio Media Studio</title><link rel="stylesheet" href="assets/styles.css"/></head><body>
 <header class="header">
-  <div class="brand"><span class="dot"></span> <span>Model Store</span></div>
+  <div class="brand"><span class="dot" style="width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#6aa3ff,#b884ff)"></span> <span>Catalog – Andio Media Studio</span></div>
   <nav>
-    <a href="index.html">Dashboard</a>
-    <a href="create.html">Create</a>
-    <a href="video.html">Video Lab</a>
-    <a href="talking.html">Talking</a>
-    <a href="wardrobe.html">Wardrobe</a>
+    <a href="index.html" >Dashboard</a>
+    <a href="create.html" >Create</a>
+    <a href="video.html" >Video Lab</a>
+    <a href="talking.html" >Talking</a>
+    <a href="wardrobe.html" >Wardrobe</a>
     <a href="catalog.html" class="active">Store</a>
-    <a href="gallery.html">Galerie</a>
+    <a href="gallery.html" >Galerie</a>
   </nav>
 </header>
 <div class="wrap">
-  <div class="card">
-    <div class="flex">
-      <h2 style="margin:0">Lokale Modelle</h2>
-      <span class="badge">Empfehlungen aktiv</span>
-      <span class="badge nsfw">NSFW möglich</span>
-      <span class="right search">
-        <input id="q" class="input" placeholder="Suche nach Name/Tag…"/>
-        <select id="grp" class="input"><option value="">Alle Gruppen</option><option>image</option><option>video</option></select>
-      </span>
-    </div>
-    <table class="table" id="tbl"><thead><tr><th>Name</th><th>Tags</th><th>Gruppe</th><th>Pfad</th></tr></thead><tbody></tbody></table>
-  </div>
-</div>
-<script src="assets/app.js"></script>
-<script>
-let MODELS=[];
-function render(){
-  const tb = document.querySelector('#tbl tbody'); tb.innerHTML='';
-  const query = (document.getElementById('q').value||'').toLowerCase();
-  const grp = (document.getElementById('grp').value||'').toLowerCase();
-  MODELS.filter(m=>(!grp || (m.group||'')===grp) && (!query || m.name.toLowerCase().includes(query) || (m.tags||[]).join(',').toLowerCase().includes(query))).forEach(m=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${m.name}</td><td>${(m.tags||[]).map(t=>`<pill>${t}</pill>`).join('')}</td><td>${m.group||''}</td><td>${m.path}</td>`;
-    tb.appendChild(tr);
-  });
-}
-(async ()=>{
-  const data = await API.models();
-  MODELS = data.models||[]; render();
-  document.getElementById('q').addEventListener('input', render);
-  document.getElementById('grp').addEventListener('change', render);
-})();
-</script>
-</body></html>
+<div id="progressHost"></div>
+<p class="hint">Seite in Arbeit – Kernfunktionen verfügbar. NSFW möglich.</p>
+</div><script src="assets/app.js"></script><div class="toast"></div></body></html>

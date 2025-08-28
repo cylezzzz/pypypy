@@ -1,47 +1,25 @@
-
-<!DOCTYPE html><html lang="de"><head>
-<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Galerie – Andio Media Studio</title>
-<link rel="stylesheet" href="assets/styles.css" />
-</head><body>
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Galerie – Andio Media Studio</title><link rel="stylesheet" href="assets/styles.css"/></head><body>
 <header class="header">
-  <div class="brand"><span class="dot"></span> <span>Galerie</span></div>
+  <div class="brand"><span class="dot" style="width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#6aa3ff,#b884ff)"></span> <span>Galerie – Andio Media Studio</span></div>
   <nav>
-    <a href="index.html">Dashboard</a>
-    <a href="create.html">Create</a>
-    <a href="video.html">Video Lab</a>
-    <a href="talking.html">Talking</a>
-    <a href="wardrobe.html">Wardrobe</a>
-    <a href="catalog.html">Store</a>
+    <a href="index.html" >Dashboard</a>
+    <a href="create.html" >Create</a>
+    <a href="video.html" >Video Lab</a>
+    <a href="talking.html" >Talking</a>
+    <a href="wardrobe.html" >Wardrobe</a>
+    <a href="catalog.html" >Store</a>
     <a href="gallery.html" class="active">Galerie</a>
   </nav>
 </header>
 <div class="wrap">
-  <div class="card">
-    <div class="flex">
-      <h2 style="margin:0">Alle Ergebnisse</h2>
-      <span class="right search">
-        <select id="kind" class="input"><option value="all">Alle</option><option value="images">Bilder</option><option value="videos">Videos</option></select>
-      </span>
-    </div>
-    <div id="grid" class="grid" style="grid-template-columns: repeat(8,1fr); gap:10px"></div>
-  </div>
+<div class="card">
+  <div class="flex"><h2>Ergebnisse</h2><span class="right"><select id="kind" class="input"><option value="all">Alle</option><option value="images">Bilder</option><option value="videos">Videos</option></select></span></div>
+  <div id="progressHost"></div>
+  <div id="grid" class="grid" style="grid-template-columns: repeat(8,1fr); gap:10px"></div>
 </div>
-<script src="assets/app.js"></script>
 <script>
-async function load(){
-  const kind = document.getElementById('kind').value;
-  const items = await API.outputs(kind);
-  const grid = document.getElementById('grid'); grid.innerHTML='';
-  items.forEach(it=>{
-    const a = document.createElement('a');
-    a.href = 'player.html?src='+encodeURIComponent(it.url);
-    const isVideo = it.url.toLowerCase().match(/\.(mp4|webm|mov|mkv)$/);
-    a.innerHTML = isVideo ? `<div class="thumb" style="display:flex;align-items:center;justify-content:center;height:160px"><span class="muted">Video</span></div>` : `<img class="thumb" loading="lazy" src="${it.url}" />`;
-    grid.appendChild(a);
-  });
-}
-document.getElementById('kind').addEventListener('change', load);
-load();
+const PM = new ProgressManager(document); PM.mount();
+async function load(){ const kind=document.getElementById('kind').value; const items=await API.outputs(kind); const grid=document.getElementById('grid'); grid.innerHTML=''; items.forEach(it=>{ const a=document.createElement('a'); a.href='player.html?src='+encodeURIComponent(it.url); const isVideo=it.url.toLowerCase().match(/\.(mp4|webm|mov|mkv)$/); a.innerHTML=isVideo?`<div class="thumb" style="display:flex;align-items:center;justify-content:center;height:160px"><span class="muted">Video</span></div>`:`<img class="thumb" loading="lazy" src="${it.url}" />`; grid.appendChild(a); }); }
+document.getElementById('kind').addEventListener('change', load); load();
 </script>
-</body></html>
+</div><script src="assets/app.js"></script><div class="toast"></div></body></html>

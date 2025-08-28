@@ -1,45 +1,40 @@
-
-<!DOCTYPE html><html lang="de"><head>
-<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Player – Andio Media Studio</title>
-<link rel="stylesheet" href="assets/styles.css" />
-</head><body>
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Player – Andio Media Studio</title><link rel="stylesheet" href="assets/styles.css"/></head><body>
 <header class="header">
-  <div class="brand"><span class="dot"></span> <span>Player</span></div>
+  <div class="brand"><span class="dot" style="width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#6aa3ff,#b884ff)"></span> <span>Player – Andio Media Studio</span></div>
   <nav>
-    <a href="index.html">Dashboard</a>
-    <a href="gallery.html">Galerie</a>
+    <a href="index.html" >Dashboard</a>
+    <a href="create.html" >Create</a>
+    <a href="video.html" >Video Lab</a>
+    <a href="talking.html" >Talking</a>
+    <a href="wardrobe.html" >Wardrobe</a>
+    <a href="catalog.html" >Store</a>
+    <a href="gallery.html" >Galerie</a>
   </nav>
 </header>
 <div class="wrap">
-  <div class="grid">
-    <div class="card" style="grid-column: span 8">
-      <h2>Datei</h2>
-      <div id="viewer"></div>
-      <div class="toolbar" style="margin-top:10px">
-        <button class="btn" onclick="download()">Download</button>
-        <a class="btn secondary" id="open" target="_blank">In neuem Tab</a>
-      </div>
+<div class="grid">
+  <div class="card" style="grid-column: span 8">
+    <h2>Datei</h2>
+    <div id="viewer"></div>
+    <div class="toolbar" style="margin-top:10px">
+      <button class="btn" onclick="download()">Download</button>
+      <a class="btn secondary" id="open" target="_blank">In neuem Tab</a>
     </div>
-    <div class="card" style="grid-column: span 4">
-      <h2>Metadaten</h2>
-      <pre id="meta" class="input" style="min-height:160px"></pre>
-    </div>
+  </div>
+  <div class="card" style="grid-column: span 4">
+    <h2>Metadaten</h2>
+    <pre id="meta" class="input" style="min-height:160px"></pre>
   </div>
 </div>
 <script>
+const PM = new ProgressManager(document); PM.mount();
 const params = new URLSearchParams(location.search);
 const src = params.get('src') || '';
-const viewer = document.getElementById('viewer');
-const meta = document.getElementById('meta');
+const viewer = document.getElementById('viewer'); const meta=document.getElementById('meta');
 document.getElementById('open').href = src;
 const isVideo = src.toLowerCase().match(/\.(mp4|webm|mov|mkv)$/);
-if(isVideo){
-  viewer.innerHTML = `<video src="${src}" controls style="width:100%;border-radius:12px;border:1px solid var(--border)"></video>`;
-}else{
-  viewer.innerHTML = `<img src="${src}" style="width:100%;border-radius:12px;border:1px solid var(--border)" />`;
-}
+if(isVideo){ viewer.innerHTML=`<video src="${src}" controls style="width:100%;border-radius:12px;border:1px solid var(--border)"></video>`; } else { viewer.innerHTML=`<img src="${src}" style="width:100%;border-radius:12px;border:1px solid var(--border)"/>`; }
 meta.textContent = JSON.stringify({src:src, type:isVideo?'video':'image', time:new Date().toISOString()}, null, 2);
 function download(){ const a=document.createElement('a'); a.href=src; a.download=src.split('/').pop(); a.click(); }
 </script>
-</body></html>
+</div><script src="assets/app.js"></script><div class="toast"></div></body></html>
