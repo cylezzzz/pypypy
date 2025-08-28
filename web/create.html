@@ -1,0 +1,127 @@
+<!DOCTYPE html><html lang="de"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Create – Andio Media Studio</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head><body>
+<header class="header">
+  <div class="brand"><span class="dot"></span> <span>Create</span></div>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="create.html" class="active">Create</a>
+    <a href="video.html">Video Lab</a>
+    <a href="talking.html">Talking</a>
+    <a href="wardrobe.html">Wardrobe</a>
+    <a href="catalog.html">Store</a>
+    <a href="gallery.html">Galerie</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <div class="card" style="grid-column: span 8">
+      <h2>Bild-Studio</h2>
+      <label>Prompt</label>
+      <textarea id="prompt" rows="3" class="input" placeholder="Ultra realistisches Portrait, 85mm, volumetrisches Licht"></textarea>
+
+      <div class="card">
+        <h3>Aktionen</h3>
+        <div class="toolbar">
+          <button class="btn" onclick="run('txt2img')">Text→Bild</button>
+          <button class="btn" onclick="run('img2img')">Bild→Bild</button>
+          <button class="btn" onclick="run('inpaint')">Inpainting</button>
+          <button class="btn" onclick="run('pose_transfer')">Pose-Transfer (ControlNet)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Upload</h3>
+        <p><b>Bild</b> (für Img2Img / Inpainting) und optional <b>Maske</b> (weiß=ändern, schwarz=behalten)</p>
+        <input type="file" id="img" accept="image/*" />
+        <input type="file" id="mask" accept="image/*" />
+        <div class="toolbar" style="margin-top:8px">
+          <button class="btn secondary" onclick="autoMask()">Auto-Maske (SAM / MediaPipe)</button>
+        </div>
+        <div id="files" style="margin-top:8px"></div>
+      </div>
+
+      <div class="card">
+        <h3>Pose-Referenz</h3>
+        <p>Bild mit gewünschter Pose (OpenPose wird automatisch extrahiert).</p>
+        <input type="file" id="pose_ref" accept="image/*" />
+      </div>
+    </div>
+
+    <div class="card" style="grid-column: span 4">
+      <h2>Preset</h2>
+      <select id="quality" class="input"><option>BALANCED</option><option>FAST</option><option>ULTRA</option></select>
+      <h2 style="margin-top:16px">Modell</h2>
+      <select id="model" class="input"></select>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+(async ()=>{
+  const data = await API.models();
+  const sel = document.getElementById('model');
+  (data.models||[]).forEach(m=>{
+    const opt=document.createElement('option'); opt.value=m.name; opt.textContent=m.name+' ['+(m.tags||[]).join(', ')+']';
+    sel.appendChild(opt);
+  });
+})();
+
+async function uploadSingle(inputId){
+  const input = document.getElementById(inputId);
+  if(!input.files || !input.files[0]) return null;
+  const res = await API.upload(input.files[0], 'workspace');
+  const files = document.getElementById('files');
+  const a = document.createElement('a'); a.href='player.html?src='+encodeURIComponent(res.path); a.textContent=res.path;
+  files.appendChild(a); files.appendChild(document.createElement('br'));
+  return res.path;
+}
+
+async function autoMask(){
+  const imgPath = await uploadSingle('img');
+  if(!imgPath){ alert('Bitte ein Bild hochladen'); return; }
+  const fd = new FormData(); fd.append('image_path', imgPath);
+  const res = await fetch('/api/auto_mask', {method:'POST', body: fd}).then(r=>r.json());
+  if(res.ok){ alert('Maske erstellt: '+res.mask_path); }
+  else { alert('Auto-Maske fehlgeschlagen'); }
+}
+
+async function run(task){
+  const prompt = document.getElementById('prompt').value.trim();
+  const quality = document.getElementById('quality').value;
+  const model = document.getElementById('model').value || null;
+  let inputs = {};
+
+  if(task==='img2img' || task==='inpaint'){
+    const imgPath = await uploadSingle('img');
+    if(!imgPath){ alert('Bitte Bild hochladen'); return; }
+    inputs.image_path = imgPath;
+  }
+  if(task==='inpaint'){
+    let maskPath = await uploadSingle('mask');
+    if(!maskPath){ alert('Bitte Maske hochladen oder Auto-Maske drücken'); return; }
+    inputs.mask_path = maskPath;
+  }
+  if(task==='pose_transfer'){
+    let poseRef = await uploadSingle('pose_ref');
+    if(!poseRef){
+      const imgInput = document.getElementById('img');
+      if(imgInput.files && imgInput.files[0]){
+        const up = await API.upload(imgInput.files[0],'workspace');
+        poseRef = up.path;
+      }
+    }
+    if(!poseRef){ alert('Bitte Pose-Referenz oder Bild hochladen'); return; }
+    inputs = { pose_ref_path: poseRef };
+  }
+
+  const res = await API.job({task, prompt, quality, model_preference:model, inputs});
+  if(!res.ok){ alert('Fehler: Job konnte nicht gestartet werden'); return; }
+  alert('Job: '+res.job.id);
+}
+</script>
+</body></html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="de"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Player – Andio Media Studio</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head><body>
+<header class="header">
+  <div class="brand"><span class="dot"></span> <span>Player</span></div>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="gallery.html">Galerie</a>
+  </nav>
+</header>
+<div class="wrap">
+  <div class="card">
+    <h2>Datei</h2>
+    <div id="viewer"></div>
+    <div style="margin-top:10px">
+      <button class="btn" onclick="download()">Download</button>
+    </div>
+  </div>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const src = params.get('src') || '';
+const viewer = document.getElementById('viewer');
+const isVideo = src.toLowerCase().match(/\.(mp4|webm|mov|mkv)$/);
+if(isVideo){
+  viewer.innerHTML = `<video src="${src}" controls style="width:100%;border-radius:12px;border:1px solid var(--border)"></video>`;
+}else{
+  viewer.innerHTML = `<img src="${src}" style="width:100%;border-radius:12px;border:1px solid var(--border)" />`;
+}
+function download(){ const a=document.createElement('a'); a.href=src; a.download=src.split('/').pop(); a.click(); }
+</script>
+</body></html>

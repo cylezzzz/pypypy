@@ -1,0 +1,8 @@
+image:
+  FAST:     { steps: 15, guidance: 3.5, width: 768, height: 1024, dtype: "auto" }
+  BALANCED: { steps: 28, guidance: 4.5, width: 896, height: 1152, dtype: "auto" }
+  ULTRA:    { steps: 40, guidance: 6.0, width: 1024, height: 1344, dtype: "auto" }
+video:
+  FAST:     { seconds: 4, fps: 12, interpolate: false }
+  BALANCED: { seconds: 6, fps: 16, interpolate: true }
+  ULTRA:    { seconds: 8, fps: 24, interpolate: true }

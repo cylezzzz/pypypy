@@ -1,0 +1,9 @@
+mode: creative
+port: 3000
+bind: 0.0.0.0
+models_path: ./models
+workspace_path: ./workspace
+outputs_path: ./outputs
+default_quality: BALANCED
+max_parallel_workers: 1
+prefer_gpu: true

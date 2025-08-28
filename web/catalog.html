@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="de"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Store – Andio Media Studio</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head><body>
+<header class="header">
+  <div class="brand"><span class="dot"></span> <span>Model Store</span></div>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="create.html">Create</a>
+    <a href="video.html">Video Lab</a>
+    <a href="talking.html">Talking</a>
+    <a href="wardrobe.html">Wardrobe</a>
+    <a href="catalog.html" class="active">Store</a>
+    <a href="gallery.html">Galerie</a>
+  </nav>
+</header>
+<div class="wrap">
+  <div class="card">
+    <h2>Lokale Modelle</h2>
+    <table class="table" id="tbl"><thead><tr><th>Name</th><th>Tags</th><th>Gruppe</th><th>Pfad</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+<script>
+(async ()=>{
+  const data = await API.models();
+  const tb = document.querySelector('#tbl tbody');
+  (data.models||[]).forEach(m=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${m.name}</td><td>${(m.tags||[]).join(', ')}</td><td>${m.group||''}</td><td>${m.path}</td>`;
+    tb.appendChild(tr);
+  });
+})();
+</script>
+</body></html>
