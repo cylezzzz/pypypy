@@ -36,28 +36,24 @@ def load_config() -> Dict[str, Any]:
         'max_parallel_workers': 1,
         'prefer_gpu': True
     }
-    
     try:
         if CONFIG_FILE.exists():
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
-                # Merge with defaults
+                config = yaml.safe_load(f) or {}
                 return {**default_config, **config}
     except Exception as e:
         logger.warning(f"Could not load config: {e}, using defaults")
-    
     return default_config
 
 def setup_directories():
     """Ensure all required directories exist"""
     dirs_to_create = [
         BASE_DIR / "models",
-        BASE_DIR / "outputs" / "images", 
+        BASE_DIR / "outputs" / "images",
         BASE_DIR / "outputs" / "videos",
         BASE_DIR / "workspace",
         BASE_DIR / "server" / "temp"
     ]
-    
     for directory in dirs_to_create:
         directory.mkdir(parents=True, exist_ok=True)
         logger.info(f"✓ Directory ready: {directory}")
@@ -73,7 +69,6 @@ def check_dependencies():
             logger.warning("⚠ No CUDA GPU detected, using CPU")
     except ImportError:
         logger.error("✗ PyTorch not found - install with: pip install torch")
-        
     try:
         import diffusers
         logger.info(f"✓ Diffusers: {diffusers.__version__}")
@@ -111,11 +106,15 @@ def print_startup_banner():
 
 async def run_server(config: Dict[str, Any]):
     """Run the FastAPI server with enhanced configuration"""
+
+    # App target: **wichtig** – hier liegt der /api-Router!
+    app_target = os.environ.get("ANDIO_APP", "server.app_with_api:app")
+
     # Set environment variables
     os.environ.setdefault('TOKENIZERS_PARALLELISM', 'false')
-    
+
     server_config = uvicorn.Config(
-        "server.app:app",
+        app_target,                               # <— vorher: "server.app:app"
         host=config.get('host', '0.0.0.0'),
         port=int(config.get('port', 3000)),
         reload=config.get('reload', False),
@@ -124,49 +123,47 @@ async def run_server(config: Dict[str, Any]):
         access_log=True,
         use_colors=True
     )
-    
+
     server = uvicorn.Server(server_config)
-    
+
     logger.info(f"🌐 Starting server on http://{config['host']}:{config['port']}")
     logger.info(f"🖥  Local access: http://localhost:{config['port']}")
-    
+    logger.info(f"🧭 App target: {app_target}")
+
     if config['host'] == '0.0.0.0':
         import socket
         try:
             hostname = socket.gethostname()
             local_ip = socket.gethostbyname(hostname)
             logger.info(f"🌍 Network access: http://{local_ip}:{config['port']}")
-        except:
+        except Exception:
             pass
-    
+
     await server.serve()
 
 def main():
     """Main entry point"""
-    # Setup signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    
     try:
         print_startup_banner()
-        
-        # Load configuration
         config = load_config()
         logger.info(f"📋 Loaded configuration: {CONFIG_FILE}")
-        
-        # Setup environment
         setup_directories()
         check_dependencies()
-        
+
         # Override with environment variables
         port = int(os.environ.get('PORT', config.get('port', 3000)))
         host = os.environ.get('HOST', config.get('host', '0.0.0.0'))
-        
         config.update({'port': port, 'host': host})
-        
-        # Start server
+
+        # Ensure project root is importable
+        root = str(BASE_DIR)
+        if root not in sys.path:
+            sys.path.insert(0, root)
+
         asyncio.run(run_server(config))
-        
+
     except KeyboardInterrupt:
         logger.info("🛑 Shutdown requested by user")
     except Exception as e:
