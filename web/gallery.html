@@ -1,3 +1,4 @@
+
 <!DOCTYPE html><html lang="de"><head>
 <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Galerie – Andio Media Studio</title>
@@ -17,21 +18,30 @@
 </header>
 <div class="wrap">
   <div class="card">
-    <h2>Alle Ergebnisse</h2>
+    <div class="flex">
+      <h2 style="margin:0">Alle Ergebnisse</h2>
+      <span class="right search">
+        <select id="kind" class="input"><option value="all">Alle</option><option value="images">Bilder</option><option value="videos">Videos</option></select>
+      </span>
+    </div>
     <div id="grid" class="grid" style="grid-template-columns: repeat(8,1fr); gap:10px"></div>
   </div>
 </div>
 <script src="assets/app.js"></script>
 <script>
-(async ()=>{
-  const items = await API.outputs('all');
-  const grid = document.getElementById('grid');
+async function load(){
+  const kind = document.getElementById('kind').value;
+  const items = await API.outputs(kind);
+  const grid = document.getElementById('grid'); grid.innerHTML='';
   items.forEach(it=>{
     const a = document.createElement('a');
     a.href = 'player.html?src='+encodeURIComponent(it.url);
-    a.innerHTML = `<img class="thumb" src="${it.url.endsWith('.mp4')?'':it.url}" />`;
+    const isVideo = it.url.toLowerCase().match(/\.(mp4|webm|mov|mkv)$/);
+    a.innerHTML = isVideo ? `<div class="thumb" style="display:flex;align-items:center;justify-content:center;height:160px"><span class="muted">Video</span></div>` : `<img class="thumb" loading="lazy" src="${it.url}" />`;
     grid.appendChild(a);
   });
-})();
+}
+document.getElementById('kind').addEventListener('change', load);
+load();
 </script>
 </body></html>

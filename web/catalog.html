@@ -1,3 +1,4 @@
+
 <!DOCTYPE html><html lang="de"><head>
 <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Store – Andio Media Studio</title>
@@ -17,20 +18,36 @@
 </header>
 <div class="wrap">
   <div class="card">
-    <h2>Lokale Modelle</h2>
+    <div class="flex">
+      <h2 style="margin:0">Lokale Modelle</h2>
+      <span class="badge">Empfehlungen aktiv</span>
+      <span class="badge nsfw">NSFW möglich</span>
+      <span class="right search">
+        <input id="q" class="input" placeholder="Suche nach Name/Tag…"/>
+        <select id="grp" class="input"><option value="">Alle Gruppen</option><option>image</option><option>video</option></select>
+      </span>
+    </div>
     <table class="table" id="tbl"><thead><tr><th>Name</th><th>Tags</th><th>Gruppe</th><th>Pfad</th></tr></thead><tbody></tbody></table>
   </div>
 </div>
 <script src="assets/app.js"></script>
 <script>
-(async ()=>{
-  const data = await API.models();
-  const tb = document.querySelector('#tbl tbody');
-  (data.models||[]).forEach(m=>{
+let MODELS=[];
+function render(){
+  const tb = document.querySelector('#tbl tbody'); tb.innerHTML='';
+  const query = (document.getElementById('q').value||'').toLowerCase();
+  const grp = (document.getElementById('grp').value||'').toLowerCase();
+  MODELS.filter(m=>(!grp || (m.group||'')===grp) && (!query || m.name.toLowerCase().includes(query) || (m.tags||[]).join(',').toLowerCase().includes(query))).forEach(m=>{
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${m.name}</td><td>${(m.tags||[]).join(', ')}</td><td>${m.group||''}</td><td>${m.path}</td>`;
+    tr.innerHTML = `<td>${m.name}</td><td>${(m.tags||[]).map(t=>`<pill>${t}</pill>`).join('')}</td><td>${m.group||''}</td><td>${m.path}</td>`;
     tb.appendChild(tr);
   });
+}
+(async ()=>{
+  const data = await API.models();
+  MODELS = data.models||[]; render();
+  document.getElementById('q').addEventListener('input', render);
+  document.getElementById('grp').addEventListener('change', render);
 })();
 </script>
 </body></html>

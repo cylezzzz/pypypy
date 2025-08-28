@@ -1,3 +1,4 @@
+
 <!DOCTYPE html><html lang="de"><head>
 <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Create – Andio Media Studio</title>
@@ -19,57 +20,124 @@
 <div class="wrap">
   <div class="grid">
     <div class="card" style="grid-column: span 8">
-      <h2>Bild-Studio</h2>
+      <div class="flex">
+        <h2 style="margin:0">Bild-Studio</h2>
+        <span class="badge nsfw" title="NSFW wird unterstützt – privat & lokal">NSFW möglich</span>
+      </div>
       <label>Prompt</label>
-      <textarea id="prompt" rows="3" class="input" placeholder="Ultra realistisches Portrait, 85mm, volumetrisches Licht"></textarea>
+      <textarea id="prompt" rows="3" class="input" placeholder="Ultra realistisches Portrait, 85mm, volumetrisches Licht, Hauttextur, film grain"></textarea>
+      <label style="margin-top:8px">Negative Prompt</label>
+      <textarea id="neg" rows="2" class="input" placeholder="Artefakte, Verzerrungen, Unschärfe"></textarea>
 
-      <div class="card">
+      <div class="card" style="margin-top:12px">
         <h3>Aktionen</h3>
         <div class="toolbar">
           <button class="btn" onclick="run('txt2img')">Text→Bild</button>
           <button class="btn" onclick="run('img2img')">Bild→Bild</button>
           <button class="btn" onclick="run('inpaint')">Inpainting</button>
-          <button class="btn" onclick="run('pose_transfer')">Pose-Transfer (ControlNet)</button>
+          <button class="btn" onclick="run('pose_transfer')">Pose-Transfer</button>
+        </div>
+        <hr class="div"/>
+        <div class="toolbar">
+          <div class="chips">
+            <pill onclick="preset('portrait')">Portrait</pill>
+            <pill onclick="preset('landscape')">Landschaft</pill>
+            <pill onclick="preset('product')">Produkt</pill>
+            <pill onclick="preset('nsfw')">NSFW</pill>
+          </div>
+          <span class="right hint">Presets setzen Größe/Guidance passend.</span>
         </div>
       </div>
 
       <div class="card">
-        <h3>Upload</h3>
+        <h3>Assets</h3>
         <p><b>Bild</b> (für Img2Img / Inpainting) und optional <b>Maske</b> (weiß=ändern, schwarz=behalten)</p>
-        <input type="file" id="img" accept="image/*" />
-        <input type="file" id="mask" accept="image/*" />
+        <div class="toolbar">
+          <input type="file" id="img" accept="image/*" class="input" />
+          <input type="file" id="mask" accept="image/*" class="input" />
+          <input type="file" id="pose_ref" accept="image/*" class="input" />
+        </div>
         <div class="toolbar" style="margin-top:8px">
           <button class="btn secondary" onclick="autoMask()">Auto-Maske (SAM / MediaPipe)</button>
+          <span class="hint">Maske wird im Workspace gespeichert</span>
         </div>
         <div id="files" style="margin-top:8px"></div>
-      </div>
-
-      <div class="card">
-        <h3>Pose-Referenz</h3>
-        <p>Bild mit gewünschter Pose (OpenPose wird automatisch extrahiert).</p>
-        <input type="file" id="pose_ref" accept="image/*" />
       </div>
     </div>
 
     <div class="card" style="grid-column: span 4">
-      <h2>Preset</h2>
+      <h2>Steuerung</h2>
+      <label>Qualität</label>
       <select id="quality" class="input"><option>BALANCED</option><option>FAST</option><option>ULTRA</option></select>
+
+      <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+        <div>
+          <label>Breite</label>
+          <input id="width" class="input" type="number" value="896"/>
+        </div>
+        <div>
+          <label>Höhe</label>
+          <input id="height" class="input" type="number" value="1152"/>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+        <div>
+          <label>Guidance</label>
+          <input id="guidance" class="input" type="number" step="0.1" value="6.0"/>
+        </div>
+        <div>
+          <label>Steps</label>
+          <input id="steps" class="input" type="number" value="28"/>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+        <div>
+          <label>Seed (leer=random)</label>
+          <input id="seed" class="input" type="number" placeholder=""/>
+        </div>
+        <div>
+          <label>Strength (Img2Img/Inpaint)</label>
+          <input id="strength" class="input" type="number" step="0.01" value="0.65"/>
+        </div>
+      </div>
+
       <h2 style="margin-top:16px">Modell</h2>
-      <select id="model" class="input"></select>
+      <div class="search">
+        <input id="modelFilter" class="input" placeholder="Filter (z. B. sdxl, flux, pose, video)…"/>
+        <select id="model" class="input"></select>
+      </div>
     </div>
   </div>
 </div>
 
 <script src="assets/app.js"></script>
 <script>
+let CATALOG=[];
 (async ()=>{
   const data = await API.models();
-  const sel = document.getElementById('model');
-  (data.models||[]).forEach(m=>{
+  CATALOG = data.models||[];
+  fillModels();
+})();
+
+function fillModels(){
+  const sel = document.getElementById('model'); sel.innerHTML='';
+  const f = (document.getElementById('modelFilter').value||'').toLowerCase();
+  (CATALOG||[]).filter(m=>!f || m.name.toLowerCase().includes(f) || (m.tags||[]).join(',').toLowerCase().includes(f)).forEach(m=>{
     const opt=document.createElement('option'); opt.value=m.name; opt.textContent=m.name+' ['+(m.tags||[]).join(', ')+']';
     sel.appendChild(opt);
   });
-})();
+}
+document.getElementById('modelFilter').addEventListener('input', fillModels);
+
+function preset(kind){
+  if(kind==='portrait'){ document.getElementById('width').value=896; document.getElementById('height').value=1152; document.getElementById('guidance').value=6.0; }
+  if(kind==='landscape'){ document.getElementById('width').value=1344; document.getElementById('height').value=768; }
+  if(kind==='product'){ document.getElementById('width').value=1024; document.getElementById('height').value=1024; document.getElementById('guidance').value=5.5; }
+  if(kind==='nsfw'){ document.getElementById('guidance').value=5.0; }
+  toast('Preset gesetzt: '+kind.toUpperCase());
+}
 
 async function uploadSingle(inputId){
   const input = document.getElementById(inputId);
@@ -83,28 +151,37 @@ async function uploadSingle(inputId){
 
 async function autoMask(){
   const imgPath = await uploadSingle('img');
-  if(!imgPath){ alert('Bitte ein Bild hochladen'); return; }
+  if(!imgPath){ toast('Bitte ein Bild hochladen'); return; }
   const fd = new FormData(); fd.append('image_path', imgPath);
   const res = await fetch('/api/auto_mask', {method:'POST', body: fd}).then(r=>r.json());
-  if(res.ok){ alert('Maske erstellt: '+res.mask_path); }
-  else { alert('Auto-Maske fehlgeschlagen'); }
+  if(res.ok){ toast('Maske erstellt: '+res.mask_path); }
+  else { toast('Auto-Maske fehlgeschlagen'); }
 }
 
 async function run(task){
   const prompt = document.getElementById('prompt').value.trim();
+  const negative = (document.getElementById('neg').value||'').trim();
   const quality = document.getElementById('quality').value;
   const model = document.getElementById('model').value || null;
-  let inputs = {};
+  const w = parseInt(document.getElementById('width').value||'0')||undefined;
+  const h = parseInt(document.getElementById('height').value||'0')||undefined;
+  const steps = parseInt(document.getElementById('steps').value||'0')||undefined;
+  const guidance = parseFloat(document.getElementById('guidance').value||'0')||undefined;
+  const seed = (document.getElementById('seed').value||'')? parseInt(document.getElementById('seed').value): null;
+  const strength = parseFloat(document.getElementById('strength').value||'0.65');
+
+  let inputs = { width:w, height:h, steps, guidance, seed };
 
   if(task==='img2img' || task==='inpaint'){
     const imgPath = await uploadSingle('img');
-    if(!imgPath){ alert('Bitte Bild hochladen'); return; }
+    if(!imgPath){ return toast('Bitte Bild hochladen'); }
     inputs.image_path = imgPath;
   }
   if(task==='inpaint'){
     let maskPath = await uploadSingle('mask');
-    if(!maskPath){ alert('Bitte Maske hochladen oder Auto-Maske drücken'); return; }
+    if(!maskPath){ return toast('Bitte Maske hochladen oder Auto-Maske drücken'); }
     inputs.mask_path = maskPath;
+    inputs.strength = strength;
   }
   if(task==='pose_transfer'){
     let poseRef = await uploadSingle('pose_ref');
@@ -115,13 +192,14 @@ async function run(task){
         poseRef = up.path;
       }
     }
-    if(!poseRef){ alert('Bitte Pose-Referenz oder Bild hochladen'); return; }
-    inputs = { pose_ref_path: poseRef };
+    if(!poseRef){ return toast('Bitte Pose-Referenz oder Bild hochladen'); }
+    inputs = { pose_ref_path: poseRef, width:w, height:h, steps, guidance, seed };
   }
 
-  const res = await API.job({task, prompt, quality, model_preference:model, inputs});
-  if(!res.ok){ alert('Fehler: Job konnte nicht gestartet werden'); return; }
-  alert('Job: '+res.job.id);
+  const res = await API.job({task, prompt, negative, quality, model_preference:model, inputs});
+  if(!res.ok){ return toast('Fehler: Job konnte nicht gestartet werden'); }
+  toast('Job gestartet: '+res.job.id);
 }
 </script>
+<div class="toast"></div>
 </body></html>

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html><html lang="de"><head>
 <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Video Lab – Andio Media Studio</title>
@@ -16,20 +17,41 @@
   </nav>
 </header>
 <div class="wrap">
-  <div class="card">
-    <h2>Text/Bild → Video</h2>
-    <label>Prompt</label>
-    <textarea id="prompt" rows="3" class="input" placeholder="Cinematic dolly shot, neon rain, ultra detail"></textarea>
-    <div style="margin-top:10px">
-      <button class="btn" onclick="run('txt2video')">Text→Video</button>
+  <div class="grid">
+    <div class="card" style="grid-column: span 8">
+      <div class="flex">
+        <h2 style="margin:0">Text/Bild → Video</h2>
+        <span class="badge nsfw">NSFW möglich</span>
+      </div>
+      <label>Prompt</label>
+      <textarea id="prompt" rows="3" class="input" placeholder="Cinematic dolly shot, neon rain, ultra detail"></textarea>
+      <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-top:10px">
+        <div><label>Frames</label><input id="frames" class="input" type="number" value="25"/></div>
+        <div><label>FPS</label><input id="fps" class="input" type="number" value="16"/></div>
+        <div><label>Größe</label><input id="size" class="input" value="576x320"/></div>
+      </div>
+      <div style="margin-top:10px" class="toolbar">
+        <button class="btn" onclick="run('txt2video')">Text→Video</button>
+      </div>
+      <small class="muted">Nutze in <span class="kbd">models/video/</span> ein SVD-Diffusers-Modell.</small>
+    </div>
+    <div class="card" style="grid-column: span 4">
+      <h2>Letzte Video-Jobs</h2>
+      <div id="jobs"></div>
     </div>
   </div>
 </div>
 <script src="assets/app.js"></script>
 <script>
 async function run(task){
-  const res = await API.job({task, prompt: document.getElementById('prompt').value.trim(), quality:'BALANCED', inputs:{frames:25,fps:16}});
-  if(res.ok) alert('Video-Job: '+res.job.id); else alert('Fehler');
+  const prompt = document.getElementById('prompt').value.trim();
+  const frames = parseInt(document.getElementById('frames').value||'25');
+  const fps = parseInt(document.getElementById('fps').value||'16');
+  const size = (document.getElementById('size').value||'576x320').split('x').map(n=>parseInt(n));
+  const res = await API.job({task, prompt, quality:'BALANCED', inputs:{frames,fps,width:size[0],height:size[1]}});
+  if(res.ok){ toast('Video-Job: '+res.job.id); } else { toast('Fehler'); }
+  const jobs = await API.jobs(); document.getElementById('jobs').innerHTML = jobs.filter(j=>j.task.includes('video')).slice(0,10).map(j=>`<div class="flex"><pill>${j.task}</pill><small class="muted">${new Date(j.time).toLocaleString()}</small><span class="right">${j.plan?.model||'AUTO'}</span></div>`).join('');
 }
 </script>
+<div class="toast"></div>
 </body></html>

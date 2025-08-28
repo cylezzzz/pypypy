@@ -1,3 +1,4 @@
+
 <!DOCTYPE html><html lang="de"><head>
 <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Andio Media Studio – Dashboard</title>
@@ -16,13 +17,23 @@
   </nav>
 </header>
 <div class="wrap">
-  <div class="card">
-    <h2>Status</h2>
-    <pre id="status">Lade…</pre>
-  </div>
-  <div class="card">
-    <h2>Letzte Ergebnisse</h2>
-    <div id="grid" class="grid" style="grid-template-columns: repeat(6,1fr); gap:10px"></div>
+  <div class="grid">
+    <div class="card" style="grid-column: span 8">
+      <div class="section-title">
+        <h2 style="margin:0">Status</h2>
+        <span class="badge nsfw" title="NSFW wird unterstützt – privat & lokal"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#ff3d7d"/></svg> NSFW möglich</span>
+      </div>
+      <pre id="status" class="input" style="white-space:pre-wrap;min-height:100px">Lade…</pre>
+      <small class="muted">Hinweis: NSFW ist **aktivierbar**, es gibt keine Blocker. Du trägst die Verantwortung für deine Inhalte.</small>
+    </div>
+    <div class="card" style="grid-column: span 4">
+      <h2>Letzte Jobs</h2>
+      <div id="jobs"></div>
+    </div>
+    <div class="card" style="grid-column: span 12">
+      <h2>Letzte Ergebnisse</h2>
+      <div id="grid" class="grid" style="grid-template-columns: repeat(8,1fr); gap:10px"></div>
+    </div>
   </div>
 </div>
 <script src="assets/app.js"></script>
@@ -34,8 +45,15 @@
   const grid = document.getElementById('grid');
   items.forEach(it=>{
     const a = document.createElement('a'); a.href='player.html?src='+encodeURIComponent(it.url);
-    a.innerHTML = `<img class="thumb" src="${it.url}" />`; grid.appendChild(a);
+    a.innerHTML = `<img class="thumb" src="${it.url.endsWith('.mp4')?'assets/video_placeholder.svg':it.url}" />`;
+    grid.appendChild(a);
   });
+  const jobs = await API.jobs();
+  const box = document.getElementById('jobs');
+  box.innerHTML = (jobs||[]).slice(0,10).map(j=>{
+    return `<div class="flex"><pill>${j.task}</pill><small class="muted">${new Date(j.time).toLocaleString()}</small><span class="right">${(j.plan?.model)||'AUTO'}</span></div>`
+  }).join('') || '<small class="muted">Noch keine Jobs.</small>';
 })();
 </script>
+<div class="toast"></div>
 </body></html>

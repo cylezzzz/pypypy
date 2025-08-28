@@ -1,3 +1,4 @@
+
 const API = {
   async ping(){ return (await fetch('/api/ping')).json() },
   async models(){ return (await fetch('/api/models')).json() },
@@ -8,5 +9,11 @@ const API = {
   },
   async job(payload){
     return (await fetch('/api/jobs', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})).json();
-  }
+  },
+  async jobs(){ return (await fetch('/api/jobs')).json() }
 };
+
+function toast(msg, ms=2500){
+  let t = document.querySelector('.toast'); if(!t){ t = document.createElement('div'); t.className='toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), ms);
+}
