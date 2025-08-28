@@ -1,79 +1,904 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Create – Andio Media Studio</title><link rel="stylesheet" href="assets/styles.css"/></head><body>
-<header class="header">
-  <div class="brand"><span class="dot" style="width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#6aa3ff,#b884ff)"></span> <span>Create – Andio Media Studio</span></div>
-  <nav>
-    <a href="index.html" >Dashboard</a>
-    <a href="create.html" class="active">Create</a>
-    <a href="video.html" >Video Lab</a>
-    <a href="talking.html" >Talking</a>
-    <a href="wardrobe.html" >Wardrobe</a>
-    <a href="catalog.html" >Store</a>
-    <a href="gallery.html" >Galerie</a>
-  </nav>
-</header>
-<div class="wrap">
-<div class="grid">
-  <div class="card" style="grid-column: span 8">
-    <h2>Bild-Studio</h2>
-    <div id="progressHost"></div>
-    <label>Prompt</label>
-    <textarea id="prompt" rows="3" class="input"></textarea>
-    <label style="margin-top:8px">Negative Prompt</label>
-    <textarea id="neg" rows="2" class="input"></textarea>
-    <div class="toolbar" style="margin-top:8px">
-      <button class="btn" onclick="run('txt2img')">Text→Bild</button>
-      <button class="btn" onclick="run('img2img')">Bild→Bild</button>
-      <button class="btn" onclick="run('inpaint')">Inpainting</button>
-      <button class="btn" onclick="run('pose_transfer')">Pose-Transfer</button>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <h3>Assets</h3>
-      <div class="toolbar">
-        <input type="file" id="img" accept="image/*" class="input" />
-        <input type="file" id="mask" accept="image/*" class="input" />
-        <input type="file" id="pose_ref" accept="image/*" class="input" />
-        <button class="btn secondary" onclick="autoMask()">Auto-Maske</button>
-      </div>
-      <div id="files" style="margin-top:8px"></div>
-    </div>
-  </div>
-  <div class="card" style="grid-column: span 4">
-    <h2>Steuerung</h2>
-    <div class="grid" style="grid-template-columns:repeat(2,1fr)">
-      <div><label>Breite</label><input id="width" class="input" type="number" value="896"/></div>
-      <div><label>Höhe</label><input id="height" class="input" type="number" value="1152"/></div>
-      <div><label>Guidance</label><input id="guidance" class="input" type="number" step="0.1" value="6.0"/></div>
-      <div><label>Steps</label><input id="steps" class="input" type="number" value="28"/></div>
-      <div><label>Seed</label><input id="seed" class="input" type="number" placeholder=""/></div>
-      <div><label>Strength</label><input id="strength" class="input" type="number" step="0.01" value="0.65"/></div>
-    </div>
-    <h2 style="margin-top:16px">Modell</h2>
-    <div class="search">
-      <input id="modelFilter" class="input" placeholder="Filter…"/>
-      <select id="model" class="input"></select>
-    </div>
-  </div>
-</div>
-<script>
-const PM = new ProgressManager(document); PM.mount();
-let CATALOG=[];
-(async ()=>{ const data=await API.models(); CATALOG=data.models||[]; fillModels(); })();
-function fillModels(){ const sel=document.getElementById('model'); sel.innerHTML=''; const f=(document.getElementById('modelFilter').value||'').toLowerCase(); (CATALOG||[]).filter(m=>!f || m.name.toLowerCase().includes(f) || (m.tags||[]).join(',').toLowerCase().includes(f)).forEach(m=>{ const opt=document.createElement('option'); opt.value=m.name; opt.textContent=m.name; sel.appendChild(opt); }); }
-document.getElementById('modelFilter').addEventListener('input', fillModels);
-async function uploadSingle(id){ const i=document.getElementById(id); if(!i.files || !i.files[0]) return null; const res=await API.upload(i.files[0],'workspace'); const files=document.getElementById('files'); const a=document.createElement('a'); a.href='player.html?src='+encodeURIComponent(res.path); a.textContent=res.path; files.appendChild(a); files.appendChild(document.createElement('br')); return res.path; }
-async function autoMask(){ const imgPath=await uploadSingle('img'); if(!imgPath){ return toast('Bitte ein Bild hochladen'); } const fd=new FormData(); fd.append('image_path', imgPath); const res=await fetch('/api/auto_mask',{method:'POST',body:fd}).then(r=>r.json()); if(res.ok){ toast('Maske erstellt: '+res.mask_path); } else { toast('Auto-Maske fehlgeschlagen'); } }
-async function run(task){
-  const prompt=document.getElementById('prompt').value.trim();
-  const negative=(document.getElementById('neg').value||'').trim();
-  const w=parseInt(document.getElementById('width').value||'896'); const h=parseInt(document.getElementById('height').value||'1152');
-  const steps=parseInt(document.getElementById('steps').value||'28'); const guidance=parseFloat(document.getElementById('guidance').value||'6.0');
-  const seed=(document.getElementById('seed').value||'')?parseInt(document.getElementById('seed').value):null; const strength=parseFloat(document.getElementById('strength').value||'0.65');
-  const model=document.getElementById('model').value||null;
-  let inputs={width:w,height:h,steps,guidance,seed};
-  if(task==='img2img' || task==='inpaint'){ const imgPath=await uploadSingle('img'); if(!imgPath){ return toast('Bitte Bild hochladen'); } inputs.image_path=imgPath; }
-  if(task==='inpaint'){ const maskPath=await uploadSingle('mask'); if(!maskPath){ return toast('Bitte Maske hochladen'); } inputs.mask_path=maskPath; inputs.strength=strength; }
-  const res=await API.job({task, prompt, negative, quality:'BALANCED', model_preference:model, inputs});
-  if(res.ok){ PM.connect(res.job.id); toast('Job gestartet: '+res.job.id); } else { toast('Fehler: Job konnte nicht gestartet werden'); }
-}
-</script>
-</div><script src="assets/app.js"></script><div class="toast"></div></body></html>
+.prompt-section {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-primary);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(20px);
+        }
+        
+        .prompt-enhancer {
+            position: relative;
+        }
+        
+        .prompt-textarea {
+            width: 100%;
+            min-height: 120px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 16px;
+            color: var(--text-primary);
+            font-size: 16px;
+            line-height: 1.5;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+        
+        .prompt-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(106, 163, 255, 0.1);
+        }
+        
+        .prompt-suggestions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        
+        .suggestion-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .suggestion-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+        
+        .assets-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-primary);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .upload-zone {
+            border: 2px dashed var(--border-primary);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--accent-primary);
+            background: rgba(106, 163, 255, 0.05);
+        }
+        
+        .upload-zone.dragover {
+            border-color: var(--accent-primary);
+            background: rgba(106, 163, 255, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+        
+        .upload-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .upload-subtext {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        
+        .file-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .preview-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--border-primary);
+            background: var(--bg-secondary);
+        }
+        
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .preview-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .preview-item:hover .preview-overlay {
+            opacity: 1;
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .preview-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--bg-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .preview-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .controls-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-primary);
+            border-radius: 20px;
+            padding: 24px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .control-value {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .slider-container {
+            position: relative;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-secondary);
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(106, 163, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 16px rgba(106, 163, 255, 0.6);
+        }
+        
+        .quality-preset {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .preset-btn {
+            padding: 16px 12px;
+            border: 2px solid var(--border-primary);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .preset-btn.active {
+            border-color: var(--accent-primary);
+            background: rgba(106, 163, 255, 0.1);
+            color: var(--accent-primary);
+        }
+        
+        .preset-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .preset-desc {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        
+        .generation-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            background: var(--accent-gradient);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .generation-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .generation-btn:hover::before {
+            left: 100%;
+        }
+        
+        .generation-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(106, 163, 255, 0.4);
+        }
+        
+        .generation-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+        
+        .result-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-primary);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .result-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result-image {
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+        }
+        
+        .result-actions {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .result-item:hover .result-actions {
+            opacity: 1;
+        }
+        
+        .result-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .result-btn:hover {
+            transform: scale(1.1);
+            background: var(--accent-primary);
+        }
+        
+        .result-info {
+            padding: 16px;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .result-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .ai-suggestions {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+        
+        .suggestion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .suggestion-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .suggestion-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+        
+        .suggestion-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .suggestion-prompt {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="brand">
+            <span class="dot"></span>
+            <span>Create Studio – AndioMediaStudio</span>
+            <div class="badge nsfw">🔥 Unlimited</div>
+        </div>
+        <nav>
+            <a href="index.html">📊 Dashboard</a>
+            <a href="create.html" class="active">🎨 Create</a>
+            <a href="video.html">🎬 Video Lab</a>
+            <a href="talking.html">💬 Talking</a>
+            <a href="wardrobe.html">👔 Wardrobe</a>
+            <a href="catalog.html">🏪 Store</a>
+            <a href="gallery.html">🖼️ Gallery</a>
+        </nav>
+    </header>
+
+    <main class="wrap">
+        <div class="create-container">
+            <h2>🎨 AI Create Studio - No Limits</h2>
+            
+            <!-- Mode Selection -->
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="txt2img" onclick="selectMode('txt2img')">
+                    <span style="font-size: 18px;">✨</span>
+                    <span>Text → Image</span>
+                </button>
+                <button class="mode-btn" data-mode="img2img" onclick="selectMode('img2img')">
+                    <span style="font-size: 18px;">🖼️</span>
+                    <span>Image → Image</span>
+                </button>
+                <button class="mode-btn" data-mode="inpaint" onclick="selectMode('inpaint')">
+                    <span style="font-size: 18px;">✏️</span>
+                    <span>Inpainting</span>
+                </button>
+                <button class="mode-btn" data-mode="pose_transfer" onclick="selectMode('pose_transfer')">
+                    <span style="font-size: 18px;">🤸</span>
+                    <span>Pose Transfer</span>
+                </button>
+            </div>
+
+            <div id="progressHost"></div>
+
+            <div class="grid">
+                <!-- Main Creation Panel -->
+                <div style="grid-column: span 8;">
+                    <!-- Prompt Section -->
+                    <div class="prompt-section">
+                        <h3>💭 Creative Prompt</h3>
+                        <div class="prompt-enhancer">
+                            <textarea id="mainPrompt" class="prompt-textarea" 
+                                     placeholder="Describe your vision... e.g., 'a beautiful woman in an elegant red dress, photorealistic, studio lighting, high detail'"></textarea>
+                            
+                            <div class="prompt-suggestions">
+                                <button class="suggestion-btn" onclick="addPromptText('photorealistic, 8k, ultra detailed')">📸 Photorealistic</button>
+                                <button class="suggestion-btn" onclick="addPromptText('anime style, manga, cel shading')">🎌 Anime</button>
+                                <button class="suggestion-btn" onclick="addPromptText('oil painting, classical art, renaissance')">🎨 Classical</button>
+                                <button class="suggestion-btn" onclick="addPromptText('cyberpunk, neon, futuristic')">🌃 Cyberpunk</button>
+                                <button class="suggestion-btn" onclick="addPromptText('fantasy, magical, ethereal')">🔮 Fantasy</button>
+                                <button class="suggestion-btn" onclick="addPromptText('portrait, studio lighting, professional')">👤 Portrait</button>
+                                <button class="suggestion-btn" onclick="addPromptText('nsfw, sensual, artistic nude')">🔥 NSFW</button>
+                                <button class="suggestion-btn" onclick="addPromptText('cinematic, movie scene, dramatic lighting')">🎬 Cinematic</button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <label class="control-label">🚫 Negative Prompt</label>
+                            <textarea id="negativePrompt" class="prompt-textarea" style="min-height: 80px;"
+                                     placeholder="What to avoid... e.g., 'blurry, low quality, distorted'"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Assets Panel -->
+                    <div class="assets-panel" id="assetsPanel" style="display: none;">
+                        <h3>📁 Input Assets</h3>
+                        
+                        <div class="upload-zone" id="uploadZone" onclick="triggerFileUpload()">
+                            <div class="upload-icon">📸</div>
+                            <div class="upload-text">Drop images here or click to upload</div>
+                            <div class="upload-subtext">Supports JPG, PNG, WebP - No size limits</div>
+                        </div>
+                        
+                        <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+                        
+                        <div class="file-preview" id="filePreview">
+                            <!-- Uploaded files will appear here -->
+                        </div>
+                        
+                        <div style="margin-top: 16px;">
+                            <button class="btn secondary" onclick="autoMask()" id="autoMaskBtn" style="display: none;">
+                                🎭 Auto Generate Mask
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="resultsSection" style="display: none;">
+                        <h3>🎯 Generated Results</h3>
+                        <div class="results-grid" id="resultsGrid">
+                            <!-- Results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls Panel -->
+                <div style="grid-column: span 4;">
+                    <div class="controls-panel">
+                        <h3>⚙️ Generation Settings</h3>
+                        
+                        <!-- Quality Presets -->
+                        <div class="control-group">
+                            <div class="control-label">🎚️ Quality Preset</div>
+                            <div class="quality-preset">
+                                <div class="preset-btn" data-quality="FAST" onclick="selectQuality('FAST')">
+                                    <div class="preset-title">⚡ Fast</div>
+                                    <div class="preset-desc">Quick results</div>
+                                </div>
+                                <div class="preset-btn active" data-quality="BALANCED" onclick="selectQuality('BALANCED')">
+                                    <div class="preset-title">⚖️ Balanced</div>
+                                    <div class="preset-desc">Best balance</div>
+                                </div>
+                                <div class="preset-btn" data-quality="ULTRA" onclick="selectQuality('ULTRA')">
+                                    <div class="preset-title">💎 Ultra</div>
+                                    <div class="preset-desc">Maximum quality</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Controls -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                📐 Dimensions
+                                <span class="control-value" id="dimensionsValue">896 × 1152</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <input id="widthInput" class="input" type="number" value="896" min="64" max="2048" step="64">
+                                <input id="heightInput" class="input" type="number" value="1152" min="64" max="2048" step="64">
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                                <button class="suggestion-btn" onclick="setDimensions(1024, 1024)">1:1 Square</button>
+                                <button class="suggestion-btn" onclick="setDimensions(896, 1152)">3:4 Portrait</button>
+                                <button class="suggestion-btn" onclick="setDimensions(1152, 896)">4:3 Landscape</button>
+                                <button class="suggestion-btn" onclick="setDimensions(1344, 768)">16:9 Wide</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                🎯 Guidance Scale
+                                <span class="control-value" id="guidanceValue">7.5</span>
+                            </div>
+                            <div class="slider-container">
+                                <input type="range" id="guidanceSlider" class="slider" min="1" max="20" value="7.5" step="0.5">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                ⚡ Inference Steps
+                                <span class="control-value" id="stepsValue">28</span>
+                            </div>
+                            <div class="slider-container">
+                                <input type="range" id="stepsSlider" class="slider" min="10" max="100" value="28" step="1">
+                            </div>
+                        </div>
+
+                        <div class="control-group" id="strengthGroup" style="display: none;">
+                            <div class="control-label">
+                                💪 Strength
+                                <span class="control-value" id="strengthValue">0.7</span>
+                            </div>
+                            <div class="slider-container">
+                                <input type="range" id="strengthSlider" class="slider" min="0.1" max="1.0" value="0.7" step="0.05">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">🎲 Seed</div>
+                            <div style="display: flex; gap: 8px;">
+                                <input id="seedInput" class="input" type="number" placeholder="Random" style="flex: 1;">
+                                <button class="btn secondary" onclick="randomSeed()">🎲</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">📦 Batch Size</div>
+                            <select id="batchSize" class="input">
+                                <option value="1">1 image</option>
+                                <option value="2">2 images</option>
+                                <option value="4">4 images</option>
+                            </select>
+                        </div>
+
+                        <!-- Model Selection -->
+                        <div class="control-group">
+                            <div class="control-label">🤖 AI Model</div>
+                            <select id="modelSelect" class="input">
+                                <option value="auto">🧠 Auto-Select Best</option>
+                                <!-- Models will be populated dynamically -->
+                            </select>
+                            <div id="modelInfo" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                                AI will automatically choose the best model
+                            </div>
+                        </div>
+
+                        <!-- Generation Button -->
+                        <button id="generateBtn" class="generation-btn" onclick="generateImage()">
+                            🚀 Generate Unlimited AI Art
+                        </button>
+                    </div>
+
+                    <!-- AI Suggestions -->
+                    <div class="ai-suggestions">
+                        <h4>💡 AI Prompt Suggestions</h4>
+                        <div class="suggestion-grid" id="promptSuggestions">
+                            <!-- Dynamic suggestions based on current input -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="assets/app.js"></script>
+    <script>
+        // Enhanced Create Studio Manager
+        class CreateStudioManager {
+            constructor() {
+                this.progressManager = new ProgressManager(document);
+                this.progressManager.mount();
+                this.currentMode = 'txt2img';
+                this.currentQuality = 'BALANCED';
+                this.uploadedFiles = [];
+                this.catalog = [];
+                
+                this.setupEventListeners();
+                this.loadModels();
+                this.updatePromptSuggestions();
+            }
+
+            setupEventListeners() {
+                // Sliders
+                const sliders = [
+                    { input: 'guidanceSlider', display: 'guidanceValue' },
+                    { input: 'stepsSlider', display: 'stepsValue' },
+                    { input: 'strengthSlider', display: 'strengthValue' }
+                ];
+
+                sliders.forEach(({ input, display }) => {
+                    const slider = document.getElementById(input);
+                    const valueDisplay = document.getElementById(display);
+                    
+                    if (slider && valueDisplay) {
+                        slider.addEventListener('input', () => {
+                            valueDisplay.textContent = slider.value;
+                        });
+                    }
+                });
+
+                // Dimensions
+                const widthInput = document.getElementById('widthInput');
+                const heightInput = document.getElementById('heightInput');
+                const dimensionsValue = document.getElementById('dimensionsValue');
+
+                [widthInput, heightInput].forEach(input => {
+                    if (input) {
+                        input.addEventListener('input', () => {
+                            dimensionsValue.textContent = `${widthInput.value} × ${heightInput.value}`;
+                        });
+                    }
+                });
+
+                // File upload
+                const fileInput = document.getElementById('fileInput');
+                const uploadZone = document.getElementById('uploadZone');
+
+                if (fileInput) {
+                    fileInput.addEventListener('change', (e) => {
+                        this.handleFiles(e.target.files);
+                    });
+                }
+
+                if (uploadZone) {
+                    // Drag and drop
+                    uploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.add('dragover');
+                    });
+
+                    uploadZone.addEventListener('dragleave', () => {
+                        uploadZone.classList.remove('dragover');
+                    });
+
+                    uploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.remove('dragover');
+                        this.handleFiles(e.dataTransfer.files);
+                    });
+                }
+
+                // Prompt suggestions update
+                const mainPrompt = document.getElementById('mainPrompt');
+                if (mainPrompt) {
+                    mainPrompt.addEventListener('input', () => {
+                        this.updatePromptSuggestions();
+                    });
+                }
+            }
+
+            async loadModels() {
+                try {
+                    const data = await API.models();
+                    this.catalog = data.models || [];
+                    this.populateModelSelect();
+                } catch (error) {
+                    console.error('Failed to load models:', error);
+                }
+            }
+
+            populateModelSelect() {
+                const select = document.getElementById('modelSelect');
+                if (!select) return;
+
+                // Clear existing options (except auto-select)
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+
+                // Add models
+                this.catalog.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.name;
+                    option.textContent = `${this.getModelEmoji(model)} ${model.name}`;
+                    select.appendChild(option);
+                });
+
+                // Model selection change handler
+                select.addEventListener('change', () => {
+                    this.updateModelInfo(select.value);
+                });
+            }
+
+            getModelEmoji(model) {
+                if (model.tags?.includes('sdxl')) return '🔥';
+                if (model.tags?.includes('realistic')) return '📸';
+                if (model.tags?.includes('anime')) return '🎌';
+                if (model.tags?.includes('artistic')) return '🎨';
+                return '🤖';
+            }
+
+            updateModelInfo(modelName) {
+                const modelInfo = document.getElementById('modelInfo');
+                if (!modelInfo) return;
+
+                if (modelName === 'auto') {
+                    modelInfo.textContent = 'AI will automatically choose the best model';
+                    return;
+                }
+
+                const model = this.catalog.find(m => m.name === modelName);
+                if (model) {
+                    const tags = model.tags?.join(', ') || 'General purpose';
+                    modelInfo.textContent = `Specialized for: ${tags}`;
+                }
+            }
+
+            handleFiles(files) {
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        this.uploadedFiles.push(file);
+                        this.displayFilePreview(file);
+                    }
+                });
+
+                // Show auto mask button for inpainting
+                if (this.currentMode === 'inpaint' && this.uploadedFiles.length > 0) {
+                    document.getElementById('autoMaskBtn').style.display = 'inline-block';
+                }
+            }
+
+            displayFilePreview(file) {
+                const preview = document.getElementById('filePreview');
+                if (!preview) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'preview-item';
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" alt="${file.name}" class="preview-image">
+                        <div class="preview-overlay">
+                            <div class="preview-actions">
+                                <button class="preview-btn" onclick="createStudio.removeFile('${file.name}')" title="Remove">🗑️</button>
+                                <button class="preview-btn" onclick="createStudio.useAsReference('${file.name}')" title="Use as Reference">📎</button>
+                            </div>
+                        </div>
+                    `;
+                    preview.appendChild(previewItem);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            removeFile(fileName) {
+                this.uploadedFiles = this.uploadedFiles.filter(f => f.name !== fileName);
+                this.refreshFilePreview();
+            }
+
+            refreshFilePreview() {
+                const preview = document.getElementById('filePreview');
+                if (preview) {
+                    preview.innerHTML = '';
+                    this.uploadedFiles.forEach(file => {
+                        this.displayFilePreview(file);
+                    });
+                }
+            }
+
+            updatePromptSuggestions() {
+                const currentPrompt = document.getElementById('mainPrompt')?.value?.toLowerCase() || '';
+                const suggestions = document.getElementById('promptSuggestions');
+                if (!suggestions) return;
+
+                const promptSuggestions = this.<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AI Create Studio - Generate unlimited AI art without restrictions">
+    <title>Create Studio – AndioMediaStudio</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22grad%22 x1=%220%%22 y1=%220%%22 x2=%22100%%22 y2=%22100%%22><stop offset=%220%%22 style=%22stop-color:%236aa3ff%22/><stop offset=%22100%%22 style=%22stop-color:%23b884ff%22/></linearGradient></defs><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22url(%23grad)%22/></svg>">
+    <link rel="stylesheet" href="assets/styles.css">
+    
+    <style>
+        .create-container {
+            background: linear-gradient(135deg, rgba(106, 163, 255, 0.1), rgba(184, 132, 255, 0.05));
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid rgba(106, 163, 255, 0.2);
+        }
+        
+        .mode-selector {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 6px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-primary);
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .mode-btn.active {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 16px rgba(106, 163, 255, 0.4);
+        }
+        
+        .mode-btn:hover:not(.active) {
+            background: rgba(106, 163, 255, 0.1);
+            color: var(--accent-primary);
+        }
+        
+        .prompt-section {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-primary);
+            border-radius: 20px;
+            padding: 24px;
+            margin-
