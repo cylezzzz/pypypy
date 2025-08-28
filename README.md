@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Andio Media Studio – Full Local (Phase 2 ready)
 
 Lokal, GPU-beschleunigt, mit echten Pipelines:
@@ -47,3 +48,6 @@ Die Hooks sind vorbereitet, aber du musst dein lokales Repo/Checkpoint einbinden
 ## Hinweise
 - Es gibt **keine Platzhalterbilder** – Pipelines erzeugen echte Ergebnisse, sofern kompatible Modelle vorhanden sind.
 - Für Inpainting brauchst du eine **Maske** (schwarz/weiß). Du kannst sie extern erzeugen oder in Zukunft via SAM2 integrieren.
+=======
+# pypypy
+>>>>>>> 7e6a8f448d7114560b98f00b22f9ef6ac21d7f0d
