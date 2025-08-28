@@ -1,8 +1,213 @@
+# AndioMediaStudio Quality Presets
+# Optimized settings for different quality/speed tradeoffs
+
 image:
-  FAST:     { steps: 15, guidance: 3.5, width: 768, height: 1024, dtype: "auto" }
-  BALANCED: { steps: 28, guidance: 4.5, width: 896, height: 1152, dtype: "auto" }
-  ULTRA:    { steps: 40, guidance: 6.0, width: 1024, height: 1344, dtype: "auto" }
+  # Fast generation - good for previews and testing
+  FAST:
+    steps: 15
+    guidance: 3.5
+    width: 768
+    height: 1024
+    dtype: "auto"
+    scheduler: "DPM++2M"
+    enable_karras: true
+    
+  # Balanced quality/speed - recommended default  
+  BALANCED:
+    steps: 28
+    guidance: 6.0
+    width: 896
+    height: 1152
+    dtype: "auto"
+    scheduler: "DPM++2M"
+    enable_karras: true
+    
+  # Ultra quality - maximum detail
+  ULTRA:
+    steps: 40
+    guidance: 7.5
+    width: 1024
+    height: 1344
+    dtype: "auto"
+    scheduler: "DPM++2M"
+    enable_karras: true
+    
+  # Custom SDXL settings
+  SDXL_FAST:
+    steps: 20
+    guidance: 5.0
+    width: 1024
+    height: 1024
+    dtype: "float16"
+    scheduler: "DPM++2M"
+    
+  SDXL_BALANCED:
+    steps: 30
+    guidance: 7.0
+    width: 1024
+    height: 1024
+    dtype: "float16"
+    scheduler: "DPM++2M"
+    
+  SDXL_ULTRA:
+    steps: 50
+    guidance: 9.0
+    width: 1280
+    height: 1280
+    dtype: "float16"
+    scheduler: "DPM++2M"
+
 video:
-  FAST:     { seconds: 4, fps: 12, interpolate: false }
-  BALANCED: { seconds: 6, fps: 16, interpolate: true }
-  ULTRA:    { seconds: 8, fps: 24, interpolate: true }
+  # Fast video generation
+  FAST:
+    duration: 4      # seconds
+    fps: 12
+    width: 768
+    height: 432
+    steps: 15
+    guidance: 7.5
+    motion_strength: 0.6
+    interpolate: false
+    
+  # Balanced quality  
+  BALANCED:
+    duration: 6
+    fps: 16
+    width: 1024
+    height: 576
+    steps: 25
+    guidance: 7.5
+    motion_strength: 0.8
+    interpolate: true
+    
+  # Ultra quality
+  ULTRA:
+    duration: 8
+    fps: 24
+    width: 1024
+    height: 576
+    steps: 35
+    guidance: 9.0
+    motion_strength: 1.0
+    interpolate: true
+    upscale: true
+    
+  # Cinematic preset
+  CINEMATIC:
+    duration: 10
+    fps: 24
+    width: 1280
+    height: 720
+    steps: 30
+    guidance: 8.0
+    motion_strength: 0.7
+    interpolate: true
+    aspect_ratio: "16:9"
+    
+  # Portrait/Mobile optimized
+  PORTRAIT:
+    duration: 6
+    fps: 16
+    width: 576
+    height: 1024
+    steps: 25
+    guidance: 7.5
+    motion_strength: 0.8
+    aspect_ratio: "9:16"
+
+# Advanced sampling parameters
+samplers:
+  DPM_2M:
+    name: "DPMSolverMultistepScheduler"
+    config:
+      use_karras_sigmas: true
+      algorithm_type: "dpmsolver++"
+      
+  EULER_A:
+    name: "EulerAncestralDiscreteScheduler"
+    config:
+      beta_start: 0.00085
+      beta_end: 0.012
+      
+  DDIM:
+    name: "DDIMScheduler"
+    config:
+      beta_start: 0.00085
+      beta_end: 0.012
+      clip_sample: false
+      
+  LMS:
+    name: "LMSDiscreteScheduler"
+    config:
+      beta_start: 0.00085
+      beta_end: 0.012
+
+# Aspect ratio presets
+aspect_ratios:
+  square: [1024, 1024]
+  portrait: [896, 1152]  
+  landscape: [1152, 896]
+  widescreen: [1344, 768]
+  mobile: [768, 1344]
+  ultrawide: [1536, 640]
+  cinematic: [1280, 720]
+  
+# Common negative prompts
+negative_prompts:
+  default: "low quality, blurry, artifact, duplicate, morbid, mutilated, poorly drawn face, deformed, ugly, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
+  
+  photorealistic: "cartoon, anime, painting, drawing, art, sketch, (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, normal quality, ((monochrome)), ((grayscale)), watermark, text"
+  
+  artistic: "photorealistic, photography, realistic, (worst quality:2), (low quality:2), lowres, bad anatomy, text, watermark, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry"
+  
+  anime: "realistic, photorealistic, (worst quality:2), (low quality:2), bad anatomy, text, watermark, error, missing fingers, extra digit, fewer digits, jpeg artifacts, signature, username, blurry, artist name"
+
+# Style prompts for quick enhancement
+style_enhancers:
+  photorealistic:
+    positive: "photorealistic, ultra detailed, 8K resolution, professional photography, sharp focus, natural lighting"
+    negative: "cartoon, anime, painting, drawing, art, sketch, low quality"
+    
+  artistic:
+    positive: "artistic masterpiece, oil painting, brush strokes, canvas texture, museum quality, fine art"
+    negative: "photorealistic, photography, low quality, blurry"
+    
+  cinematic:
+    positive: "cinematic lighting, movie scene, dramatic composition, film grain, color grading, professional cinematography"
+    negative: "amateur, snapshot, low quality, overexposed"
+    
+  anime:
+    positive: "anime style, manga, cel shading, vibrant colors, Japanese animation, detailed illustration"
+    negative: "realistic, photographic, western cartoon, low quality"
+    
+  fantasy:
+    positive: "fantasy art, magical atmosphere, ethereal lighting, mystical, enchanted, otherworldly"
+    negative: "realistic, mundane, ordinary, low quality"
+    
+  scifi:
+    positive: "sci-fi, futuristic, cyberpunk, neon lights, high-tech, space age, digital art"
+    negative: "medieval, historical, primitive, low quality"
+
+# Prompt templates
+prompt_templates:
+  portrait:
+    template: "portrait of {subject}, {style}, {lighting}, {details}"
+    defaults:
+      style: "professional photography"
+      lighting: "natural lighting"
+      details: "sharp focus, detailed"
+      
+  landscape:
+    template: "{location}, {time_of_day}, {weather}, {style}, {details}"
+    defaults:
+      time_of_day: "golden hour"
+      weather: "clear sky"
+      style: "landscape photography"
+      details: "ultra wide angle, detailed"
+      
+  character:
+    template: "{character_description}, {art_style}, {background}, {details}"
+    defaults:
+      art_style: "digital art"
+      background: "detailed background"
+      details: "high quality, detailed"

@@ -1,25 +1,937 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Galerie – Andio Media Studio</title><link rel="stylesheet" href="assets/styles.css"/></head><body>
-<header class="header">
-  <div class="brand"><span class="dot" style="width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#6aa3ff,#b884ff)"></span> <span>Galerie – Andio Media Studio</span></div>
-  <nav>
-    <a href="index.html" >Dashboard</a>
-    <a href="create.html" >Create</a>
-    <a href="video.html" >Video Lab</a>
-    <a href="talking.html" >Talking</a>
-    <a href="wardrobe.html" >Wardrobe</a>
-    <a href="catalog.html" >Store</a>
-    <a href="gallery.html" class="active">Galerie</a>
-  </nav>
-</header>
-<div class="wrap">
-<div class="card">
-  <div class="flex"><h2>Ergebnisse</h2><span class="right"><select id="kind" class="input"><option value="all">Alle</option><option value="images">Bilder</option><option value="videos">Videos</option></select></span></div>
-  <div id="progressHost"></div>
-  <div id="grid" class="grid" style="grid-template-columns: repeat(8,1fr); gap:10px"></div>
-</div>
-<script>
-const PM = new ProgressManager(document); PM.mount();
-async function load(){ const kind=document.getElementById('kind').value; const items=await API.outputs(kind); const grid=document.getElementById('grid'); grid.innerHTML=''; items.forEach(it=>{ const a=document.createElement('a'); a.href='player.html?src='+encodeURIComponent(it.url); const isVideo=it.url.toLowerCase().match(/\.(mp4|webm|mov|mkv)$/); a.innerHTML=isVideo?`<div class="thumb" style="display:flex;align-items:center;justify-content:center;height:160px"><span class="muted">Video</span></div>`:`<img class="thumb" loading="lazy" src="${it.url}" />`; grid.appendChild(a); }); }
-document.getElementById('kind').addEventListener('change', load); load();
-</script>
-</div><script src="assets/app.js"></script><div class="toast"></div></body></html>
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AI Generated Media Gallery - View and manage your creations">
+    <title>Gallery – AndioMediaStudio</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22grad%22 x1=%220%%22 y1=%220%%22 x2=%22100%%22 y2=%22100%%22><stop offset=%220%%22 style=%22stop-color:%236aa3ff%22/><stop offset=%22100%%22 style=%22stop-color:%23b884ff%22/></linearGradient></defs><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22url(%23grad)%22/></svg>">
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="brand">
+            <span class="dot"></span>
+            <span>Gallery – AndioMediaStudio</span>
+            <div class="badge nsfw">🎨 Creative Gallery</div>
+        </div>
+        <nav>
+            <a href="index.html">📊 Dashboard</a>
+            <a href="create.html">🎨 Create</a>
+            <a href="video.html">🎬 Video Lab</a>
+            <a href="talking.html">💬 Talking</a>
+            <a href="wardrobe.html">👔 Wardrobe</a>
+            <a href="catalog.html">🏪 Store</a>
+            <a href="gallery.html" class="active">🖼️ Gallery</a>
+        </nav>
+    </header>
+
+    <main class="wrap">
+        <!-- Enhanced Gallery Controls -->
+        <div class="card">
+            <div class="flex">
+                <h2>🖼️ Your Creative Gallery</h2>
+                <div class="right">
+                    <div class="gallery-stats" id="galleryStats" style="font-size: 12px; color: var(--text-muted);">
+                        Loading...
+                    </div>
+                </div>
+            </div>
+            
+            <div id="progressHost"></div>
+
+            <!-- Advanced Filter Controls -->
+            <div class="gallery-controls" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 16px 0;">
+                
+                <!-- Content Type Filter -->
+                <div class="filter-group">
+                    <label>📁 Content Type</label>
+                    <select id="contentFilter" class="input">
+                        <option value="all">🌟 All Media</option>
+                        <option value="images">🖼️ Images Only</option>
+                        <option value="videos">🎬 Videos Only</option>
+                    </select>
+                </div>
+
+                <!-- Sort Options -->
+                <div class="filter-group">
+                    <label>📊 Sort By</label>
+                    <select id="sortFilter" class="input">
+                        <option value="newest">🆕 Newest First</option>
+                        <option value="oldest">📅 Oldest First</option>
+                        <option value="name">📝 Name A-Z</option>
+                        <option value="size">📏 File Size</option>
+                    </select>
+                </div>
+
+                <!-- View Mode -->
+                <div class="filter-group">
+                    <label>👁️ View Mode</label>
+                    <select id="viewMode" class="input">
+                        <option value="grid">🔲 Grid View</option>
+                        <option value="list">📋 List View</option>
+                        <option value="masonry">🧱 Masonry</option>
+                    </select>
+                </div>
+
+                <!-- Grid Size -->
+                <div class="filter-group">
+                    <label>📐 Grid Size</label>
+                    <input type="range" id="gridSize" min="150" max="400" value="200" class="input" style="margin-top: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
+                        <span>Small</span>
+                        <span>Large</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Search and Actions -->
+            <div class="toolbar">
+                <div class="search" style="flex: 1; max-width: 300px;">
+                    <input type="text" id="searchInput" class="input" placeholder="Search by filename, prompt, or metadata...">
+                </div>
+                <button class="btn secondary" id="refreshBtn">🔄 Refresh</button>
+                <button class="btn secondary" id="selectAllBtn">☑️ Select All</button>
+                <button class="btn secondary" id="exportBtn">📦 Export Selected</button>
+                <button class="btn danger" id="deleteBtn" style="display: none;">🗑️ Delete Selected</button>
+            </div>
+
+            <!-- Gallery Content -->
+            <div class="gallery-container">
+                <div id="galleryGrid" class="gallery-grid loading">
+                    <div class="loading-spinner" style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                        <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--border-primary); border-top: 3px solid var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <div style="margin-top: 16px; color: var(--text-muted);">Loading your creations...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination" style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 24px;">
+                <button class="btn secondary" id="prevPage">⬅️ Previous</button>
+                <span id="pageInfo" class="badge">Page 1 of 1</span>
+                <button class="btn secondary" id="nextPage">Next ➡️</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Enhanced Image/Video Viewer Modal -->
+    <div class="modal" id="mediaModal" style="display: none;">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Media Viewer</h3>
+                <div class="modal-actions">
+                    <button class="btn secondary" id="prevMediaBtn">⬅️</button>
+                    <button class="btn secondary" id="nextMediaBtn">➡️</button>
+                    <button class="btn secondary" onclick="closeModal()">✖️</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="media-viewer" id="mediaViewer">
+                    <!-- Media content will be loaded here -->
+                </div>
+                <div class="media-info" id="mediaInfo">
+                    <!-- Media information will be shown here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" id="downloadBtn">💾 Download</button>
+                <button class="btn secondary" id="shareBtn">🔗 Copy Link</button>
+                <button class="btn secondary" id="editBtn">✏️ Edit</button>
+                <button class="btn danger" id="deleteModalBtn">🗑️ Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+        // Enhanced Gallery Management
+        class AdvancedGallery {
+            constructor() {
+                this.progressManager = new ProgressManager(document);
+                this.progressManager.mount();
+                this.galleryManager = new GalleryManager(document.getElementById('galleryGrid'));
+                
+                this.currentPage = 1;
+                this.itemsPerPage = 50;
+                this.totalItems = 0;
+                this.selectedItems = new Set();
+                this.currentViewIndex = 0;
+                this.filteredItems = [];
+                
+                this.setupEventListeners();
+                this.loadGallery();
+            }
+
+            setupEventListeners() {
+                // Filter controls
+                document.getElementById('contentFilter')?.addEventListener('change', () => {
+                    this.applyFilters();
+                });
+
+                document.getElementById('sortFilter')?.addEventListener('change', () => {
+                    this.applyFilters();
+                });
+
+                document.getElementById('viewMode')?.addEventListener('change', (e) => {
+                    this.changeViewMode(e.target.value);
+                });
+
+                document.getElementById('gridSize')?.addEventListener('input', (e) => {
+                    this.updateGridSize(e.target.value);
+                });
+
+                // Search
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    const debouncedSearch = Utils.debounce(() => {
+                        this.applyFilters();
+                    }, 500);
+                    searchInput.addEventListener('input', debouncedSearch);
+                }
+
+                // Action buttons
+                document.getElementById('refreshBtn')?.addEventListener('click', () => {
+                    this.loadGallery();
+                });
+
+                document.getElementById('selectAllBtn')?.addEventListener('click', () => {
+                    this.toggleSelectAll();
+                });
+
+                document.getElementById('exportBtn')?.addEventListener('click', () => {
+                    this.exportSelected();
+                });
+
+                document.getElementById('deleteBtn')?.addEventListener('click', () => {
+                    this.deleteSelected();
+                });
+
+                // Pagination
+                document.getElementById('prevPage')?.addEventListener('click', () => {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        this.renderCurrentPage();
+                    }
+                });
+
+                document.getElementById('nextPage')?.addEventListener('click', () => {
+                    const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+                    if (this.currentPage < totalPages) {
+                        this.currentPage++;
+                        this.renderCurrentPage();
+                    }
+                });
+
+                // Modal controls
+                document.getElementById('prevMediaBtn')?.addEventListener('click', () => {
+                    this.showPreviousMedia();
+                });
+
+                document.getElementById('nextMediaBtn')?.addEventListener('click', () => {
+                    this.showNextMedia();
+                });
+
+                document.getElementById('downloadBtn')?.addEventListener('click', () => {
+                    this.downloadCurrentMedia();
+                });
+
+                document.getElementById('shareBtn')?.addEventListener('click', () => {
+                    this.shareCurrentMedia();
+                });
+
+                document.getElementById('deleteModalBtn')?.addEventListener('click', () => {
+                    this.deleteCurrentMedia();
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (document.getElementById('mediaModal').style.display !== 'none') {
+                        switch(e.key) {
+                            case 'ArrowLeft':
+                                e.preventDefault();
+                                this.showPreviousMedia();
+                                break;
+                            case 'ArrowRight':
+                                e.preventDefault();
+                                this.showNextMedia();
+                                break;
+                            case 'Escape':
+                                e.preventDefault();
+                                closeModal();
+                                break;
+                            case 'Delete':
+                                e.preventDefault();
+                                this.deleteCurrentMedia();
+                                break;
+                        }
+                    }
+                });
+
+                // Handle grid item selection
+                document.addEventListener('click', (e) => {
+                    if (e.target.matches('.gallery-item') || e.target.closest('.gallery-item')) {
+                        const item = e.target.closest('.gallery-item');
+                        
+                        if (e.ctrlKey || e.metaKey) {
+                            // Multi-select
+                            this.toggleItemSelection(item);
+                        } else if (e.shiftKey && this.selectedItems.size > 0) {
+                            // Range select
+                            this.selectRange(item);
+                        } else {
+                            // Single select or open modal
+                            if (e.detail === 2) { // Double click
+                                this.openMediaModal(item);
+                            } else {
+                                this.selectSingle(item);
+                            }
+                        }
+                    }
+                });
+            }
+
+            async loadGallery() {
+                try {
+                    this.filteredItems = await this.galleryManager.loadOutputs('all', 1000);
+                    this.totalItems = this.filteredItems.length;
+                    
+                    this.updateGalleryStats();
+                    this.applyFilters();
+                    
+                } catch (error) {
+                    console.error('Failed to load gallery:', error);
+                    toast.error('Failed to load gallery');
+                }
+            }
+
+            applyFilters() {
+                const contentType = document.getElementById('contentFilter').value;
+                const sortBy = document.getElementById('sortFilter').value;
+                const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+                // Filter by content type
+                let filtered = this.galleryManager.items;
+                
+                if (contentType !== 'all') {
+                    filtered = filtered.filter(item => item.type === contentType);
+                }
+
+                // Filter by search query
+                if (searchQuery) {
+                    filtered = filtered.filter(item => 
+                        item.name.toLowerCase().includes(searchQuery) ||
+                        (item.metadata?.prompt || '').toLowerCase().includes(searchQuery) ||
+                        (item.metadata?.model || '').toLowerCase().includes(searchQuery)
+                    );
+                }
+
+                // Apply sorting
+                this.galleryManager.filteredItems = [...filtered];
+                this.galleryManager.sort(sortBy);
+                
+                this.filteredItems = this.galleryManager.filteredItems;
+                this.totalItems = this.filteredItems.length;
+                this.currentPage = 1;
+                
+                this.updateGalleryStats();
+                this.renderCurrentPage();
+            }
+
+            renderCurrentPage() {
+                const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+                const endIndex = Math.min(startIndex + this.itemsPerPage, this.totalItems);
+                const pageItems = this.filteredItems.slice(startIndex, endIndex);
+
+                this.renderItems(pageItems);
+                this.updatePagination();
+            }
+
+            renderItems(items) {
+                const container = document.getElementById('galleryGrid');
+                if (!container) return;
+
+                if (items.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-muted);">
+                            <div style="font-size: 64px; margin-bottom: 16px;">🎨</div>
+                            <h3>No media found</h3>
+                            <p>Try adjusting your filters or create some AI art!</p>
+                            <a href="create.html" class="btn">Create Something Amazing</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const gridHTML = items.map((item, index) => {
+                    const isVideo = item.type === 'video';
+                    const date = new Date(item.mtime).toLocaleDateString();
+                    const time = new Date(item.mtime).toLocaleTimeString();
+                    const isSelected = this.selectedItems.has(item.url);
+                    
+                    return `
+                        <div class="gallery-item ${isSelected ? 'selected' : ''}" 
+                             data-url="${item.url}" 
+                             data-type="${item.type}"
+                             data-index="${index}"
+                             style="position: relative;">
+                            
+                            <!-- Selection checkbox -->
+                            <div class="item-selector" style="position: absolute; top: 8px; left: 8px; z-index: 10;">
+                                <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                                       style="transform: scale(1.2);" 
+                                       onclick="event.stopPropagation();">
+                            </div>
+
+                            <!-- Type indicator -->
+                            <div class="type-indicator" style="position: absolute; top: 8px; right: 8px; z-index: 10;">
+                                <div class="badge ${isVideo ? 'warning' : 'success'}" style="font-size: 10px; padding: 2px 6px;">
+                                    ${isVideo ? '🎬' : '🖼️'}
+                                </div>
+                            </div>
+
+                            <!-- Media content -->
+                            ${isVideo ? `
+                                <video preload="metadata" muted style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                                    <source src="${item.url}" type="video/mp4">
+                                </video>
+                                <div class="video-overlay" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border-radius: 12px; opacity: 0; transition: opacity 0.3s;">
+                                    <div style="font-size: 32px; color: white;">▶️</div>
+                                </div>
+                            ` : `
+                                <img src="${item.url}" 
+                                     alt="${item.name}" 
+                                     loading="lazy" 
+                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                            `}
+
+                            <!-- Item overlay with info -->
+                            <div class="item-overlay" style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%); display: flex; align-items: flex-end; padding: 12px; border-radius: 12px; opacity: 0; transition: opacity 0.3s;">
+                                <div class="item-info" style="color: white; width: 100%;">
+                                    <div class="item-name" style="font-weight: 600; font-size: 13px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        ${item.name}
+                                    </div>
+                                    <div class="item-meta" style="font-size: 11px; opacity: 0.9; display: flex; justify-content: space-between;">
+                                        <span>${this.formatFileSize(item.size)}</span>
+                                        <span>${date}</span>
+                                    </div>
+                                    ${item.metadata?.model ? `
+                                        <div style="font-size: 10px; opacity: 0.7; margin-top: 2px;">
+                                            Model: ${item.metadata.model}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Quick actions -->
+                            <div class="quick-actions" style="position: absolute; bottom: 8px; right: 8px; display: none; gap: 4px;">
+                                <button class="btn secondary" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); Utils.downloadFile('${item.url}', '${item.name}')">💾</button>
+                                <button class="btn secondary" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); Utils.copyToClipboard('${window.location.origin}/${item.url}')">🔗</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `<div class="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(${document.getElementById('gridSize').value}px, 1fr)); gap: 16px;">${gridHTML}</div>`;
+
+                // Add hover effects
+                container.querySelectorAll('.gallery-item').forEach(item => {
+                    const overlay = item.querySelector('.item-overlay');
+                    const videoOverlay = item.querySelector('.video-overlay');
+                    const quickActions = item.querySelector('.quick-actions');
+
+                    item.addEventListener('mouseenter', () => {
+                        if (overlay) overlay.style.opacity = '1';
+                        if (videoOverlay) videoOverlay.style.opacity = '1';
+                        if (quickActions) quickActions.style.display = 'flex';
+                    });
+
+                    item.addEventListener('mouseleave', () => {
+                        if (overlay) overlay.style.opacity = '0';
+                        if (videoOverlay) videoOverlay.style.opacity = '0';
+                        if (quickActions) quickActions.style.display = 'none';
+                    });
+
+                    // Handle selection checkbox
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        checkbox.addEventListener('change', (e) => {
+                            e.stopPropagation();
+                            this.toggleItemSelection(item);
+                        });
+                    }
+                });
+            }
+
+            updatePagination() {
+                const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+                
+                document.getElementById('pageInfo').textContent = `Page ${this.currentPage} of ${totalPages}`;
+                document.getElementById('prevPage').disabled = this.currentPage <= 1;
+                document.getElementById('nextPage').disabled = this.currentPage >= totalPages;
+            }
+
+            updateGalleryStats() {
+                const stats = document.getElementById('galleryStats');
+                if (!stats) return;
+
+                const totalSize = this.filteredItems.reduce((sum, item) => sum + (item.size || 0), 0);
+                const imageCount = this.filteredItems.filter(item => item.type === 'image').length;
+                const videoCount = this.filteredItems.filter(item => item.type === 'video').length;
+
+                stats.innerHTML = `
+                    <div style="display: flex; gap: 16px; font-size: 12px;">
+                        <span>📊 ${this.filteredItems.length} items</span>
+                        <span>🖼️ ${imageCount} images</span>
+                        <span>🎬 ${videoCount} videos</span>
+                        <span>💾 ${this.formatFileSize(totalSize)} total</span>
+                        ${this.selectedItems.size > 0 ? `<span style="color: var(--accent-primary);">☑️ ${this.selectedItems.size} selected</span>` : ''}
+                    </div>
+                `;
+            }
+
+            changeViewMode(mode) {
+                const container = document.getElementById('galleryGrid');
+                if (!container) return;
+
+                // Update container class
+                container.className = `gallery-${mode}`;
+                
+                // Apply specific styles for each mode
+                switch(mode) {
+                    case 'list':
+                        container.style.display = 'flex';
+                        container.style.flexDirection = 'column';
+                        break;
+                    case 'masonry':
+                        container.style.display = 'grid';
+                        container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+                        container.style.gridAutoRows = 'auto';
+                        break;
+                    default: // grid
+                        container.style.display = 'grid';
+                        container.style.gridTemplateColumns = `repeat(auto-fill, minmax(${document.getElementById('gridSize').value}px, 1fr))`;
+                        break;
+                }
+            }
+
+            updateGridSize(size) {
+                const container = document.querySelector('.gallery-grid');
+                if (container && document.getElementById('viewMode').value === 'grid') {
+                    container.style.gridTemplateColumns = `repeat(auto-fill, minmax(${size}px, 1fr))`;
+                }
+            }
+
+            toggleItemSelection(item) {
+                const url = item.dataset.url;
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                
+                if (this.selectedItems.has(url)) {
+                    this.selectedItems.delete(url);
+                    item.classList.remove('selected');
+                    if (checkbox) checkbox.checked = false;
+                } else {
+                    this.selectedItems.add(url);
+                    item.classList.add('selected');
+                    if (checkbox) checkbox.checked = true;
+                }
+
+                this.updateSelectionUI();
+            }
+
+            selectSingle(item) {
+                // Clear previous selections
+                this.selectedItems.clear();
+                document.querySelectorAll('.gallery-item').forEach(el => {
+                    el.classList.remove('selected');
+                    const checkbox = el.querySelector('input[type="checkbox"]');
+                    if (checkbox) checkbox.checked = false;
+                });
+
+                // Select current item
+                this.toggleItemSelection(item);
+            }
+
+            selectRange(endItem) {
+                // Implementation for shift+click range selection
+                const items = Array.from(document.querySelectorAll('.gallery-item'));
+                const endIndex = items.indexOf(endItem);
+                
+                // Find first selected item
+                let startIndex = -1;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].classList.contains('selected')) {
+                        startIndex = i;
+                        break;
+                    }
+                }
+
+                if (startIndex === -1) {
+                    this.selectSingle(endItem);
+                    return;
+                }
+
+                // Select range
+                const start = Math.min(startIndex, endIndex);
+                const end = Math.max(startIndex, endIndex);
+                
+                for (let i = start; i <= end; i++) {
+                    const url = items[i].dataset.url;
+                    this.selectedItems.add(url);
+                    items[i].classList.add('selected');
+                    const checkbox = items[i].querySelector('input[type="checkbox"]');
+                    if (checkbox) checkbox.checked = true;
+                }
+
+                this.updateSelectionUI();
+            }
+
+            toggleSelectAll() {
+                const allSelected = this.selectedItems.size === this.filteredItems.length;
+                
+                if (allSelected) {
+                    // Deselect all
+                    this.selectedItems.clear();
+                    document.querySelectorAll('.gallery-item').forEach(item => {
+                        item.classList.remove('selected');
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        if (checkbox) checkbox.checked = false;
+                    });
+                    document.getElementById('selectAllBtn').textContent = '☑️ Select All';
+                } else {
+                    // Select all visible items
+                    document.querySelectorAll('.gallery-item').forEach(item => {
+                        const url = item.dataset.url;
+                        this.selectedItems.add(url);
+                        item.classList.add('selected');
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        if (checkbox) checkbox.checked = true;
+                    });
+                    document.getElementById('selectAllBtn').textContent = '❌ Deselect All';
+                }
+
+                this.updateSelectionUI();
+            }
+
+            updateSelectionUI() {
+                const hasSelection = this.selectedItems.size > 0;
+                const deleteBtn = document.getElementById('deleteBtn');
+                const selectAllBtn = document.getElementById('selectAllBtn');
+                
+                deleteBtn.style.display = hasSelection ? 'inline-flex' : 'none';
+                selectAllBtn.textContent = this.selectedItems.size === this.filteredItems.length ? '❌ Deselect All' : '☑️ Select All';
+                
+                this.updateGalleryStats();
+            }
+
+            async exportSelected() {
+                if (this.selectedItems.size === 0) {
+                    toast.warning('Please select items to export');
+                    return;
+                }
+
+                const selectedUrls = Array.from(this.selectedItems);
+                
+                if (selectedUrls.length === 1) {
+                    // Single file download
+                    const item = this.filteredItems.find(i => i.url === selectedUrls[0]);
+                    if (item) {
+                        Utils.downloadFile(item.url, item.name);
+                    }
+                } else {
+                    // Multiple file download (create ZIP or download individually)
+                    const confirmed = confirm(`Download ${selectedUrls.length} files individually?`);
+                    if (confirmed) {
+                        selectedUrls.forEach((url, index) => {
+                            const item = this.filteredItems.find(i => i.url === url);
+                            if (item) {
+                                // Add small delay to prevent browser blocking
+                                setTimeout(() => {
+                                    Utils.downloadFile(item.url, item.name);
+                                }, index * 100);
+                            }
+                        });
+                        toast.success(`📦 Downloading ${selectedUrls.length} files`);
+                    }
+                }
+            }
+
+            deleteSelected() {
+                if (this.selectedItems.size === 0) {
+                    toast.warning('Please select items to delete');
+                    return;
+                }
+
+                const confirmed = confirm(`Delete ${this.selectedItems.size} selected items? This cannot be undone.`);
+                if (!confirmed) return;
+
+                // In a real implementation, you would call an API to delete the files
+                toast.warning('🚧 Delete functionality would be implemented on the server side');
+                
+                // For demo purposes, just clear selection
+                this.selectedItems.clear();
+                this.updateSelectionUI();
+            }
+
+            openMediaModal(item) {
+                const modal = document.getElementById('mediaModal');
+                const viewer = document.getElementById('mediaViewer');
+                const info = document.getElementById('mediaInfo');
+                const title = document.getElementById('modalTitle');
+                
+                // Find item data
+                const itemData = this.filteredItems.find(i => i.url === item.dataset.url);
+                if (!itemData) return;
+
+                // Set current view index
+                this.currentViewIndex = this.filteredItems.indexOf(itemData);
+                
+                // Update modal content
+                title.textContent = itemData.name;
+                
+                // Display media
+                if (itemData.type === 'video') {
+                    viewer.innerHTML = `
+                        <video controls style="max-width: 100%; max-height: 80vh;">
+                            <source src="${itemData.url}" type="video/mp4">
+                        </video>
+                    `;
+                } else {
+                    viewer.innerHTML = `
+                        <img src="${itemData.url}" alt="${itemData.name}" style="max-width: 100%; max-height: 80vh; object-fit: contain;">
+                    `;
+                }
+
+                // Display info
+                const date = new Date(itemData.mtime);
+                info.innerHTML = `
+                    <div class="media-metadata" style="background: var(--glass-bg); padding: 16px; border-radius: 12px; margin-top: 16px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div><strong>Filename:</strong> ${itemData.name}</div>
+                            <div><strong>Size:</strong> ${this.formatFileSize(itemData.size)}</div>
+                            <div><strong>Type:</strong> ${itemData.type}</div>
+                            <div><strong>Created:</strong> ${date.toLocaleString()}</div>
+                            ${itemData.width && itemData.height ? `<div><strong>Dimensions:</strong> ${itemData.width}×${itemData.height}</div>` : ''}
+                            ${itemData.metadata?.model ? `<div><strong>Model:</strong> ${itemData.metadata.model}</div>` : ''}
+                            ${itemData.metadata?.seed ? `<div><strong>Seed:</strong> ${itemData.metadata.seed}</div>` : ''}
+                        </div>
+                        ${itemData.metadata?.prompt ? `
+                            <div style="margin-top: 12px;">
+                                <strong>Prompt:</strong>
+                                <div style="background: var(--bg-secondary); padding: 8px; border-radius: 6px; margin-top: 4px; font-size: 13px;">
+                                    ${itemData.metadata.prompt}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                modal.style.display = 'flex';
+            }
+
+            showPreviousMedia() {
+                if (this.currentViewIndex > 0) {
+                    this.currentViewIndex--;
+                    const item = this.filteredItems[this.currentViewIndex];
+                    const mockItem = { dataset: { url: item.url } };
+                    this.openMediaModal(mockItem);
+                }
+            }
+
+            showNextMedia() {
+                if (this.currentViewIndex < this.filteredItems.length - 1) {
+                    this.currentViewIndex++;
+                    const item = this.filteredItems[this.currentViewIndex];
+                    const mockItem = { dataset: { url: item.url } };
+                    this.openMediaModal(mockItem);
+                }
+            }
+
+            downloadCurrentMedia() {
+                const currentItem = this.filteredItems[this.currentViewIndex];
+                if (currentItem) {
+                    Utils.downloadFile(currentItem.url, currentItem.name);
+                }
+            }
+
+            shareCurrentMedia() {
+                const currentItem = this.filteredItems[this.currentViewIndex];
+                if (currentItem) {
+                    const fullUrl = `${window.location.origin}/${currentItem.url}`;
+                    Utils.copyToClipboard(fullUrl);
+                }
+            }
+
+            deleteCurrentMedia() {
+                const currentItem = this.filteredItems[this.currentViewIndex];
+                if (!currentItem) return;
+
+                const confirmed = confirm(`Delete "${currentItem.name}"? This cannot be undone.`);
+                if (confirmed) {
+                    toast.warning('🚧 Delete functionality would be implemented on the server side');
+                    closeModal();
+                }
+            }
+
+            formatFileSize(bytes) {
+                return fileManager.formatFileSize(bytes);
+            }
+        }
+
+        // Modal control functions
+        function closeModal() {
+            document.getElementById('mediaModal').style.display = 'none';
+        }
+
+        // Initialize gallery
+        let gallery;
+        document.addEventListener('DOMContentLoaded', () => {
+            gallery = new AdvancedGallery();
+        });
+
+        // Add gallery-specific styles
+        const galleryStyles = `
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+
+                .gallery-item {
+                    position: relative;
+                    aspect-ratio: 1;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    border: 2px solid transparent;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                }
+
+                .gallery-item:hover {
+                    transform: translateY(-2px);
+                    box-shadow: var(--shadow-lg);
+                    border-color: var(--accent-primary);
+                }
+
+                .gallery-item.selected {
+                    border-color: var(--accent-primary);
+                    box-shadow: 0 0 0 2px rgba(106, 163, 255, 0.3);
+                }
+
+                .gallery-item img,
+                .gallery-item video {
+                    transition: transform 0.3s ease;
+                }
+
+                .gallery-item:hover img,
+                .gallery-item:hover video {
+                    transform: scale(1.05);
+                }
+
+                .modal {
+                    position: fixed;
+                    inset: 0;
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(0, 0, 0, 0.8);
+                    backdrop-filter: blur(10px);
+                }
+
+                .modal-backdrop {
+                    position: absolute;
+                    inset: 0;
+                    cursor: pointer;
+                }
+
+                .modal-content {
+                    position: relative;
+                    background: var(--bg-card);
+                    border: 1px solid var(--border-primary);
+                    border-radius: 20px;
+                    max-width: 90vw;
+                    max-height: 90vh;
+                    overflow: hidden;
+                    box-shadow: var(--shadow-lg);
+                }
+
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 16px 24px;
+                    border-bottom: 1px solid var(--border-primary);
+                    background: var(--glass-bg);
+                }
+
+                .modal-body {
+                    padding: 24px;
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }
+
+                .modal-footer {
+                    display: flex;
+                    gap: 12px;
+                    justify-content: flex-end;
+                    padding: 16px 24px;
+                    border-top: 1px solid var(--border-primary);
+                    background: var(--glass-bg);
+                }
+
+                .filter-group label {
+                    font-size: 12px;
+                    color: var(--text-muted);
+                    margin-bottom: 4px;
+                }
+
+                .gallery-list .gallery-item {
+                    aspect-ratio: auto;
+                    display: flex;
+                    align-items: center;
+                    padding: 12px;
+                    margin-bottom: 8px;
+                    background: var(--glass-bg);
+                }
+
+                .gallery-masonry {
+                    column-count: auto;
+                    column-width: 200px;
+                    column-gap: 16px;
+                }
+
+                .gallery-masonry .gallery-item {
+                    aspect-ratio: auto;
+                    break-inside: avoid;
+                    margin-bottom: 16px;
+                }
+
+                @media (max-width: 768px) {
+                    .gallery-controls {
+                        grid-template-columns: 1fr;
+                    }
+                    
+                    .modal-content {
+                        max-width: 95vw;
+                        max-height: 95vh;
+                    }
+                    
+                    .modal-body {
+                        padding: 16px;
+                    }
+                    
+                    .modal-footer {
+                        flex-direction: column;
+                    }
+                }
+            </style>
+        `;
+        
+        document.head.insertAdjacentHTML('beforeend', galleryStyles);
+    </script>
+</body>
+</html>

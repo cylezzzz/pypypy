@@ -1,25 +1,63 @@
+# Core Web Framework
 fastapi==0.111.0
-uvicorn==0.30.1
+uvicorn[standard]==0.30.1
 python-multipart==0.0.9
 pydantic==2.8.2
 starlette==0.37.2
+
+# Configuration & Utilities
 PyYAML==6.0.2
+python-dotenv==1.0.1
+click==8.1.7
+rich==13.7.1
+
+# Image Processing
 Pillow==10.4.0
 numpy==1.26.4
 opencv-python==4.9.0.80
-# ML
-torch>=2.2.0
-torchvision>=0.17.0
-torchaudio>=2.2.0
-diffusers>=0.27.2
+imageio[ffmpeg]>=2.34.0
+
+# Machine Learning Core
+torch>=2.3.0
+torchvision>=0.18.0
+torchaudio>=2.3.0
+diffusers>=0.28.0
 transformers>=4.42.0
 accelerate>=0.30.0
 safetensors>=0.4.3
-xformers>=0.0.26.post1 ; platform_system=="Windows"
-# Pose / segmentation (lightweight defaults)
+
+# GPU Acceleration (Windows/Linux)
+xformers>=0.0.26.post1 ; platform_system != "Darwin"
+
+# Computer Vision & Pose Detection
 mediapipe>=0.10.14
-# Optional / video
-imageio[ffmpeg]>=2.34.0
+controlnet-aux>=0.0.7
+
+# Video Processing
 moviepy>=1.0.3
-# Optional lip-sync (Wav2Lip) & audio
+ffmpeg-python>=0.2.0
+
+# Audio Processing (for lip-sync)
 librosa>=0.10.2.post1
+soundfile>=0.12.1
+
+# Deep Learning Extensions
+compel>=2.0.2
+invisible-watermark>=0.2.0
+
+# Model Management
+huggingface-hub>=0.23.0
+timm>=0.9.16
+
+# Optional: SAM (Segment Anything Model)
+# segment-anything-py>=1.0.0
+
+# Optional: Advanced Features
+# insightface>=0.7.3  # for face analysis
+# realesrgan>=0.3.0   # for upscaling
+# backgroundremover>=0.2.0  # for background removal
+
+# Development (optional)
+pytest>=7.4.0
+black>=23.0.0
+ruff>=0.1.0

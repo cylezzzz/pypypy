@@ -1,17 +1,302 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Wardrobe – Andio Media Studio</title><link rel="stylesheet" href="assets/styles.css"/></head><body>
-<header class="header">
-  <div class="brand"><span class="dot" style="width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#6aa3ff,#b884ff)"></span> <span>Wardrobe – Andio Media Studio</span></div>
-  <nav>
-    <a href="index.html" >Dashboard</a>
-    <a href="create.html" >Create</a>
-    <a href="video.html" >Video Lab</a>
-    <a href="talking.html" >Talking</a>
-    <a href="wardrobe.html" class="active">Wardrobe</a>
-    <a href="catalog.html" >Store</a>
-    <a href="gallery.html" >Galerie</a>
-  </nav>
-</header>
-<div class="wrap">
-<div id="progressHost"></div>
-<p class="hint">Seite in Arbeit – Kernfunktionen verfügbar. NSFW möglich.</p>
-</div><script src="assets/app.js"></script><div class="toast"></div></body></html>
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AI Wardrobe & Outfit Editor - Virtual Try-On, Clothing Swap, Fashion AI">
+    <title>Wardrobe – AndioMediaStudio</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22grad%22 x1=%220%%22 y1=%220%%22 x2=%22100%%22 y2=%22100%%22><stop offset=%220%%22 style=%22stop-color:%236aa3ff%22/><stop offset=%22100%%22 style=%22stop-color:%23b884ff%22/></linearGradient></defs><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22url(%23grad)%22/></svg>">
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="brand">
+            <span class="dot"></span>
+            <span>Wardrobe – AndioMediaStudio</span>
+            <div class="badge nsfw">👔 Fashion AI</div>
+        </div>
+        <nav>
+            <a href="index.html">📊 Dashboard</a>
+            <a href="create.html">🎨 Create</a>
+            <a href="video.html">🎬 Video Lab</a>
+            <a href="talking.html">💬 Talking</a>
+            <a href="wardrobe.html" class="active">👔 Wardrobe</a>
+            <a href="catalog.html">🏪 Store</a>
+            <a href="gallery.html">🖼️ Gallery</a>
+        </nav>
+    </header>
+
+    <main class="wrap">
+        <!-- Coming Soon Notice -->
+        <div class="card" style="text-align: center; padding: 60px; background: var(--accent-gradient);">
+            <div style="font-size: 72px; margin-bottom: 20px;">👔</div>
+            <h1 style="color: white; margin-bottom: 16px;">AI Wardrobe Studio</h1>
+            <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 24px;">
+                Virtual Try-On • Outfit Editor • Fashion AI
+            </p>
+            <div class="badge" style="background: rgba(255,255,255,0.2); color: white; font-size: 14px;">
+                🚧 Coming Soon - Advanced Fashion AI Features
+            </div>
+        </div>
+
+        <!-- Feature Preview -->
+        <div class="grid" style="margin-top: 32px;">
+            <div class="card" style="grid-column: span 4;">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">👕</div>
+                    <h3>Virtual Try-On</h3>
+                    <p style="color: var(--text-muted);">
+                        Try on different outfits virtually using AI-powered clothing simulation and realistic fabric physics.
+                    </p>
+                    <div class="badge">Coming v0.6.0</div>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: span 4;">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🎨</div>
+                    <h3>Outfit Editor</h3>
+                    <p style="color: var(--text-muted);">
+                        Edit clothing in existing photos with intelligent segmentation and realistic texture mapping.
+                    </p>
+                    <div class="badge">Coming v0.6.0</div>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: span 4;">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🤖</div>
+                    <h3>Fashion AI</h3>
+                    <p style="color: var(--text-muted);">
+                        Generate new clothing designs and styles using cutting-edge fashion AI models and style transfer.
+                    </p>
+                    <div class="badge">Coming v0.7.0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Planned Features -->
+        <div class="card" style="margin-top: 32px;">
+            <h2>🎯 Planned Features</h2>
+            <div class="feature-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                
+                <div class="feature-item">
+                    <h4>👗 Virtual Fitting Room</h4>
+                    <ul style="list-style: none; padding: 0; color: var(--text-muted);">
+                        <li>✓ Real-time clothing simulation</li>
+                        <li>✓ Body shape adaptation</li>
+                        <li>✓ Fabric physics and draping</li>
+                        <li>✓ Multiple angles and poses</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h4>🎨 Intelligent Editing</h4>
+                    <ul style="list-style: none; padding: 0; color: var(--text-muted);">
+                        <li>✓ Automatic clothing segmentation</li>
+                        <li>✓ Color and pattern replacement</li>
+                        <li>✓ Texture and material changes</li>
+                        <li>✓ Size and fit adjustments</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h4>🤖 AI Fashion Designer</h4>
+                    <ul style="list-style: none; padding: 0; color: var(--text-muted);">
+                        <li>✓ Style trend analysis</li>
+                        <li>✓ Custom design generation</li>
+                        <li>✓ Color palette suggestions</li>
+                        <li>✓ Seasonal collections</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h4>📱 Integration Features</h4>
+                    <ul style="list-style: none; padding: 0; color: var(--text-muted);">
+                        <li>✓ Webcam live preview</li>
+                        <li>✓ Mobile app companion</li>
+                        <li>✓ Social sharing</li>
+                        <li>✓ E-commerce integration</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Technology Stack -->
+        <div class="card" style="margin-top: 32px;">
+            <h2>⚙️ Technology Stack</h2>
+            <div class="tech-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 20px;">
+                
+                <div class="tech-item" style="background: var(--glass-bg); padding: 16px; border-radius: 12px;">
+                    <h4>🧠 AI Models</h4>
+                    <p style="font-size: 13px; color: var(--text-muted);">
+                        • Stable Diffusion XL<br>
+                        • ControlNet (Pose, Depth)<br>
+                        • Segment Anything Model<br>
+                        • Custom Fashion Models
+                    </p>
+                </div>
+
+                <div class="tech-item" style="background: var(--glass-bg); padding: 16px; border-radius: 12px;">
+                    <h4>👁️ Computer Vision</h4>
+                    <p style="font-size: 13px; color: var(--text-muted);">
+                        • MediaPipe Human Pose<br>
+                        • OpenCV Image Processing<br>
+                        • YOLO Object Detection<br>
+                        • Custom Segmentation
+                    </p>
+                </div>
+
+                <div class="tech-item" style="background: var(--glass-bg); padding: 16px; border-radius: 12px;">
+                    <h4>🎨 Graphics Engine</h4>
+                    <p style="font-size: 13px; color: var(--text-muted);">
+                        • Three.js 3D Rendering<br>
+                        • WebGL Shaders<br>
+                        • Physics Simulation<br>
+                        • Real-time Ray Tracing
+                    </p>
+                </div>
+
+                <div class="tech-item" style="background: var(--glass-bg); padding: 16px; border-radius: 12px;">
+                    <h4>🔧 Backend</h4>
+                    <p style="font-size: 13px; color: var(--text-muted);">
+                        • PyTorch & CUDA<br>
+                        • FastAPI Server<br>
+                        • WebSocket Streaming<br>
+                        • Local Processing
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Beta Testing Signup -->
+        <div class="card" style="margin-top: 32px; text-align: center; background: linear-gradient(135deg, rgba(106, 163, 255, 0.1), rgba(184, 132, 255, 0.1));">
+            <h2>🚀 Early Access</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Be the first to try the AI Wardrobe when it launches!<br>
+                Sign up for beta testing and exclusive early access.
+            </p>
+            
+            <div style="max-width: 400px; margin: 0 auto;">
+                <input type="email" class="input" placeholder="Your email address" style="margin-bottom: 12px;">
+                <button class="btn" style="width: 100%;">📧 Notify Me When Ready</button>
+            </div>
+            
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 16px;">
+                We'll only contact you about the Wardrobe feature launch
+            </p>
+        </div>
+
+        <!-- Temporary Alternative -->
+        <div class="card" style="margin-top: 32px;">
+            <h2>💡 Current Alternatives</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                While the dedicated Wardrobe feature is in development, you can use existing AndioMediaStudio features for fashion-related tasks:
+            </p>
+            
+            <div class="alternatives-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                
+                <div class="alternative-card" style="background: var(--glass-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-primary);">
+                    <h4>🎨 Image Inpainting</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                        Use the inpainting feature to edit clothing in photos
+                    </p>
+                    <a href="create.html" class="btn secondary" style="width: 100%;">Open Create Studio</a>
+                </div>
+
+                <div class="alternative-card" style="background: var(--glass-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-primary);">
+                    <h4>🖼️ Pose Transfer</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                        Transfer poses and clothing styles between images
+                    </p>
+                    <a href="create.html" class="btn secondary" style="width: 100%;">Try Pose Transfer</a>
+                </div>
+
+                <div class="alternative-card" style="background: var(--glass-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-primary);">
+                    <h4>✨ Style Prompts</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                        Generate fashion content with detailed text prompts
+                    </p>
+                    <a href="create.html" class="btn secondary" style="width: 100%;">Generate Fashion</a>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="assets/app.js"></script>
+    <script>
+        // Wardrobe page functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            // Email signup functionality
+            const emailInput = document.querySelector('input[type="email"]');
+            const signupBtn = document.querySelector('button');
+            
+            if (emailInput && signupBtn) {
+                signupBtn.addEventListener('click', () => {
+                    const email = emailInput.value.trim();
+                    
+                    if (!email) {
+                        window.AndioStudio?.toast?.warning('Please enter your email address');
+                        return;
+                    }
+                    
+                    if (!isValidEmail(email)) {
+                        window.AndioStudio?.toast?.error('Please enter a valid email address');
+                        return;
+                    }
+                    
+                    // Store email for beta signup (in real app, send to server)
+                    localStorage.setItem('wardrobeBetaEmail', email);
+                    
+                    signupBtn.textContent = '✅ Signed Up!';
+                    signupBtn.disabled = true;
+                    emailInput.disabled = true;
+                    
+                    window.AndioStudio?.toast?.success('🚀 Thanks for signing up! We\'ll notify you when the Wardrobe is ready.');
+                });
+            }
+            
+            // Check if user already signed up
+            const savedEmail = localStorage.getItem('wardrobeBetaEmail');
+            if (savedEmail && emailInput && signupBtn) {
+                emailInput.value = savedEmail;
+                emailInput.disabled = true;
+                signupBtn.textContent = '✅ Already Signed Up';
+                signupBtn.disabled = true;
+            }
+        });
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Add some interactive animations
+        const wardrobeStyles = `
+            <style>
+                .feature-item {
+                    background: var(--glass-bg);
+                    border: 1px solid var(--border-primary);
+                    border-radius: 12px;
+                    padding: 16px;
+                    transition: var(--transition-normal);
+                }
+                
+                .feature-item:hover {
+                    border-color: var(--accent-primary);
+                    transform: translateY(-2px);
+                    box-shadow: var(--shadow-md);
+                }
+                
+                .feature-item h4 {
+                    color: var(--text-primary);
+                    margin-bottom: 12px;
+                }
+                
+                .feature-item li {
+                    padding: 2px 0;
+                    position: relative

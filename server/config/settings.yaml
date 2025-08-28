@@ -1,9 +1,81 @@
-mode: creative
+# AndioMediaStudio Configuration
+# Enhanced settings for maximum performance and creative freedom
+
+# Server Configuration
+host: "0.0.0.0"  # Bind to all interfaces for network access
 port: 3000
-bind: 0.0.0.0
-models_path: ./models
-workspace_path: ./workspace
-outputs_path: ./outputs
-default_quality: BALANCED
-max_parallel_workers: 1
+mode: "creative"  # No content restrictions
+log_level: "info"
+reload: false
+workers: 1
+
+# Paths
+models_path: "./models"
+workspace_path: "./workspace"
+outputs_path: "./outputs"
+temp_path: "./server/temp"
+
+# Performance Settings
 prefer_gpu: true
+max_parallel_workers: 2  # Increased for better throughput
+compile_unet: false  # Enable PyTorch 2.0 compilation for speed (experimental)
+
+# Memory Management
+enable_cpu_offload: true
+enable_vae_slicing: true
+enable_attention_slicing: true
+enable_xformers: true  # Use memory-efficient attention
+low_vram_mode: false   # Set to true for <8GB VRAM
+
+# Generation Defaults
+default_quality: "BALANCED"
+max_batch_size: 4
+max_image_size: 2048
+max_video_duration: 10  # seconds
+max_video_fps: 30
+
+# Content Policy
+nsfw_allowed: true      # No content filtering
+safety_checker: false  # Disable safety checker for creative freedom
+content_filter: false  # No content filtering
+
+# API Settings
+enable_api_docs: true
+enable_cors: true
+api_timeout: 300  # 5 minutes for long generations
+
+# File Handling
+max_file_size: 100  # MB
+allowed_image_formats: ["png", "jpg", "jpeg", "webp", "bmp", "tiff"]
+allowed_video_formats: ["mp4", "webm", "mov", "avi", "mkv"]
+allowed_audio_formats: ["wav", "mp3", "flac", "ogg"]
+
+# Auto-cleanup
+cleanup_temp_files: true
+temp_file_lifetime: 3600  # 1 hour in seconds
+cleanup_interval: 1800    # 30 minutes
+
+# Advanced Features
+enable_lora_support: true
+enable_controlnet: true
+enable_inpainting: true
+enable_upscaling: true
+enable_face_restoration: true
+
+# Video Generation
+video_model_priority: ["stable-video-diffusion", "animatediff", "svd"]
+default_video_fps: 16
+default_video_duration: 6
+
+# Experimental Features
+enable_experimental: false
+beta_features: false
+
+# Monitoring
+enable_metrics: true
+log_generations: true
+save_metadata: true
+
+# Security (for network access)
+trusted_hosts: ["*"]  # Allow all hosts - change for production
+cors_origins: ["*"]   # Allow all origins - change for production
