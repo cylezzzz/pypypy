@@ -1,32 +1,50 @@
 <!doctype html>
 <!-- === Brand / Navbar (standardisiert) === -->
-<header class="header">
-  <nav>
+<header class="header" role="banner">
+  <nav role="navigation" aria-label="Hauptnavigation">
     <div class="brand">
-      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
-      <span class="wordmark">Andio Media Studio</span>
+      <a href="index.html" class="brand-link" aria-label="Zur Startseite">
+        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+        <span class="wordmark">Andio Media Studio</span>
+      </a>
     </div>
     <div class="spacer"></div>
-    <div class="links">
-      <a href="index.html" data-link="index">Übersicht</a>
-      <a href="images.html" data-link="images">Image Studio</a>
-      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
-      <a href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
-      <a href="motion.html" data-link="motion">Motion</a>
-      <a href="gallery.html" data-link="gallery">Gallery</a>
-      <a href="catalog.html" data-link="catalog">Store</a>
-      <a href="editor.html" data-link="editor">Editor</a>
+    <div class="links" role="menubar">
+      <a role="menuitem" href="index.html" data-link="index">Übersicht</a>
+      <a role="menuitem" href="images.html" data-link="images">Image Studio</a>
+      <a role="menuitem" href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a role="menuitem" href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
+      <a role="menuitem" href="motion.html" data-link="motion">Motion</a>
+      <a role="menuitem" href="gallery.html" data-link="gallery">Gallery</a>
+      <a role="menuitem" href="catalog.html" data-link="catalog">Store</a>
+      <a role="menuitem" href="editor.html" data-link="editor">Editor</a>
     </div>
   </nav>
 </header>
 <script>
+  // Set active nav item based on data-page or current path; add aria-current for a11y
   (function(){
-    var p=document.body.getAttribute('data-page')||'catalog';
-    var a=document.querySelector('.links a[data-link="'+p+'"]');
-    if(a) a.classList.add('active');
+    try {
+      var dataPage = document.body && document.body.getAttribute('data-page');
+      if(!dataPage){
+        var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+        var map = {
+          'index.html':'index','images.html':'images','video-gen.html':'video-gen',
+          'wandrobe.html':'wardrobe','motion.html':'motion','gallery.html':'gallery',
+          'catalog.html':'catalog','editor.html':'editor'
+        };
+        dataPage = map[path] || 'index';
+        document.body && document.body.setAttribute('data-page', dataPage);
+      }
+      var sel = '.links a[data-link="' + dataPage + '"]';
+      var a = document.querySelector(sel);
+      if(a){
+        a.classList.add('active');
+        a.setAttribute('aria-current','page');
+      }
+    } catch(e){ console && console.warn('navbar init failed', e); }
   })();
 </script>
-
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
@@ -239,8 +257,8 @@
         tags:['portrait','realistic'], nsfw:false, installed:false, enabled:false,
         version:'1.0.0', sizeMB: 6810, compat:'ok', license:'Open', author:'Stability',
         date:'2025-08-15T09:00:00Z',
-        cover:'assets/demo/sdxl.jpg',
-        demo:[{type:'image', src:'assets/demo/portrait_a.jpg', generated:true}],
+        cover:'',
+        demo:[{type:'image', src:'', generated:true}],
         desc:'Allgemeines SDXL-Basis-Checkpoint für hochwertige Bildgenerierung.',
         deps:[{id:'sdxl-vae', name:'SDXL VAE', installed:false, missing:true}],
         changelog:[{version:'1.0.0', date:'2025-08-15', notes:['Initial release']}]
@@ -250,8 +268,8 @@
         tags:['anime','stylized'], nsfw:false, installed:true, enabled:true,
         version:'2.1.0', sizeMB: 240, compat:'ok', license:'CC-BY', author:'Artist-X',
         date:'2025-08-20T11:00:00Z',
-        cover:'assets/demo/anime.jpg',
-        demo:[{type:'image', src:'assets/demo/fabric.jpg', generated:false}], // Referenzbild -> kein Overlay
+        cover:'',
+        demo:[{type:'image', src:'', generated:false}], // Referenzbild -> kein Overlay
         desc:'Stilisierte Anime-Gesichter, fein für Retusche & Inpainting.',
         deps:[{id:'sdxl-base', name:'SDXL Base 1.0', installed:false, missing:true}],
         changelog:[{version:'2.1.0', date:'2025-08-20', notes:['Verbessertes Training','Geringere Artefakte']}]
@@ -261,8 +279,8 @@
         tags:['pose','keypoints'], nsfw:true, installed:false, enabled:false,
         version:'0.9.2', sizeMB: 520, compat:'warn', license:'Open', author:'Community',
         date:'2025-08-10T08:30:00Z',
-        cover:'assets/demo/pose.jpg',
-        demo:[{type:'video', src:'assets/demo/clip.mp4', generated:true}],
+        cover:'',
+        demo:[{type:'video', src:'', generated:true}],
         desc:'Steuert Haltung/Bewegung über extrahierte Skelettpunkte.',
         deps:[],
         changelog:[{version:'0.9.2', date:'2025-08-10', notes:['Kompat-Hinweis mit älterem VAE']}]
@@ -272,8 +290,8 @@
         tags:['try-on','fabric','swap'], nsfw:true, installed:false, enabled:false,
         version:'1.4.3', sizeMB: 110, compat:'ok', license:'Proprietär', author:'Andio',
         date:'2025-08-26T16:00:00Z',
-        cover:'assets/demo/wardrobe.jpg',
-        demo:[{type:'image', src:'assets/demo/nsfw.jpg', generated:true}],
+        cover:'',
+        demo:[{type:'image', src:'', generated:true}],
         desc:'Auto-Erkennung von Kleidungsteilen, Stoffsimulation, Farb-/Musterwechsel, optional Remover.',
         deps:[{id:'sdxl-base', name:'SDXL Base 1.0', installed:false, missing:true}],
         changelog:[{version:'1.4.3', date:'2025-08-26', notes:['Bessere Masken','Schnelleres Preview']}]
@@ -608,5 +626,7 @@
     // Init
     loadCatalog();
   </script>
+
+<div class="container"><h2>Model Catalog</h2><div class="grid" id="catalog-list"></div></div>
 </body>
 </html>

@@ -1,32 +1,50 @@
 <!doctype html>
 <!-- === Brand / Navbar (standardisiert) === -->
-<header class="header">
-  <nav>
+<header class="header" role="banner">
+  <nav role="navigation" aria-label="Hauptnavigation">
     <div class="brand">
-      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
-      <span class="wordmark">Andio Media Studio</span>
+      <a href="index.html" class="brand-link" aria-label="Zur Startseite">
+        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+        <span class="wordmark">Andio Media Studio</span>
+      </a>
     </div>
     <div class="spacer"></div>
-    <div class="links">
-      <a href="index.html" data-link="index">Übersicht</a>
-      <a href="images.html" data-link="images">Image Studio</a>
-      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
-      <a href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
-      <a href="motion.html" data-link="motion">Motion</a>
-      <a href="gallery.html" data-link="gallery">Gallery</a>
-      <a href="catalog.html" data-link="catalog">Store</a>
-      <a href="editor.html" data-link="editor">Editor</a>
+    <div class="links" role="menubar">
+      <a role="menuitem" href="index.html" data-link="index">Übersicht</a>
+      <a role="menuitem" href="images.html" data-link="images">Image Studio</a>
+      <a role="menuitem" href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a role="menuitem" href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
+      <a role="menuitem" href="motion.html" data-link="motion">Motion</a>
+      <a role="menuitem" href="gallery.html" data-link="gallery">Gallery</a>
+      <a role="menuitem" href="catalog.html" data-link="catalog">Store</a>
+      <a role="menuitem" href="editor.html" data-link="editor">Editor</a>
     </div>
   </nav>
 </header>
 <script>
+  // Set active nav item based on data-page or current path; add aria-current for a11y
   (function(){
-    var p=document.body.getAttribute('data-page')||'gallery';
-    var a=document.querySelector('.links a[data-link="'+p+'"]');
-    if(a) a.classList.add('active');
+    try {
+      var dataPage = document.body && document.body.getAttribute('data-page');
+      if(!dataPage){
+        var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+        var map = {
+          'index.html':'index','images.html':'images','video-gen.html':'video-gen',
+          'wandrobe.html':'wardrobe','motion.html':'motion','gallery.html':'gallery',
+          'catalog.html':'catalog','editor.html':'editor'
+        };
+        dataPage = map[path] || 'index';
+        document.body && document.body.setAttribute('data-page', dataPage);
+      }
+      var sel = '.links a[data-link="' + dataPage + '"]';
+      var a = document.querySelector(sel);
+      if(a){
+        a.classList.add('active');
+        a.setAttribute('aria-current','page');
+      }
+    } catch(e){ console && console.warn('navbar init failed', e); }
   })();
 </script>
-
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
@@ -249,10 +267,10 @@
      *  date: ISO, tags:[], thumb, src, model, seed, steps, guidance, prompt, negative
      */
     const demo = [
-      { id: 'img_001', name: 'Portrait A', type:'image', sfw:true, generated:true,  date:'2025-08-27T10:21:00Z', tags:['portrait','bw'], thumb:'assets/demo/portrait_a.jpg', src:'assets/demo/portrait_a.jpg', model:'SDXL-1.0', seed:12345, steps:28, guidance:5.5, prompt:'ultrarealistisches Portrait, 35mm, 4:3', negative:'low quality, artifacts' },
-      { id: 'vid_002', name: 'Cinematic Clip', type:'video', sfw:true, generated:true,  date:'2025-08-28T08:02:00Z', tags:['cinematic','product'], thumb:'assets/demo/clip_thumb.jpg', src:'assets/demo/clip.mp4',         model:'VideoGenX',  seed:9876, steps:0,  guidance:0,   prompt:'sleek product shot, slow pan', negative:'' },
-      { id: 'img_003', name: 'Referenz Stoff', type:'image', sfw:true, generated:false, date:'2025-08-20T12:00:00Z', tags:['fabric','reference'], thumb:'assets/demo/fabric.jpg',     src:'assets/demo/fabric.jpg',     model:'—',         seed:'—', steps:'—', guidance:'—', prompt:'', negative:'' },
-      { id: 'img_004', name: 'NSFW Test',     type:'image', sfw:false,generated:true,  date:'2025-08-25T17:44:00Z', tags:['nsfw','edit'],       thumb:'assets/demo/nsfw.jpg',       src:'assets/demo/nsfw.jpg',       model:'SDXL-NS',   seed:43210, steps:30, guidance:6.0, prompt:'studio lighting, soft skin', negative:'blur' },
+      { id: 'img_001', name: 'Portrait A', type:'image', sfw:true, generated:true,  date:'2025-08-27T10:21:00Z', tags:['portrait','bw'], thumb:'', src:'', model:'SDXL-1.0', seed:12345, steps:28, guidance:5.5, prompt:'ultrarealistisches Portrait, 35mm, 4:3', negative:'low quality, artifacts' },
+      { id: 'vid_002', name: 'Cinematic Clip', type:'video', sfw:true, generated:true,  date:'2025-08-28T08:02:00Z', tags:['cinematic','product'], thumb:'', src:'',         model:'VideoGenX',  seed:9876, steps:0,  guidance:0,   prompt:'sleek product shot, slow pan', negative:'' },
+      { id: 'img_003', name: 'Referenz Stoff', type:'image', sfw:true, generated:false, date:'2025-08-20T12:00:00Z', tags:['fabric','reference'], thumb:'',     src:'',     model:'—',         seed:'—', steps:'—', guidance:'—', prompt:'', negative:'' },
+      { id: 'img_004', name: 'NSFW Test',     type:'image', sfw:false,generated:true,  date:'2025-08-25T17:44:00Z', tags:['nsfw','edit'],       thumb:'',       src:'',       model:'SDXL-NS',   seed:43210, steps:30, guidance:6.0, prompt:'studio lighting, soft skin', negative:'blur' },
     ];
 
     // --- State ---
@@ -558,5 +576,7 @@
     // --- Init ---
     applyFilters();
   </script>
+
+<div class="container"><h2>Gallery</h2><div class="grid gallery" id="gallery"></div></div>
 </body>
 </html>

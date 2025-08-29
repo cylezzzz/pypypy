@@ -1,0 +1,13 @@
+
+# How to include the router
+
+In `server/app.py`, after your other routers are included, add:
+
+```python
+try:
+    from server.api.generation_endpoints import router as gen_router
+    app.include_router(gen_router)
+    logger.info("✅ Generation endpoints eingebunden")
+except Exception as e:
+    logger.warning(f"Generation endpoints nicht geladen: {e}")
+```

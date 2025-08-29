@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 
 # ---------------------------------
 # Setup
@@ -17,6 +16,7 @@ from fastapi.responses import JSONResponse
 BASE_DIR = Path(__file__).resolve().parents[1]
 WEB_DIR = BASE_DIR / "web"
 ASSETS_DIR = WEB_DIR / "assets"
+OUTPUTS_DIR = BASE_DIR / "outputs"
 
 logger = logging.getLogger("AndioMediaStudio")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -32,24 +32,23 @@ app.add_middleware(
 )
 
 # ---------------------------------
-# Static mounts
+# ⚠️ Wichtig: Keine Root-Mounts!
+# StaticFiles NICHT auf "/" mounten, sonst verschluckt es /api/* → 404.
 # ---------------------------------
-# / -> serve web/
-if WEB_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web-root")
-else:
-    logger.warning(f"⚠️  WEB_DIR fehlt: {WEB_DIR}")
-
-# /assets -> serve web/assets
 if ASSETS_DIR.exists():
     app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
 else:
     logger.warning(f"⚠️  ASSETS_DIR fehlt: {ASSETS_DIR}")
 
+# Optional: Ausgaben lesbar machen
+if (OUTPUTS_DIR / "images").exists():
+    app.mount("/outputs/images", StaticFiles(directory=str(OUTPUTS_DIR / "images")), name="outputs-images")
+if (OUTPUTS_DIR / "videos").exists():
+    app.mount("/outputs/videos", StaticFiles(directory=str(OUTPUTS_DIR / "videos")), name="outputs-videos")
+
 # ---------------------------------
-# Orchestrator Import (robuster Fallback)
+# Orchestrator Import (Fallback)
 # ---------------------------------
-orchestrator_module = None
 try:
     from server.ai_orchestrator import (
         get_orchestrator, generate_image, generate_video, get_job_status,
@@ -58,7 +57,7 @@ try:
     logger.info("✅ Orchestrator: server.ai_orchestrator aktiv")
 except Exception as e:
     logger.warning(f"⚠️  server.ai_orchestrator nicht gefunden/nutzbar: {e}")
-    from server.pipelines.ai_orchestrator import (  # Fallback
+    from server.pipelines.ai_orchestrator import (
         get_orchestrator, generate_image, generate_video, get_job_status,
         list_jobs, cancel_job, get_system_status
     )
@@ -68,7 +67,7 @@ except Exception as e:
 # Optional: Enhanced Endpoints
 # ---------------------------------
 try:
-    from server.api.enhanced_endpoints import router as enhanced_router  # nutzt sniff_image
+    from server.api.enhanced_endpoints import router as enhanced_router
     app.include_router(enhanced_router)
     logger.info("✅ Enhanced endpoints eingebunden")
 except Exception as e:
@@ -82,8 +81,9 @@ try:
 except Exception as e:
     logger.warning(f"Intelligent model selector nicht geladen: {e}")
 
+# ---------------------------------
 # Core endpoints
-from fastapi import Body
+# ---------------------------------
 from pydantic import BaseModel
 
 class Txt2ImgRequest(BaseModel):
@@ -136,8 +136,33 @@ async def api_cancel_job(job_id: str):
 async def api_system():
     return await get_system_status()
 
-# Root: index.html ausliefern
+# Optional: einfache /api/catalog, wenn Registry verfügbar ist
+try:
+    from server.models_registry import get_registry  # type: ignore
+    @app.get("/api/catalog")
+    def api_catalog():
+        reg = get_registry()
+        return {"models": reg.list_models() if hasattr(reg, "list_models") else []}
+except Exception as e:
+    logger.warning(f"/api/catalog nicht aktiviert: {e}")
+
+# ---------------------------------
+# Frontend-Seiten sicher ausliefern
+# ---------------------------------
+def file_or_404(rel: str):
+    p = WEB_DIR / rel
+    if p.exists():
+        return FileResponse(str(p))
+    return JSONResponse({"error": "file not found"}, status_code=404)
+
 @app.get("/")
-def root():
-    # StaticFiles mount liefert index.html automatisch; hier nur als Fallback JSON
-    return JSONResponse({"message": "AndioMediaStudio API running"})
+def index():
+    # Liefert index.html ohne Root-Static-Mount
+    return file_or_404("index.html")
+
+# Convenience-Routen für deine bestehenden Seiten-Namen
+for page in ["images.html", "video-gen.html", "wandrobe.html", "motion.html", "gallery.html", "editor.html", "catalog.html", "store.html"]:
+    route_path = f"/{page}"
+    async def serve_page(page=page):
+        return file_or_404(page)
+    app.add_api_route(route_path, serve_page, methods=["GET"]) 

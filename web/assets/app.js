@@ -427,3 +427,156 @@
     try { Andio.polish(); } catch (e) { console.error(e); }
   }
 })();
+
+/* === Andio Full-KI additions === */
+(function(){
+  const A = window.Andio || {};
+
+  // Simple API wrapper
+  if (!A.api) A.api = {};
+  if (!A.api.get) {
+    A.api.get = async function get(url){
+      try {
+        const r = await fetch(url);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return await r.json();
+      } catch (e) {
+        console.warn("GET failed", url, e);
+        return null;
+      }
+    };
+  }
+
+  // Outputs loader with fallbacks
+  if (!A.outputs) A.outputs = {};
+  if (!A.outputs.load) {
+    A.outputs.load = async function load(){
+      // try unified
+      let data = await A.api.get('/api/outputs');
+      if (data && (data.images || data.videos)) return data;
+      // fallbacks
+      const images = await A.api.get('/api/outputs/images') || [];
+      const videos = await A.api.get('/api/outputs/videos') || [];
+      return { images, videos };
+    };
+  }
+
+  // Card element factory
+  function mediaCard(path){
+    const ext = (path||'').split('.').pop().toLowerCase();
+    const isVideo = ['mp4','webm','mkv','avi','mov'].includes(ext);
+    const card = A.utils.createEl('div', { className:'media-card', tabIndex:0 });
+    const media = A.utils.createEl(isVideo ? 'video':'img', { className:'thumb', src:path });
+    if (isVideo) { media.muted = true; media.playsInline = true; media.loop = true; }
+    const meta = A.utils.createEl('div', { className:'meta' });
+    const row = A.utils.createEl('div', { className:'row' });
+    const name = A.utils.createEl('span', { className:'muted' }, [ (path.split('/').pop() || 'media') ]);
+    const badge = A.utils.createEl('span', { className:'badge sfw' }, [ 'KI' ]);
+    row.appendChild(name); row.appendChild(badge);
+    meta.appendChild(row);
+    card.appendChild(media); card.appendChild(meta);
+    const open = () => A.openPlayer({ type: isVideo ? 'video':'image', src: path });
+    card.addEventListener('dblclick', open);
+    card.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') open(); });
+    return card;
+  }
+
+  // Gallery render
+  if (!A.gallery) A.gallery = {};
+  if (!A.gallery.render) {
+    A.gallery.render = async function render(selector){
+      const host = document.querySelector(selector || '#gallery') || document.querySelector('.grid.gallery');
+      if (!host) return;
+      host.classList.add('is-loading');
+      host.innerHTML = '';
+      const data = await A.outputs.load();
+      const items = [];
+      (data.images || []).forEach(p => items.push(p));
+      (data.videos || []).forEach(p => items.push(p));
+      host.classList.remove('is-loading');
+      if (!items.length){
+        host.innerHTML = '<div class="muted">Noch keine generierten Inhalte.</div>';
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      items.forEach(p => frag.appendChild(mediaCard(p)));
+      host.appendChild(frag);
+    };
+  }
+
+  // Catalog render (models)
+  if (!A.catalog) A.catalog = {};
+  if (!A.catalog.render) {
+    A.catalog.render = async function render(selector){
+      const host = document.querySelector(selector || '#catalog-list') || document.querySelector('.grid');
+      if (!host) return;
+      host.classList.add('is-loading');
+      host.innerHTML = '';
+      let data = await A.api.get('/api/catalog');
+      if (!data || !Array.isArray(data.models)) {
+        // fallback to /api/models shape
+        const alt = await A.api.get('/api/models');
+        const list = Array.isArray(alt?.items) ? alt.items : [];
+        data = { models: list };
+      }
+      host.classList.remove('is-loading');
+      if (!data || !Array.isArray(data.models) || data.models.length === 0){
+        host.innerHTML = '<div class="muted">Keine Modelle gefunden.</div>';
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      data.models.forEach(m => {
+        const card = A.utils.createEl('div', { className:'card reveal in' });
+        const title = (m.name || m.model_id || 'Model');
+        const badgeCls = m.nsfw ? 'badge nsfw' : 'badge sfw';
+        card.innerHTML = `
+          <h3>${title} <span class="${badgeCls}">${m.nsfw?'NSFW':'SFW'}</span></h3>
+          <div class="muted">${m.family || ''}</div>
+          <div class="chips">${(m.tags||[]).slice(0,8).map(t=>`<span class="badge">${t}</span>`).join(' ')}</div>
+          <div class="toolbar" style="margin-top:10px;display:flex;gap:8px;align-items:center">
+            <button class="btn primary" data-action="select">Auswählen</button>
+            ${m.size_gb ? `<span class="badge">${m.size_gb} GB</span>`:''}
+            ${m.path ? `<span class="badge">${(m.path.split('/').pop())}</span>`:''}
+          </div>`;
+        const btn = card.querySelector('[data-action="select"]');
+        if (btn) btn.addEventListener('click', ()=>{
+          A.toast(`${title} ausgewählt`);
+          // Hook: hier könnte man A.state.selectedModel setzen
+          A.state.selectedModel = (m.model_id || m.name || title);
+        });
+        frag.appendChild(card);
+      });
+      host.appendChild(frag);
+    };
+  }
+
+  // Page init dispatcher
+  if (!A.page) A.page = {};
+  if (!A.page.init) {
+    A.page.init = function init(){
+      const file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+      const page = (document.body.getAttribute('data-page') || file.replace('.html','')).toLowerCase();
+      const key = page === 'wandrobe' ? 'wardrobe' : page; // normalize
+      if (key === 'gallery') A.gallery.render('#gallery');
+      if (key === 'catalog') A.catalog.render('#catalog-list');
+      if (key === 'index') {
+        // optional quick counters
+        A.outputs.load().then(d=>{
+          const imgCount = (d.images||[]).length;
+          const vidCount = (d.videos||[]).length;
+          const el = document.getElementById('andio-counters');
+          if (el) el.innerHTML = `<span class="badge">Bilder: ${imgCount}</span> <span class="badge">Videos: ${vidCount}</span>`;
+        });
+      }
+    };
+  }
+
+  // Auto-run init once DOM is ready (in addition to Andio.polish)
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => { try { A.page.init(); } catch(e){ console.warn(e); } });
+  } else {
+    try { A.page.init(); } catch(e){ console.warn(e); }
+  }
+
+  window.Andio = A;
+})();

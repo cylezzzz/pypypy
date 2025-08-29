@@ -17,17 +17,14 @@ def is_image(path: Path) -> bool:
     return kind in {"jpeg", "png", "gif", "bmp", "tiff", "webp"}
 
 def sniff_image(path: Path) -> Tuple[bool, Optional[str]]:
-    """
-    Prüft schnell, ob Datei ein Bild ist, und gibt den (groben) MIME-Typ zurück.
-    """
-    if not path or not Path(path).exists():
+    """Prüft schnell, ob Datei ein Bild ist, und gibt (groben) MIME-Typ zurück."""
+    if not path:
         return (False, None)
     p = Path(path)
-    if not p.is_file():
+    if not p.exists() or not p.is_file():
         return (False, None)
     if is_image(p):
         mime, _ = mimetypes.guess_type(str(p))
-        # Fallback MIME
         if not mime:
             suffix = p.suffix.lower()
             mime = {
@@ -42,3 +39,9 @@ def sniff_image(path: Path) -> Tuple[bool, Optional[str]]:
             }.get(suffix, "application/octet-stream")
         return (True, mime)
     return (False, None)
+
+def validate_image_upload(path: Path) -> Tuple[bool, str]:
+    ok, mime = sniff_image(path)
+    if not ok:
+        return False, "Unsupported or corrupt image file"
+    return True, mime or "application/octet-stream"

@@ -1,32 +1,50 @@
 <!doctype html>
 <!-- === Brand / Navbar (standardisiert) === -->
-<header class="header">
-  <nav>
+<header class="header" role="banner">
+  <nav role="navigation" aria-label="Hauptnavigation">
     <div class="brand">
-      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
-      <span class="wordmark">Andio Media Studio</span>
+      <a href="index.html" class="brand-link" aria-label="Zur Startseite">
+        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+        <span class="wordmark">Andio Media Studio</span>
+      </a>
     </div>
     <div class="spacer"></div>
-    <div class="links">
-      <a href="index.html" data-link="index">Übersicht</a>
-      <a href="images.html" data-link="images">Image Studio</a>
-      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
-      <a href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
-      <a href="motion.html" data-link="motion">Motion</a>
-      <a href="gallery.html" data-link="gallery">Gallery</a>
-      <a href="catalog.html" data-link="catalog">Store</a>
-      <a href="editor.html" data-link="editor">Editor</a>
+    <div class="links" role="menubar">
+      <a role="menuitem" href="index.html" data-link="index">Übersicht</a>
+      <a role="menuitem" href="images.html" data-link="images">Image Studio</a>
+      <a role="menuitem" href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a role="menuitem" href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
+      <a role="menuitem" href="motion.html" data-link="motion">Motion</a>
+      <a role="menuitem" href="gallery.html" data-link="gallery">Gallery</a>
+      <a role="menuitem" href="catalog.html" data-link="catalog">Store</a>
+      <a role="menuitem" href="editor.html" data-link="editor">Editor</a>
     </div>
   </nav>
 </header>
 <script>
+  // Set active nav item based on data-page or current path; add aria-current for a11y
   (function(){
-    var p=document.body.getAttribute('data-page')||'editor';
-    var a=document.querySelector('.links a[data-link="'+p+'"]');
-    if(a) a.classList.add('active');
+    try {
+      var dataPage = document.body && document.body.getAttribute('data-page');
+      if(!dataPage){
+        var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+        var map = {
+          'index.html':'index','images.html':'images','video-gen.html':'video-gen',
+          'wandrobe.html':'wardrobe','motion.html':'motion','gallery.html':'gallery',
+          'catalog.html':'catalog','editor.html':'editor'
+        };
+        dataPage = map[path] || 'index';
+        document.body && document.body.setAttribute('data-page', dataPage);
+      }
+      var sel = '.links a[data-link="' + dataPage + '"]';
+      var a = document.querySelector(sel);
+      if(a){
+        a.classList.add('active');
+        a.setAttribute('aria-current','page');
+      }
+    } catch(e){ console && console.warn('navbar init failed', e); }
   })();
 </script>
-
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
