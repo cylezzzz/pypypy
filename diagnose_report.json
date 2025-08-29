@@ -1,19 +1,49 @@
 {
   "env": {
     "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "root": "X:\\pypygennew",
     "CUDA_VISIBLE_DEVICES": "",
     "PYTORCH_CUDA_ALLOC_CONF": "",
-    "root": "X:\\pypygennew"
+    "HF_HOME": "",
+    "HUGGINGFACE_HUB_CACHE": ""
   },
   "torch": {
     "version": "2.4.0+cu118",
     "cuda_available": true,
-    "device": "NVIDIA GeForce RTX 3070",
+    "cudnn": {
+      "enabled": true,
+      "version": 90100
+    },
+    "device_count": 1,
+    "devices": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070"
+      }
+    ],
+    "mem": {
+      "free": 7442792448,
+      "total": 8589410304
+    },
     "xformers_ok": true,
-    "triton_ok": false
+    "triton_ok": false,
+    "nvidia_smi_devices": [
+      "GPU 0: NVIDIA GeForce RTX 3070 (UUID: GPU-281bbc1c-a269-d7f8-07d1-5e232f7533c3)"
+    ]
   },
   "diffusers": {
-    "ok": true
+    "ok": true,
+    "version": "0.35.1"
+  },
+  "deps": {
+    "transformers": {
+      "ok": true,
+      "error": null
+    },
+    "accelerate": {
+      "ok": true,
+      "error": null
+    }
   },
   "models": {
     "registry_present": true,
@@ -84,16 +114,179 @@
       "Realistic_Vision_V6.0_B1_noVAE",
       "stable-diffusion-xl-base-1.0",
       "stable-diffusion-xl-refiner-1.0"
+    ],
+    "video_subdirs": [
+      "animatediff",
+      "motion_modules",
+      "stable-video-diffusion-img2vid",
+      "stable-video-diffusion-img2vid-xt"
+    ],
+    "audio_subdirs": [
+      ".gitkeep"
+    ],
+    "loose_components": [],
+    "scan": [
+      {
+        "kind": "image",
+        "name": "checkpoints",
+        "path": "X:\\pypygennew\\models\\image\\checkpoints",
+        "complete": false,
+        "suspect": [
+          "Struktur/Files wirken unvollst\u00e4ndig"
+        ],
+        "has_model_index": false,
+        "has_config": false,
+        "any_core_folders": false,
+        "safetensors_files": 1,
+        "safetensors_total": 0
+      },
+      {
+        "kind": "image",
+        "name": "components",
+        "path": "X:\\pypygennew\\models\\image\\components",
+        "complete": true,
+        "suspect": [
+          "Struktur/Files wirken unvollst\u00e4ndig"
+        ],
+        "has_model_index": false,
+        "has_config": false,
+        "any_core_folders": true,
+        "safetensors_files": 0,
+        "safetensors_total": 0
+      },
+      {
+        "kind": "image",
+        "name": "loras",
+        "path": "X:\\pypygennew\\models\\image\\loras",
+        "complete": false,
+        "suspect": [
+          "Struktur/Files wirken unvollst\u00e4ndig"
+        ],
+        "has_model_index": false,
+        "has_config": false,
+        "any_core_folders": false,
+        "safetensors_files": 0,
+        "safetensors_total": 0
+      },
+      {
+        "kind": "image",
+        "name": "Realistic_Vision_V6.0_B1_noVAE",
+        "path": "X:\\pypygennew\\models\\image\\Realistic_Vision_V6.0_B1_noVAE",
+        "complete": true,
+        "suspect": [
+          "Struktur/Files wirken unvollst\u00e4ndig"
+        ],
+        "has_model_index": false,
+        "has_config": false,
+        "any_core_folders": true,
+        "safetensors_files": 0,
+        "safetensors_total": 0
+      },
+      {
+        "kind": "image",
+        "name": "stable-diffusion-xl-base-1.0",
+        "path": "X:\\pypygennew\\models\\image\\stable-diffusion-xl-base-1.0",
+        "complete": true,
+        "suspect": [],
+        "has_model_index": true,
+        "has_config": false,
+        "any_core_folders": true,
+        "safetensors_files": 13,
+        "safetensors_total": 35241388748
+      },
+      {
+        "kind": "image",
+        "name": "stable-diffusion-xl-refiner-1.0",
+        "path": "X:\\pypygennew\\models\\image\\stable-diffusion-xl-refiner-1.0",
+        "complete": true,
+        "suspect": [],
+        "has_model_index": true,
+        "has_config": false,
+        "any_core_folders": true,
+        "safetensors_files": 10,
+        "safetensors_total": 30881480672
+      },
+      {
+        "kind": "video",
+        "name": "animatediff",
+        "path": "X:\\pypygennew\\models\\video\\animatediff",
+        "complete": false,
+        "suspect": [
+          "Struktur/Files wirken unvollst\u00e4ndig"
+        ],
+        "has_model_index": false,
+        "has_config": false,
+        "any_core_folders": false,
+        "safetensors_files": 0,
+        "safetensors_total": 0
+      },
+      {
+        "kind": "video",
+        "name": "motion_modules",
+        "path": "X:\\pypygennew\\models\\video\\motion_modules",
+        "complete": false,
+        "suspect": [
+          "Struktur/Files wirken unvollst\u00e4ndig"
+        ],
+        "has_model_index": false,
+        "has_config": false,
+        "any_core_folders": false,
+        "safetensors_files": 0,
+        "safetensors_total": 0
+      },
+      {
+        "kind": "video",
+        "name": "stable-video-diffusion-img2vid",
+        "path": "X:\\pypygennew\\models\\video\\stable-video-diffusion-img2vid",
+        "complete": false,
+        "suspect": [
+          "Struktur/Files wirken unvollst\u00e4ndig"
+        ],
+        "has_model_index": false,
+        "has_config": false,
+        "any_core_folders": false,
+        "safetensors_files": 0,
+        "safetensors_total": 0
+      },
+      {
+        "kind": "video",
+        "name": "stable-video-diffusion-img2vid-xt",
+        "path": "X:\\pypygennew\\models\\video\\stable-video-diffusion-img2vid-xt",
+        "complete": true,
+        "suspect": [],
+        "has_model_index": true,
+        "has_config": false,
+        "any_core_folders": true,
+        "safetensors_files": 5,
+        "safetensors_total": 13938764166
+      }
     ]
   },
   "sdxl_smoketest": {
     "ok": true,
-    "load_seconds": 35.6,
-    "gen_seconds": 56.1,
+    "load_seconds": 9.2,
+    "gen_seconds": 79.4,
     "output": "X:\\pypygennew\\outputs\\diagnose_sdxl.png"
   },
+  "svd_smoketest": {
+    "skipped": true
+  },
   "web": {
-    "app_js_bytes": 24087
+    "app_js_bytes": 19249,
+    "endpoints": {
+      "/api/health": {
+        "ok": false,
+        "error": "Remote end closed connection without response"
+      },
+      "/api/catalog": {
+        "ok": false,
+        "error": "Remote end closed connection without response"
+      },
+      "/api/models": {
+        "ok": false,
+        "error": "Remote end closed connection without response"
+      }
+    }
   },
   "summary": []
 }

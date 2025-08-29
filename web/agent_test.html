@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Agent Test – AndioMediaStudio</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    body{background:#0a0a0a;color:#ddd}
+    .wrap{max-width:1000px;margin:0 auto;padding:16px}
+    .row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+    textarea{width:100%;min-height:96px}
+    .log{background:#111;border:1px solid #222;border-radius:8px;padding:8px;max-height:240px;overflow:auto;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    .badge{background:#1b2b45;color:#a8d0ff;padding:2px 8px;border-radius:999px;border:1px solid #2b4b75}
+    .panel{border:1px solid #222;background:#0e0e10;border-radius:12px;padding:12px;margin-top:12px}
+    h2{margin:10px 0}
+  </style>
+</head>
+<body>
+  <script src="assets/app.js"></script>
+  <script>window.Andio?.navbar?.('index');</script>
+
+  <div class="wrap">
+    <h1>Agent-HTML-Test</h1>
+    <p>Dieser Test ruft (falls vorhanden) <code>Andio.agent</code> an und beobachtet DOM-Änderungen. Funktioniert auch ohne Agent via Fallback-DOM-Modifikation.</p>
+
+    <div class="panel">
+      <h2>1) Prompt</h2>
+      <textarea id="prompt">Bitte färbe alle H2-Überschriften blau und füge am Seitenende eine Notiz hinzu.</textarea>
+      <div class="row" style="margin-top:8px">
+        <button id="btn-run" class="primary">Agent ausführen</button>
+        <span class="badge" id="agent-state">Agent: unbekannt</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>2) Ergebnis</h2>
+      <div class="row">
+        <button id="btn-snapshot">Snapshot anzeigen</button>
+        <button id="btn-clear">Log löschen</button>
+      </div>
+      <div id="log" class="log" style="margin-top:8px"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Demo-Inhalt (Ziel der Änderungen)</h2>
+      <h2>Abschnitt A</h2>
+      <p>Hier kann der Agent Styles ändern, Elemente einfügen usw.</p>
+      <h2>Abschnitt B</h2>
+      <p>Noch ein Absatz für Tests.</p>
+      <button>Normaler Button</button>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    const $ = s => document.querySelector(s);
+    const logEl = $('#log');
+    function log(...a){ const line=document.createElement('div'); line.textContent='• '+a.join(' '); logEl.appendChild(line); logEl.scrollTop = logEl.scrollHeight; }
+    function setAgentState(txt){ $('#agent-state').textContent = 'Agent: '+txt; }
+
+    // Diagnose-Hooks (leichtgewichtige Version)
+    (function setupProbe(){
+      window.__AgentDiag = window.__AgentDiag || { events:[], exposed:{} };
+      const mutations = [];
+      const obs = new MutationObserver(list => {
+        list.forEach(m => mutations.push({t:Date.now(), type:m.type, target:m.target && m.target.nodeName}));
+      });
+      obs.observe(document.documentElement, {subtree:true, childList:true, attributes:true});
+
+      // versuchen, Agent verfügbar zu machen (Proxy)
+      function wrapAgent(agent){
+        if(!agent || agent.__wrapped) return agent;
+        const p = new Proxy(agent, {
+          get(target, prop, recv){
+            const val = Reflect.get(target, prop, recv);
+            if(typeof val === 'function'){
+              return function(...args){
+                window.__AgentDiag.events.push({t:Date.now(), type:'agent_call', method:String(prop), args});
+                try{
+                  const ret = val.apply(this, args);
+                  if(ret && typeof ret.then === 'function'){
+                    return ret.then(out => { window.__AgentDiag.events.push({t:Date.now(), type:'agent_resolve', method:String(prop), out}); return out; })
+                              .catch(e => { window.__AgentDiag.events.push({t:Date.now(), type:'agent_reject', method:String(prop), error:String(e)}); throw e; });
+                  }else{
+                    window.__AgentDiag.events.push({t:Date.now(), type:'agent_return', method:String(prop), out:ret});
+                    return ret;
+                  }
+                }catch(e){
+                  window.__AgentDiag.events.push({t:Date.now(), type:'agent_error', method:String(prop), error:String(e)});
+                  throw e;
+                }
+              }
+            }
+            return val;
+          }
+        });
+        p.__wrapped = true;
+        return p;
+      }
+
+      const candidates = [['Andio','agent'],['Andio','Agent'],['Agent']];
+      let found = false;
+      for(const path of candidates){
+        try{
+          let ctx = window;
+          for(const key of path) ctx = ctx?.[key];
+          if(ctx){
+            let root = window;
+            for(let i=0;i<path.length-1;i++) root = root[path[i]];
+            root[path[path.length-1]] = wrapAgent(ctx);
+            window.__AgentDiag.exposed[path.join('.')] = true;
+            found = true;
+          }
+        }catch(_){}
+      }
+      setAgentState(found ? 'gefunden' : 'nicht gefunden');
+
+      window.__AgentDiag.getSnapshot = () => ({
+        htmlLen: document.documentElement.outerHTML.length,
+        events: window.__AgentDiag.events.slice(),
+        mutations: mutations.slice(),
+        exposed: window.__AgentDiag.exposed
+      });
+
+      window.__AgentDiag.trySimpleEdit = async (text) => {
+        if(window.Andio && window.Andio.agent && typeof window.Andio.agent.command === 'function'){
+          return await window.Andio.agent.command({kind:'html-edit', prompt:text});
+        }
+        // Fallback: DOM selbst ändern, damit Test nicht "leer" bleibt
+        document.querySelectorAll('h2').forEach(el => el.style.color = 'dodgerblue');
+        const note = document.createElement('div');
+        note.textContent = 'Hinzugefügt vom Agent-Test (Fallback).';
+        note.style = 'margin:12px 0;padding:8px;border:1px dashed #48f;background:#001025;';
+        document.body.appendChild(note);
+        return {ok:true, fallback:true};
+      };
+    })();
+
+    $('#btn-run').addEventListener('click', async ()=>{
+      const prompt = $('#prompt').value.trim();
+      log('Sende Prompt:', prompt);
+      try{
+        const res = await window.__AgentDiag.trySimpleEdit(prompt);
+        log('Antwort:', JSON.stringify(res));
+        setTimeout(()=>{ snapshot(); }, 500);
+      }catch(e){
+        log('Fehler:', String(e));
+      }
+    });
+
+    function snapshot(){
+      const snap = window.__AgentDiag.getSnapshot();
+      log('Snapshot:', JSON.stringify({htmlLen:snap.htmlLen, events:snap.events.length, mutations:snap.mutations.length, exposed:snap.exposed}));
+    }
+
+    $('#btn-snapshot').addEventListener('click', snapshot);
+    $('#btn-clear').addEventListener('click', ()=> { logEl.innerHTML=''; });
+
+    // erste Statusmeldung
+    snapshot();
+  })();
+  </script>
+</body>
+</html>
