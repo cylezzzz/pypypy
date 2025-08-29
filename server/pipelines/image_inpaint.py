@@ -1,108 +1,267 @@
 # server/pipelines/image_inpaint.py
 from __future__ import annotations
-
 from pathlib import Path
-from typing import Callable, Optional, List
-import io
+from typing import Optional, Callable, List, Dict, Any
+import logging
 import base64
-import uuid
+import io
 
 import torch
-from PIL import Image, ImageOps
-from diffusers import StableDiffusionInpaintPipeline
+from PIL import Image
 
+logger = logging.getLogger(__name__)
 
-class InpaintRequest:
-    def __init__(self, **data):
-        self.image_path: str = data.get("image_path")
-        self.mask_path: Optional[str] = data.get("mask_path")
-        self.mask_b64: Optional[str] = data.get("mask_b64")
-        self.prompt: str = data.get("prompt", "")
-        self.negative_prompt: str = data.get("negative_prompt", "")
-        self.steps: int = int(data.get("steps", 30))
-        self.guidance: float = float(data.get("guidance", 7.5))
-        self.strength: float = float(data.get("strength", 0.85))
-        self.seed: Optional[int] = data.get("seed")
-        self.width: Optional[int] = data.get("width")
-        self.height: Optional[int] = data.get("height")
+# diffusers optional laden
+try:
+    from diffusers import StableDiffusionInpaintPipeline, StableDiffusionPipeline, DiffusionPipeline
+    DIFFUSERS_AVAILABLE = True
+except Exception as e:
+    DIFFUSERS_AVAILABLE = False
+    logger.warning(f"Diffusers not fully available for inpaint: {e}")
 
+# ---------------------------------------------------------------------------
+
+BASE = Path(__file__).resolve().parents[2]
+MODELS_DIR_FLAT = BASE / "models"
+MODELS_DIR_LEGACY = BASE / "models" / "image"
+CHECKPOINT_EXT = {".safetensors", ".ckpt", ".bin", ".pt"}
+
+def _models_root() -> Path:
+    # zuerst flach, dann legacy akzeptieren
+    if MODELS_DIR_FLAT.exists():
+        return MODELS_DIR_FLAT
+    if MODELS_DIR_LEGACY.exists():
+        return MODELS_DIR_LEGACY
+    raise FileNotFoundError(f"Models directory not found: {MODELS_DIR_FLAT}")
+
+def _find_model_path(name: Optional[str]) -> Path:
+    root = _models_root()
+    if name:
+        candidates = [
+            root / name,
+            root / f"{name}.safetensors",
+            root / f"{name}.ckpt",
+            root / f"{name}.bin",
+            root / f"{name}.pt",
+        ]
+        for c in candidates:
+            if c.exists():
+                return c
+        # fuzzy
+        for p in root.iterdir():
+            if name.lower() in p.name.lower():
+                return p
+
+    # fallback: diffusers-ordner
+    for p in root.iterdir():
+        if p.is_dir() and (p / "model_index.json").exists():
+            logger.info(f"[inpaint] fallback diffusers folder: {p.name}")
+            return p
+
+    # fallback: irgendein checkpoint (nicht ideal für inpaint)
+    for p in root.iterdir():
+        if p.is_file() and p.suffix.lower() in CHECKPOINT_EXT:
+            logger.info(f"[inpaint] fallback checkpoint: {p.name}")
+            return p
+
+    raise FileNotFoundError(f"No inpaint-capable model found in {root}")
+
+def _load_image(path_or_b64: Optional[str], b64: Optional[str] = None) -> Image.Image:
+    if b64:
+        raw = base64.b64decode(b64.split(",")[-1])
+        return Image.open(io.BytesIO(raw)).convert("RGBA")
+    if path_or_b64:
+        p = Path(path_or_b64)
+        if not p.exists():
+            raise FileNotFoundError(f"image not found: {p}")
+        return Image.open(p).convert("RGBA")
+    raise ValueError("no image provided")
+
+def _load_mask(path_or_b64: Optional[str], b64: Optional[str] = None, size: Optional[tuple[int,int]] = None) -> Optional[Image.Image]:
+    if not path_or_b64 and not b64:
+        return None
+    if b64:
+        raw = base64.b64decode(b64.split(",")[-1])
+        m = Image.open(io.BytesIO(raw)).convert("L")
+    else:
+        p = Path(path_or_b64)
+        if not p.exists():
+            raise FileNotFoundError(f"mask not found: {p}")
+        m = Image.open(p).convert("L")
+    if size and m.size != size:
+        m = m.resize(size, Image.NEAREST)
+    return m
+
+# ---------------------------------------------------------------------------
+
+class InpaintRequest(torch.nn.Module):
+    def __init__(
+        self,
+        image_path: Optional[str] = None,
+        mask_path: Optional[str] = None,
+        mask_b64: Optional[str] = None,
+        prompt: str = "",
+        negative_prompt: str = "blurry, artifacts, text, watermark",
+        steps: int = 30,
+        guidance: float = 7.5,
+        strength: float = 0.85,
+        seed: Optional[int] = None,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        model: Optional[str] = None,  # <— neu: explizites Modell möglich
+    ):
+        super().__init__()
+        self.image_path = image_path
+        self.mask_path = mask_path
+        self.mask_b64 = mask_b64
+        self.prompt = prompt
+        self.negative_prompt = negative_prompt
+        self.steps = steps
+        self.guidance = guidance
+        self.strength = strength
+        self.seed = seed
+        self.width = width
+        self.height = height
+        self.model = model
 
 class SDInpaintEngine:
-    def __init__(self, model_id: str = "runwayml/stable-diffusion-inpainting"):
-        self.model_id = model_id
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        dtype = torch.float16 if self.device == "cuda" else torch.float32
+    """
+    Lädt **lazy** ein Inpainting-Modell ausschließlich lokal aus `models/` (flat/legacy).
+    Unterstützt:
+      • Diffusers-Ordner mit model_index.json (empfohlen: SD-Inpaint)
+      • Single-File Checkpoints (.safetensors/.ckpt/.bin/.pt) -> fallback mit normaler SD-Pipeline (Maske wird ignoriert!)
+    """
+    def __init__(self, prefer_gpu: bool = True) -> None:
+        self.device = "cuda" if (prefer_gpu and torch.cuda.is_available()) else "cpu"
+        self.dtype = torch.float16 if self.device == "cuda" else torch.float32
+        self.pipe: Optional[DiffusionPipeline] = None
+        self.loaded_from: Optional[Path] = None
 
-        # Load pipeline once
-        self.pipe = StableDiffusionInpaintPipeline.from_pretrained(
-            self.model_id,
-            torch_dtype=dtype,
-            safety_checker=None,  # you control usage locally; keep enabled if public
+    def _create_pipeline(self, model_path: Path) -> DiffusionPipeline:
+        if not DIFFUSERS_AVAILABLE:
+            raise RuntimeError("Diffusers not installed")
+
+        common = dict(
+            torch_dtype=self.dtype,
+            safety_checker=None,
+            requires_safety_checker=False,
+            local_files_only=True,  # **nie** ins Netz gehen
         )
-        self.pipe = self.pipe.to(self.device)
-        try:
-            self.pipe.enable_attention_slicing()
-        except Exception:
-            pass
-        try:
-            # Only available when xformers present
-            self.pipe.enable_xformers_memory_efficient_attention()
-        except Exception:
-            pass
 
-    def _decode_mask_b64(self, data_uri: str) -> Image.Image:
-        """Decode a data URL (PNG) to Pillow image (L)."""
-        if "," in data_uri:
-            data_uri = data_uri.split(",", 1)[1]
-        raw = base64.b64decode(data_uri)
-        return Image.open(io.BytesIO(raw)).convert("L")
+        if model_path.is_file():
+            # Single-File: Inpainting-Pipeline aus Single-File gibt es nur, wenn das Model kompatibel ist.
+            # Viele .safetensors sind "normale" SD-Weights -> wir laden dann normale SD-Pipeline (Maske wird ignoriert).
+            if hasattr(StableDiffusionInpaintPipeline, "from_single_file"):
+                try:
+                    pipe = StableDiffusionInpaintPipeline.from_single_file(str(model_path), **common)
+                    logger.info(f"[inpaint] loaded InpaintPipeline from single file: {model_path.name}")
+                    return pipe.to(self.device)
+                except Exception as e:
+                    logger.warning(f"[inpaint] single-file inpaint not supported, falling back to SD pipeline: {e}")
 
-    def _load_images(self, req: InpaintRequest) -> tuple[Image.Image, Optional[Image.Image]]:
-        img = Image.open(req.image_path).convert("RGB")
+            pipe = StableDiffusionPipeline.from_single_file(str(model_path), **common)
+            logger.info(f"[inpaint] loaded **normal** SD pipeline from single file (mask will be ignored): {model_path.name}")
+            return pipe.to(self.device)
+
+        # Diffusers-Ordner
+        # Versuch Inpaint-Pipeline
+        try:
+            pipe = StableDiffusionInpaintPipeline.from_pretrained(str(model_path), **common)
+            logger.info(f"[inpaint] loaded InpaintPipeline from folder: {model_path.name}")
+            return pipe.to(self.device)
+        except Exception as e:
+            logger.warning(f"[inpaint] folder not inpaint-capable, trying normal SD pipeline: {e}")
+            pipe = StableDiffusionPipeline.from_pretrained(str(model_path), **common)
+            logger.info(f"[inpaint] loaded **normal** SD pipeline from folder (mask will be ignored): {model_path.name}")
+            return pipe.to(self.device)
+
+    def ensure_loaded(self, model_name: Optional[str]) -> None:
+        if self.pipe is not None:
+            return
+        model_path = _find_model_path(model_name)
+        self.pipe = self._create_pipeline(model_path)
+        self.loaded_from = model_path
+
+        # leichte Optimierungen
+        if self.device == "cuda":
+            try:
+                self.pipe.enable_attention_slicing(1)
+            except Exception:
+                pass
+            try:
+                self.pipe.enable_vae_slicing()
+            except Exception:
+                pass
+
+    def run(self, req: InpaintRequest, progress_cb: Optional[Callable[[int,int,str], None]] = None) -> List[str]:
+        self.ensure_loaded(req.model)
+
+        img = _load_image(req.image_path)
+        msk = _load_mask(req.mask_path, req.mask_b64, size=img.size)
+
+        # Dimensionen ggf. anpassen
         if req.width and req.height:
-            img = img.resize((int(req.width), int(req.height)), Image.LANCZOS)
-
-        mask = None
-        if req.mask_path and Path(req.mask_path).exists():
-            mask = Image.open(req.mask_path).convert("L")
-        elif req.mask_b64:
-            mask = self._decode_mask_b64(req.mask_b64)
-
-        if mask is not None and mask.size != img.size:
-            mask = mask.resize(img.size, Image.NEAREST)
-
-        # SD expects white = to-change, black = keep. Ensure correct polarity (no-op placeholder).
-        if mask is not None:
-            mask = ImageOps.invert(ImageOps.invert(mask))
-
-        return img, mask
-
-    def run(self, req: InpaintRequest, progress: Optional[Callable[[int,int,float], None]] = None) -> List[str]:
-        img, mask = self._load_images(req)
+            # SD verlangt vielfache von 8
+            w = (int(req.width) // 8) * 8
+            h = (int(req.height) // 8) * 8
+            if (w, h) != img.size:
+                img = img.resize((w, h), Image.LANCZOS)
+                if msk is not None:
+                    msk = msk.resize((w, h), Image.NEAREST)
 
         generator = None
         if req.seed is not None:
             generator = torch.Generator(device=self.device).manual_seed(int(req.seed))
 
-        images = self.pipe(
-            prompt=req.prompt,
-            negative_prompt=(req.negative_prompt or None),
-            image=img,
-            mask_image=mask,
-            guidance_scale=float(req.guidance),
+        # Prüfen, ob wir eine echte Inpaint-Pipeline haben
+        is_inpaint = isinstance(self.pipe, StableDiffusionInpaintPipeline)
+
+        if msk is None and is_inpaint:
+            logger.warning("[inpaint] no mask provided — result will ~equal original. Provide a white=change / black=keep mask.")
+        if msk is None and not is_inpaint:
+            logger.warning("[inpaint] mask ignored because pipeline is **not** inpaint-capable (normal SD).")
+
+        # Aufruf-Argumente zusammenstellen
+        call = dict(
+            prompt=req.prompt or "",
+            negative_prompt=req.negative_prompt or "",
             num_inference_steps=int(req.steps),
-            strength=float(req.strength),
+            guidance_scale=float(req.guidance),
             generator=generator,
-        ).images
+        )
 
-        out_dir = Path(__file__).resolve().parents[2] / "outputs" / "images"
+        if is_inpaint:
+            # echte Inpainting-Argumente
+            call.update(dict(
+                image=img.convert("RGB"),
+                mask_image=msk if msk is not None else Image.new("L", img.size, color=0),
+                strength=float(req.strength),
+            ))
+        else:
+            # normale SD-Pipeline (Maske kann nicht wirken)
+            call.update(dict(
+                width=img.size[0],
+                height=img.size[1],
+            ))
+
+        if progress_cb:
+            # diffusers-callback ist bei vielen Pipelines verfügbar; wir nutzen step/total heuristisch
+            def _cb(step, t, kwargs):
+                try:
+                    progress_cb(step, int(req.steps), f"step {step}/{req.steps}")
+                except Exception:
+                    pass
+            call["callback"] = _cb
+            call["callback_steps"] = 1
+
+        out = self.pipe(**call)
+        imgs: List[Image.Image] = out.images
+
+        out_dir = BASE / "outputs" / "images"
         out_dir.mkdir(parents=True, exist_ok=True)
-
-        saved = []
-        for i, im in enumerate(images):
-            out = out_dir / f"inpaint_{uuid.uuid4().hex[:8]}_{i:02d}.png"
-            im.save(out)
-            saved.append(str(out).replace("\\", "/"))
-            if progress:
-                progress(i + 1, len(images), 0.0)
-        return saved
+        results: List[str] = []
+        for i, im in enumerate(imgs):
+            p = out_dir / f"inpaint_{(self.loaded_from.name if self.loaded_from else 'model')}_{i}.png"
+            im.save(p)
+            results.append(str(p))
+        return results
