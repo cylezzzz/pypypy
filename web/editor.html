@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Pro Editor · AndioMediaStudio</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .tool-row{display:flex;gap:8px;flex-wrap:wrap}
+    .layer-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+    .layer-item{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.03)}
+    .select-rect{position:absolute;border:1px dashed rgba(255,255,255,.6);pointer-events:none}
+  </style>
+</head>
+<body>
+<script src="assets/app.js"></script>
+<script>if(Andio?.injectNavbar)Andio.injectNavbar('editor'); else Andio?.navbar?.('editor');</script>
+
+<div class="container">
+  <h1>Pro Editor</h1>
+  <div class="grid cols-2">
+    <div class="card">
+      <h3>Quelle & Werkzeuge</h3>
+      <label>Bild hochladen</label>
+      <input id="file" type="file" accept="image/*" class="input"/>
+
+      <h3 style="margin-top:12px">Werkzeuge</h3>
+      <div class="tool-row">
+        <button class="btn tool primary" data-tool="brush">Pinsel</button>
+        <button class="btn tool" data-tool="eraser">Radierer</button>
+        <button class="btn tool" data-tool="select">Bereich markieren</button>
+        <button class="btn tool" data-tool="magic">Magic Select</button>
+      </div>
+      <div class="grid cols-2" style="margin-top:10px">
+        <div><label>Brush Size</label><input id="bSize" type="range" min="4" max="64" value="18"/></div>
+        <div><label>Feather</label><input id="bSoft" type="range" min="0" max="32" value="8"/></div>
+      </div>
+
+      <h3 style="margin-top:12px">Pose</h3>
+      <div class="tool-row">
+        <label class="badge"><input id="poseDetect" type="checkbox"> Pose erkennen</label>
+        <label>Preset</label>
+        <select id="posePreset" class="input" style="max-width:220px">
+          <option>Neutral</option><option>Turn Head Right</option><option>Raise Left Arm</option><option>Walk</option>
+        </select>
+      </div>
+      <div><label>Pose-Intensität</label><input id="poseAmount" type="range" min="0" max="1" step="0.05" value="0.5"/></div>
+
+      <h3 style="margin-top:12px">Objekte</h3>
+      <div class="grid cols-2">
+        <div><label>Objekt/Asset</label><input id="objName" class="input" placeholder="z. B. Hut, Brille, Tattoo"/></div>
+        <div><label>Größe</label><input id="objScale" type="range" min="0.1" max="3" step="0.05" value="1"/></div>
+      </div>
+      <small class="badge" style="margin-top:6px">Klick in die Vorschau, um zu platzieren</small>
+
+      <h3 style="margin-top:12px">Filter</h3>
+      <div class="grid cols-2">
+        <div><label>Helligkeit</label><input id="fBright" type="range" min="0.2" max="2" step="0.05" value="1"/></div>
+        <div><label>Kontrast</label><input id="fContr" type="range" min="0.2" max="2" step="0.05" value="1"/></div>
+        <div><label>Sättigung</label><input id="fSat" type="range" min="0" max="2" step="0.05" value="1"/></div>
+        <div><label>Blur</label><input id="fBlur" type="range" min="0" max="10" step="0.5" value="0"/></div>
+      </div>
+
+      <h3 style="margin-top:12px">SFW/NSFW</h3>
+      <div class="tool-row">
+        <label class="badge"><input id="nsfwToggle" type="checkbox"> NSFW Style</label>
+      </div>
+      <div id="nsfwBlock" style="display:none;margin-top:6px">
+        <label>NSFW-Level</label>
+        <select id="nsfwLevel" class="input"><option>soft</option><option>artistic</option><option>unrestricted</option></select>
+        <div class="tool-row">
+          <label class="badge"><input id="adultOk" type="checkbox"> über 18</label>
+          <label class="badge"><input id="consentOk" type="checkbox"> Einwilligung</label>
+        </div>
+      </div>
+
+      <hr/>
+      <div class="toolbar">
+        <button id="apply" class="btn primary">Anwenden/Rendern</button>
+        <button id="save" class="btn ok">Download</button>
+        <button id="reset" class="btn">Reset</button>
+      </div>
+
+      <h3 style="margin-top:12px">Ebenen</h3>
+      <div id="layers" class="layer-list"></div>
+    </div>
+
+    <div class="card">
+      <h3>Vorschau</h3>
+      <div id="stage" class="preview" style="min-height:520px; position:relative">
+        <div class="progress"><div></div></div>
+        <!-- Base & Paint layers -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>© AndioMediaStudio</footer>
+
+<script>
+const {$, $$, Progress} = Andio; const Status = Andio.Status || {start:()=>({}),progress:()=>{},done:()=>{}};
+const pm = new Progress($('#stage')); let tool='brush', base=null, paint=null, pctx=null, selRect=null, placingObj=false;
+
+function addLayerItem(name){
+  const el=document.createElement('div'); el.className='layer-item'; el.innerHTML=`<span>${name}</span><span class="badge">ON</span>`; $('#layers').appendChild(el);
+}
+
+function ensureCanvases(){
+  if(!base){ base=document.createElement('canvas'); base.width=$('#stage').clientWidth|0; base.height=$('#stage').clientHeight|0; $('#stage').appendChild(base); addLayerItem('Base'); }
+  if(!paint){ paint=document.createElement('canvas'); paint.width=base.width; paint.height=base.height; paint.style.position='absolute'; paint.style.inset='0'; $('#stage').appendChild(paint); pctx=paint.getContext('2d'); addLayerItem('Paint'); }
+}
+function resizeCanvasToImage(img){
+  base.width=img.naturalWidth; base.height=img.naturalHeight;
+  paint.width=base.width; paint.height=base.height;
+  const bctx=base.getContext('2d'); bctx.clearRect(0,0,base.width,base.height); bctx.drawImage(img,0,0,base.width,base.height);
+}
+
+$('#file').addEventListener('change', e=>{
+  const f=e.target.files?.[0]; if(!f) return; const url=URL.createObjectURL(f);
+  ensureCanvases(); const img=new Image(); img.onload=()=>{ resizeCanvasToImage(img); URL.revokeObjectURL(url); }; img.src=url;
+});
+
+$$('.tool').forEach(b=>b.addEventListener('click',()=>{ tool=b.dataset.tool; $$('.tool').forEach(x=>x.classList.toggle('primary', x===b)); placingObj = (tool==='magic')?true:false; }));
+
+function stageRel(e){
+  const r=$('#stage').getBoundingClientRect(); return { x: (e.clientX-r.left)/r.width*base.width, y:(e.clientY-r.top)/r.height*base.height, r };
+}
+
+let drawing=false, sx=0, sy=0;
+$('#stage').addEventListener('mousedown', e=>{
+  if(!base) ensureCanvases();
+  const {x,y} = stageRel(e); drawing=true; sx=x; sy=y;
+  if(tool==='select'){ if(!selRect){ selRect=document.createElement('div'); selRect.className='select-rect'; $('#stage').appendChild(selRect);} selRect.style.left=e.offsetX+'px'; selRect.style.top=e.offsetY+'px'; selRect.style.width='0px'; selRect.style.height='0px'; }
+});
+$('#stage').addEventListener('mousemove', e=>{
+  if(!drawing || !paint) return;
+  const {x,y,r} = stageRel(e);
+  if(tool==='brush' || tool==='eraser'){
+    pctx.globalCompositeOperation = (tool==='brush')? 'source-over' : 'destination-out';
+    const size=+$('#bSize').value, soft=+$('#bSoft').value;
+    const g=pctx.createRadialGradient(x,y,Math.max(1,size-soft),x,y,size);
+    g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,0)');
+    pctx.fillStyle=g; pctx.beginPath(); pctx.arc(x,y,size,0,Math.PI*2); pctx.fill();
+  } else if(tool==='select' && selRect){
+    selRect.style.width = (e.offsetX - parseFloat(selRect.style.left))+'px';
+    selRect.style.height= (e.offsetY - parseFloat(selRect.style.top))+'px';
+  }
+});
+window.addEventListener('mouseup', ()=> drawing=false);
+
+$('#stage').addEventListener('click', e=>{
+  if(tool!=='magic') return;
+  const {x,y}=stageRel(e);
+  const name=$('#objName').value||'Object'; const scale=+$('#objScale').value;
+  pctx.save(); pctx.translate(x,y); pctx.scale(scale,scale);
+  pctx.fillStyle='rgba(102,163,255,.8)'; pctx.beginPath(); pctx.arc(0,0,16,0,Math.PI*2); pctx.fill();
+  pctx.fillStyle='white'; pctx.font='bold 10px ui-monospace,monospace'; pctx.fillText(name, -name.length*3.2, 4);
+  pctx.restore();
+});
+
+function applyFilters(){
+  if(!base) return;
+  const bctx=base.getContext('2d'); const img=bctx.getImageData(0,0,base.width,base.height);
+  const canvas=document.createElement('canvas'); canvas.width=img.width; canvas.height=img.height; const cx=canvas.getContext('2d');
+  const br=+$('#fBright').value, ct=+$('#fContr').value, st=+$('#fSat').value, bl=+$('#fBlur').value;
+  cx.filter = `brightness(${br}) contrast(${ct}) saturate(${st}) blur(${bl}px)`;
+  cx.putImageData(img,0,0); // draw original then filter: need image bitmap, quick workaround:
+  // snapshot via drawImage of base+paint:
+  const snap=document.createElement('canvas'); snap.width=base.width; snap.height=base.height;
+  const sctx=snap.getContext('2d'); sctx.drawImage(base,0,0); sctx.drawImage(paint,0,0);
+  bctx.clearRect(0,0,base.width,base.height); bctx.filter = cx.filter; bctx.drawImage(snap,0,0);
+  pctx.clearRect(0,0,paint.width,paint.height);
+}
+
+$('#nsfwToggle').addEventListener('change', ()=> $('#nsfwBlock').style.display = $('#nsfwToggle').checked ? 'block' : 'none');
+
+$('#apply').addEventListener('click', async ()=>{
+  const nsfw=$('#nsfwToggle').checked;
+  if(nsfw && !($('#adultOk').checked && $('#consentOk').checked)){ alert('NSFW benötigt Alters-/Einwilligungsbestätigung.'); return; }
+  const est=2000; Status.start('Editor: Render', {estMs:est}); await pm.fake(est);
+  applyFilters(); Status.done('Fertig');
+});
+$('#save').addEventListener('click', ()=>{
+  if(!base) return alert('Kein Bild'); const snap=document.createElement('canvas'); snap.width=base.width; snap.height=base.height;
+  const sctx=snap.getContext('2d'); sctx.drawImage(base,0,0); if(paint) sctx.drawImage(paint,0,0);
+  const a=document.createElement('a'); a.href=snap.toDataURL('image/png'); a.download='editor_result.png'; a.click();
+});
+$('#reset').addEventListener('click', ()=>{
+  $('#poseDetect').checked=false; $('#posePreset').value='Neutral'; $('#poseAmount').value=0.5;
+  $('#objName').value=''; $('#objScale').value=1; $('#fBright').value=1; $('#fContr').value=1; $('#fSat').value=1; $('#fBlur').value=0;
+  $('#nsfwToggle').checked=false; $('#nsfwBlock').style.display='none';
+  if(base){ base.remove(); base=null; } if(paint){ paint.remove(); paint=null; pctx=null; } $('#layers').innerHTML='';
+});
+
+if(Andio?.polish) Andio.polish();
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Motion · AndioMediaStudio</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+<script src="assets/app.js"></script>
+<script>if(Andio?.injectNavbar)Andio.injectNavbar('motion'); else Andio?.navbar?.('motion');</script>
+
+<div class="container">
+  <h1>Bild → Bewegung</h1>
+  <div class="grid cols-2">
+    <div class="card">
+      <h3>Quelle & Modi</h3>
+      <label>Bild</label>
+      <input id="img" type="file" accept="image/*" class="input"/>
+      <div class="toolbar" style="margin-top:8px">
+        <button class="btn mode primary" data-mode="parallax">Parallax 2.5D</button>
+        <button class="btn mode" data-mode="cinemagraph">Cinemagraph</button>
+        <button class="btn mode" data-mode="head">Head Turn/Blink</button>
+        <button class="btn mode" data-mode="body">Body Sway</button>
+      </div>
+      <div class="grid cols-2" style="margin-top:10px">
+        <div><label>Intensität</label><input id="intensity" type="range" min="0" max="1" step="0.05" value="0.5"/></div>
+        <div><label>Geschwindigkeit</label><input id="speed" type="range" min="0" max="1" step="0.05" value="0.5"/></div>
+        <div><label>Länge (Sek.)</label><input id="length" type="number" class="input" value="6"/></div>
+        <div><label>Qualität</label>
+          <select id="quality" class="input"><option value="draft">Draft</option><option value="standard" selected>Standard</option><option value="ultra">Ultra</option></select>
+        </div>
+      </div>
+
+      <h3 style="margin-top:12px">Audio & Lipsync</h3>
+      <div class="grid cols-2">
+        <div><label>Audio</label><input id="audio" type="file" accept="audio/*" class="input"/></div>
+        <div><label>oder TTS</label><textarea id="tts" class="input" rows="2"></textarea></div>
+        <div><label>Lipsync</label><input id="lip" type="range" min="0" max="1" step="0.05" value="0.7"/></div>
+        <div class="toolbar"><label class="badge"><input id="nsfwToggle" type="checkbox"> NSFW Style</label></div>
+      </div>
+      <div id="nsfwBlock" style="display:none;margin-top:6px">
+        <label>NSFW-Level</label>
+        <select id="nsfwLevel" class="input"><option>soft</option><option>artistic</option><option>unrestricted</option></select>
+        <div class="toolbar" style="margin-top:6px">
+          <label class="badge"><input id="adultOk" type="checkbox"> über 18</label>
+          <label class="badge"><input id="consentOk" type="checkbox"> Einwilligung</label>
+        </div>
+      </div>
+
+      <hr/>
+      <div class="toolbar">
+        <button id="render" class="btn primary">Rendern</button>
+        <button id="save" class="btn ok">Download</button>
+        <button id="reset" class="btn">Reset</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Vorschau</h3>
+      <div id="preview" class="preview" style="min-height:420px">
+        <div class="progress"><div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>© AndioMediaStudio</footer>
+
+<script>
+const {$, $$, Progress} = Andio; const Status = Andio.Status || {start:()=>({}),progress:()=>{},done:()=>{}};
+const pm = new Progress($('#preview')); let mode='parallax', lastImageURL=null;
+$$('.mode').forEach(b=>b.addEventListener('click',()=>{ mode=b.dataset.mode; $$('.mode').forEach(x=>x.classList.toggle('primary', x===b)); }));
+$('#img').addEventListener('change',e=>{ const f=e.target.files?.[0]; if(!f) return; lastImageURL=URL.createObjectURL(f); let img=$('#preview img'); if(!img){ img=document.createElement('img'); $('#preview').appendChild(img);} img.src=lastImageURL; });
+$('#nsfwToggle').addEventListener('change', ()=> $('#nsfwBlock').style.display = $('#nsfwToggle').checked ? 'block' : 'none');
+
+function assemble(){
+  const nsfw = $('#nsfwToggle').checked;
+  const p = { mode, length:+$('#length').value, quality:$('#quality').value, intensity:+$('#intensity').value, speed:+$('#speed').value, lip:+$('#lip').value, image:lastImageURL||null, nsfw: nsfw ? { level: $('#nsfwLevel').value, attest:{ adult:$('#adultOk').checked, consent:$('#consentOk').checked } } : null };
+  if(nsfw && !(p.nsfw.attest.adult && p.nsfw.attest.consent)){ alert('NSFW benötigt Alters-/Einwilligungsbestätigung.'); return null; }
+  return p;
+}
+async function demoRender(p){
+  const est = (p.quality==='ultra'? 5000 : p.quality==='draft'? 1500 : 3000) + p.length*60;
+  Status.start(`Motion: ${p.mode}`, {estMs: est}); await pm.fake(est);
+  const c=document.createElement('canvas'); c.width=640; c.height=360; const ctx=c.getContext('2d');
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,640,360);
+  ctx.fillStyle='rgba(255,255,255,.92)'; ctx.font='bold 18px ui-monospace,monospace';
+  ctx.fillText(`MOTION · ${p.mode}`, 16, 28);
+  ctx.font='14px ui-monospace,monospace'; ctx.fillText(`len=${p.length}s q=${p.quality} int=${p.intensity} spd=${p.speed} lip=${p.lip}`, 16, 52);
+  if(p.nsfw) ctx.fillText(`nsfw=${p.nsfw.level}`, 16, 76);
+  const url=c.toDataURL('image/png'); let img=$('#preview img'); if(!img){ img=document.createElement('img'); $('#preview').appendChild(img);} img.src=url;
+  Status.done('Fertig');
+}
+$('#render').addEventListener('click', async ()=>{ const p=assemble(); if(!p) return; await demoRender(p); });
+$('#save').addEventListener('click', ()=>{ const img=$('#preview img'); if(!img) return alert('Nichts zu speichern'); const a=document.createElement('a'); a.href=img.src; a.download='motion_thumb.png'; a.click(); });
+$('#reset').addEventListener('click', ()=>{ $('#length').value=6; $('#quality').value='standard'; $('#intensity').value=0.5; $('#speed').value=0.5; $('#lip').value=0.7; $('#nsfwToggle').checked=false; $('#nsfwBlock').style.display='none'; let img=$('#preview img'); if(img) img.remove(); if(lastImageURL) URL.revokeObjectURL(lastImageURL); lastImageURL=null; });
+if(Andio?.polish) Andio.polish();
+</script>
+</body>
+</html>

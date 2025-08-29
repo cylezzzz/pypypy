@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Video Studio · AndioMediaStudio</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .chip.active{outline:2px solid var(--accent); border-radius:999px}
+    .subtle{color:var(--muted);font-size:12px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:960px){ .split{grid-template-columns:1fr} }
+    .pill{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.04)}
+    #preview img, #preview canvas{display:block;max-width:100%;max-height:100%;margin:auto}
+    .toast{position:fixed;bottom:26px;right:26px;background:linear-gradient(180deg,rgba(24,32,54,.95),rgba(14,20,36,.95));border:1px solid var(--border);padding:12px 14px;border-radius:14px;box-shadow:var(--shadow-md);z-index:80}
+    /* Wippschalter (voll klickbar + tastaturfähig) */
+    .switch{position:relative;width:58px;height:28px;background:#1a2236;border:1px solid var(--border);border-radius:999px;cursor:pointer}
+    .switch input{position:absolute;inset:0;opacity:0}
+    .knob{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#fff,#cfd6ff);box-shadow:0 2px 8px rgba(0,0,0,.35);transition:left .18s}
+    .switch input:checked ~ .knob{ left:32px }
+    .switch .labels{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);padding:0 8px;pointer-events:none}
+  </style>
+</head>
+<body>
+<script src="assets/data/registry.js"></script>
+<script src="assets/app.js"></script>
+<script>window.Andio=window.Andio||{}; Andio.injectNavbar?.('video-gen');</script>
+
+<div class="container">
+  <h1>Video Studio</h1>
+  <div class="grid cols-2">
+
+    <!-- LINKS -->
+    <div class="card">
+      <h3>1) Quelle & Modus</h3>
+      <div class="row">
+        <label class="switch" title="SFW ↔ NSFW" aria-label="SFW oder NSFW" role="switch" aria-checked="false" tabindex="0">
+          <input id="nsfwToggle" type="checkbox"/><div class="knob"></div><div class="labels"><span>SFW</span><span>NSFW</span></div>
+        </label>
+        <span class="badge">Modelle passen sich an</span>
+      </div>
+
+      <div class="toolbar" style="margin-top:10px">
+        <button class="btn mode primary" data-mode="t2v">Text→Video</button>
+        <button class="btn mode" data-mode="ti2v">Text+Bild→Video</button>
+      </div>
+
+      <!-- Modus-spezifisch -->
+      <section data-pane="ti2v" style="display:none;margin-top:10px">
+        <label>Referenzbild</label>
+        <input id="refImg" type="file" accept="image/*" class="input"/>
+      </section>
+
+      <!-- Kategorien -->
+      <h3 style="margin-top:14px">Kategorien</h3>
+      <div class="subtle">Klicke einen Vorschlags-Chip oder wähle Genre manuell</div>
+      <div id="chipsLeft" class="chips"></div>
+
+      <hr/>
+      <h3>2) Look & Motion</h3>
+      <div class="split">
+        <div><label>Genre</label><select id="genre" class="input"></select></div>
+        <div><label>Kamera</label><select id="camera" class="input"></select></div>
+        <div><label>Bewegungsstil</label><select id="motionStyle" class="input"></select></div>
+        <div><label>Color-Grade</label><select id="grade" class="input"></select></div>
+      </div>
+
+      <hr/>
+      <h3>3) Ausgabe</h3>
+      <div class="split">
+        <div>
+          <label>Format</label>
+          <select id="format" class="input">
+            <option value="16:9" selected>16:9</option>
+            <option value="9:16">9:16</option>
+            <option value="1:1">1:1</option>
+            <option value="2.39:1">2.39:1</option>
+          </select>
+        </div>
+        <div><label>Auflösung</label><select id="res" class="input"></select></div>
+        <div><label>Länge (Sek.)</label><input id="length" type="number" class="input" value="8"/></div>
+        <div><label>FPS</label><input id="fps" type="number" class="input" value="24"/></div>
+      </div>
+
+      <hr/>
+      <h3>4) Modell & Safety</h3>
+      <div class="split">
+        <div>
+          <label class="badge"><input id="smartModel" type="checkbox" checked> Smart Modell</label>
+          <select id="model" class="input" disabled></select>
+          <div class="subtle" id="modelHint"></div>
+        </div>
+        <div id="nsfwBlock" style="display:none">
+          <label class="badge"><input id="adultConsent" type="checkbox"> Ü18 & Einwilligung bestätigt</label>
+        </div>
+      </div>
+
+      <hr/>
+      <div class="toolbar">
+        <button id="btnRandom" class="btn primary">🎲 Zufall</button>
+        <button id="render" class="btn">Rendern</button>
+        <button id="save" class="btn ok">Download</button>
+        <button id="reset" class="btn">Reset</button>
+      </div>
+    </div>
+
+    <!-- RECHTS -->
+    <div class="card">
+      <h3>Vorschau</h3>
+      <div id="preview" class="preview" style="min-height:420px"><div class="progress"><div></div></div></div>
+
+      <h3 style="margin-top:12px">Prompt</h3>
+      <textarea id="promptBox" class="input" rows="3" placeholder="Zufall füllt hier automatisch…"></textarea>
+      <label style="margin-top:8px;display:block">Negative</label>
+      <textarea id="negative" class="input" rows="2" placeholder="Artefakte, Ruckler …"></textarea>
+    </div>
+
+  </div>
+</div>
+
+<footer>© AndioMediaStudio</footer>
+
+<script>
+/* ==== SHIMs ==== */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$= (s,r=document)=>Array.from(r.querySelectorAll(s));
+const Progress = (window.Andio?.Progress) ? window.Andio.Progress : function(el){return{fake:async(ms=1200)=>{const b=el?.querySelector?.('.progress>div'); if(!b) return; b.style.transition='width .25s'; b.style.width='85%'; await new Promise(r=>setTimeout(r,ms)); b.style.width='100%'; setTimeout(()=>b.style.width='0%',300);}}};
+const pm = new Progress($('#preview'));
+
+/* ==== Daten ==== */
+const RES_BY_FORMAT = {
+  '16:9':['1280×720 (720p)','1920×1080 (1080p)','2560×1440 (1440p)','3840×2160 (4K)'],
+  '9:16':['720×1280','1080×1920','1440×2560'],
+  '1:1' :['768×768','1024×1024','1536×1536'],
+  '2.39:1':['1920×804','4096×1716']
+};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+let V, VMODELS, mode='t2v', lastRefURL=null;
+
+/* ==== Switch voll klickbar + Tastatur ==== */
+(function wireSwitch(){
+  const sw = $('.switch'); const input = $('#nsfwToggle');
+  const sync=()=> sw.setAttribute('aria-checked', input.checked?'true':'false');
+  sw.addEventListener('click', e=>{ if(e.target!==input){ input.checked=!input.checked; input.dispatchEvent(new Event('change',{bubbles:true})); } sync();});
+  sw.addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); input.checked=!input.checked; input.dispatchEvent(new Event('change',{bubbles:true})); sync();}});
+  input.addEventListener('change', sync); sync();
+})();
+
+function setSel(el, items){ el.innerHTML=(items||[]).map(x=>`<option value="${x.id||x}">${x.name||x}</option>`).join(''); }
+function setRes(fmt){ $('#format').value=fmt; setSel($('#res'), RES_BY_FORMAT[fmt]); $('#res').value=RES_BY_FORMAT[fmt][1]||RES_BY_FORMAT[fmt][0]; }
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 1800); }
+function wipePreview(){ $$('#preview img, #preview canvas').forEach(n=>n.remove()); }
+function setMode(m){
+  mode=m;
+  $$('.btn.mode').forEach(b=>b.classList.toggle('primary', b.dataset.mode===m));
+  $$('[data-pane]').forEach(p=>p.style.display=(p.dataset.pane===m)?'block':'none');
+}
+
+/* ==== Boot ==== */
+async function bootVideo(){
+  V = await AndioData.loadVideoPresets();
+  setSel($('#genre'), V.genres); setSel($('#camera'), V.cameras);
+  setSel($('#motionStyle'), V.motions); setSel($('#grade'), V.grades);
+  setRes('16:9');
+
+  // Chips
+  const chips = AndioData.featuredChips(V.featured, {nsfw: $('#nsfwToggle').checked, n:16});
+  $('#chipsLeft').innerHTML = chips.map(c=>`<span class="badge chip">${c}</span>`).join('');
+  $$('.chip').forEach(el=>el.addEventListener('click',()=>{
+    $$('.chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+    const g = V.genres.find(x=>x.name===el.textContent);
+    if(g){ $('#genre').value=g.id; bindModels(); }
+  }));
+
+  // Modelle
+  VMODELS = await AndioData.models('video', { nsfw: $('#nsfwToggle').checked });
+  bindModels();
+
+  // Events
+  $('#nsfwToggle').addEventListener('change', async ()=>{
+    $('#nsfwBlock').style.display = $('#nsfwToggle').checked ? 'block' : 'none';
+    VMODELS = await AndioData.models('video', { nsfw: $('#nsfwToggle').checked });
+    bindModels();
+  });
+  $('#genre').addEventListener('change', bindModels);
+  $$('.btn.mode').forEach(b=>b.addEventListener('click',()=> setMode(b.dataset.mode)));
+  $('#format').addEventListener('change', ()=> setRes($('#format').value));
+  $('#refImg').addEventListener('change', (e)=>{ const f=e.target.files?.[0]; if(!f) return; if(lastRefURL) URL.revokeObjectURL(lastRefURL); lastRefURL=URL.createObjectURL(f); wipePreview(); const im=new Image(); im.src=lastRefURL; $('#preview').appendChild(im); });
+
+  $('#btnRandom').addEventListener('click', randomAll);
+  $('#render').addEventListener('click', doRender);
+  $('#save').addEventListener('click', doSave);
+  $('#reset').addEventListener('click', doReset);
+}
+
+function bindModels(){
+  const genreId = $('#genre').value;
+  const smart = AndioData.smartPickModel(VMODELS, genreId);
+  setSel($('#model'), VMODELS);
+  $('#model').disabled = $('#smartModel').checked;
+  $('#model').value = $('#smartModel').checked && smart ? smart.id : (VMODELS[0]?.id||'');
+  $('#modelHint').textContent = (VMODELS.find(m=>m.id===$('#model').value)||{}).hint || '';
+}
+
+function randomAll(){
+  const genreId = $('#genre').value;
+  if(!genreId){ toast('Bitte zuerst ein Genre wählen.'); return; }
+  const nsfw = $('#nsfwToggle').checked;
+
+  // Ausgabe
+  const fmtPool = nsfw ? ['9:16','16:9','1:1','2.39:1'] : ['16:9','2.39:1','1:1','9:16'];
+  setRes(pick(fmtPool));
+  $('#length').value  = Math.floor(6 + Math.random()*6); // 6–11s
+  $('#fps').value     = pick([24,25,30]);
+
+  // Look
+  $('#camera').value      = pick(V.cameras);
+  $('#motionStyle').value = pick(V.motions);
+  $('#grade').value       = pick(V.grades);
+
+  // Prompt & Negative
+  $('#promptBox').value = AndioData.randomVideoPrompt(V, { genreId, nsfw });
+  $('#negative').value  = (V.negatives?.[nsfw?'nsfw':'sfw']) || 'Artefakte, Ruckler, Ghosting, Kompressionsfehler';
+
+  // Smart Modell
+  bindModels();
+}
+
+async function doRender(){
+  if(!$('#promptBox').value.trim()){ toast('Bitte zuerst „🎲 Zufall“ klicken (oder Prompt schreiben).'); return; }
+  if($('#nsfwToggle').checked && !$('#adultConsent').checked){ toast('Für NSFW bitte „Ü18 & Einwilligung“ bestätigen.'); return; }
+  const payload = {
+    mode,
+    prompt: $('#promptBox').value,
+    negative: $('#negative').value,
+    format: $('#format').value, res: $('#res').value,
+    length: +$('#length').value, fps: +$('#fps').value,
+    model: $('#model').value, smartModel: $('#smartModel').checked,
+    look: { genre: $('#genre').value, camera: $('#camera').value, motion: $('#motionStyle').value, grade: $('#grade').value },
+    nsfw: $('#nsfwToggle').checked
+  };
+  if(Andio?.api?.videoGenerate){
+    Andio.Status?.start?.('Video Render', {estMs: 3000 + payload.length*80});
+    const url = await Andio.api.videoGenerate(payload);
+    wipePreview(); const img=new Image(); img.src=url; $('#preview').appendChild(img);
+    Andio.Status?.done?.('Fertig');
+  }else{
+    // Fallback Thumb
+    const c=document.createElement('canvas'); c.width=640; c.height=360; const ctx=c.getContext('2d');
+    ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,640,360);
+    ctx.fillStyle='rgba(255,255,255,.92)'; ctx.font='bold 18px ui-monospace,monospace';
+    ctx.fillText(`VIDEO · ${payload.mode} · ${payload.format} ${payload.res}`, 16, 28);
+    ctx.font='14px ui-monospace,monospace';
+    ctx.fillText(`len=${payload.length}s fps=${payload.fps} model=${payload.model}${payload.smartModel?' (smart)':''}`, 16, 52);
+    const img=new Image(); img.src=c.toDataURL('image/png');
+    wipePreview(); $('#preview').appendChild(img);
+  }
+}
+function doSave(){ const img=$('#preview img'); if(!img) return toast('Nichts zu speichern.'); const a=document.createElement('a'); a.href=img.src; a.download='video_thumb.png'; a.click(); }
+function doReset(){
+  $('#nsfwToggle').checked=false; $('#nsfwBlock').style.display='none'; setMode('t2v');
+  setRes('16:9'); $('#length').value=8; $('#fps').value=24;
+  $('#promptBox').value=''; $('#negative').value='';
+  $('#smartModel').checked=true; $('#model').disabled=true; bindModels(); wipePreview();
+  if(lastRefURL){ URL.revokeObjectURL(lastRefURL); lastRefURL=null; }
+}
+
+bootVideo().then(()=>Andio?.polish&&Andio.polish?.());
+</script>
+</body>
+</html>
