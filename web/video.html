@@ -6,69 +6,11 @@
   <title>Video Lab – AndioMediaStudio</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <script type="module">
-    import { apiGet, apiPost, connectProgress } from './assets/api.js';
-    import { bindDropzone } from './assets/uploader.js';
-
-    let uploaded = null;
-    let jobId = null;
-    const drop = document.getElementById('drop');
-    const meta = document.getElementById('meta');
-    const runBtn = document.getElementById('run');
-    const video = document.getElementById('video');
-    const statusEl = document.getElementById('status');
-    const widthEl = document.getElementById('width');
-    const heightEl = document.getElementById('height');
-    const durEl = document.getElementById('duration');
-    const fpsEl = document.getElementById('fps');
-
-    bindDropzone(drop, (res) => {
-      uploaded = res;
-      meta.textContent = `Uploaded: ${res.name} (${Math.round(res.size/1024)} KB)`;
-      runBtn.disabled = false;
-    });
-
-    runBtn.addEventListener('click', async () => {
-      if (!uploaded) return;
-      runBtn.disabled = true;
-      statusEl.textContent = 'Starting...';
-      const payload = {
-        image_path: uploaded.path,
-        width: parseInt(widthEl.value, 10) || 1280,
-        height: parseInt(heightEl.value, 10) || 720,
-        duration: parseFloat(durEl.value) || 5,
-        fps: parseInt(fpsEl.value, 10) || 30,
-      };
-      const start = await apiPost('/api/video/kenburns', payload);
-      jobId = start.job_id;
-      const ws = connectProgress(jobId, (msg) => {
-        statusEl.textContent = `${Math.round(msg.progress*100)}% – ${msg.message}`;
-        if (msg.status === 'done') {
-          apiGet(`/api/jobs/${jobId}`).then(r => {
-            statusEl.textContent = 'Done';
-            if (r.results && r.results.video) {
-              // Fetch via relative path (server should serve outputs dir)
-              video.src = r.results.video.replace(/^.*outputs\//, '/outputs/');
-              video.load();
-              video.play();
-            }
-          });
-        }
-        if (msg.status === 'error') {
-          statusEl.textContent = 'Error';
-        }
-      });
-    });
-
-    // optional ping to show backend alive
-    apiGet('/api/ping').then(()=>{
-      document.getElementById('backend').textContent = 'Backend: OK';
-    }).catch(()=>{
-      document.getElementById('backend').textContent = 'Backend: not reachable';
-    });
-  </script>
   <style>
     body{margin:0;background:#0b1220;color:#e6ecf5;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
+    nav{background:#0f172a;border-bottom:1px solid #1f2a44;padding:10px 16px;display:flex;gap:16px}
+    nav a{color:#9fb0c7;text-decoration:none;font-weight:600;font-size:14px}
+    nav a:hover{color:#fff;text-decoration:underline}
     .wrap{max-width:1100px;margin:32px auto;padding:0 16px}
     .card{background:#0f172a;border:1px solid #1f2a44;border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
     h1{margin:0 0 8px;font-weight:800;font-size:22px}
@@ -84,14 +26,30 @@
   </style>
 </head>
 <body>
+  <!-- 🔹 Navigation -->
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="create.html">Create</a>
+    <a href="video.html">Video Lab</a>
+    <a href="talking.html">Talking</a>
+    <a href="wardrobe.html">Wardrobe</a>
+    <a href="catalog.html">Store</a>
+    <a href="gallery.html">Galerie</a>
+  </nav>
+
   <div class="wrap">
     <div class="card">
       <h1>🎬 Video Lab – Ken Burns</h1>
       <div class="muted" id="backend">Backend: checking…</div>
+
       <div id="drop" class="card" style="height:200px;margin-top:12px;display:flex;align-items:center;justify-content:center">
         Drop image here or click to upload
       </div>
-      <div class="muted" id="meta" style="margin-top:8px"></div>
+      <div style="margin-top:8px;display:flex;gap:10px;align-items:center">
+        <div class="muted" id="meta"></div>
+        <input id="filePick" type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none">
+        <button id="pickBtn" type="button">Choose File</button>
+      </div>
 
       <div style="height:12px"></div>
       <div class="row">
@@ -106,5 +64,77 @@
       <video id="video" controls playsinline></video>
     </div>
   </div>
+
+  <!-- JS Module -->
+  <script type="module">
+    import { apiGet, apiPost, connectProgress } from './assets/api.js';
+    import { bindDropzone, uploadFile } from './assets/uploader.js';
+
+    const drop    = document.getElementById('drop');
+    const meta    = document.getElementById('meta');
+    const runBtn  = document.getElementById('run');
+    const videoEl = document.getElementById('video');
+    const statusEl= document.getElementById('status');
+    const widthEl = document.getElementById('width');
+    const heightEl= document.getElementById('height');
+    const durEl   = document.getElementById('duration');
+    const fpsEl   = document.getElementById('fps');
+
+    // Drag&Drop
+    bindDropzone(drop, (res) => {
+      meta.textContent  = `Uploaded: ${res.name} (${Math.round(res.size/1024)} KB)`;
+      meta.dataset.path = res.path;
+      runBtn.disabled   = false;
+    });
+
+    // Fallback-Button
+    const pickBtn = document.getElementById('pickBtn');
+    const filePick= document.getElementById('filePick');
+    pickBtn.addEventListener('click', ()=> filePick.click());
+    filePick.addEventListener('change', async ()=>{
+      const f = filePick.files?.[0]; if(!f) return;
+      const res = await uploadFile(f);
+      meta.textContent  = `Uploaded: ${res.name} (${Math.round(res.size/1024)} KB)`;
+      meta.dataset.path = res.path;
+      runBtn.disabled   = false;
+    });
+
+    runBtn.addEventListener('click', async () => {
+      if (!meta.dataset.path) return;
+      runBtn.disabled = true;
+      statusEl.textContent = 'Starting...';
+      const payload = {
+        image_path: meta.dataset.path,
+        width: parseInt(widthEl.value, 10) || 1280,
+        height: parseInt(heightEl.value, 10) || 720,
+        duration: parseFloat(durEl.value) || 5,
+        fps: parseInt(fpsEl.value, 10) || 30,
+      };
+      const start = await apiPost('/api/video/kenburns', payload);
+      const ws = connectProgress(start.job_id, (msg) => {
+        const p = typeof msg.progress === 'number' ? Math.round(msg.progress*100) : 0;
+        statusEl.textContent = `${p}% – ${msg.message||''}`;
+        if (msg.status === 'done') {
+          apiGet(`/api/jobs/${start.job_id}`).then(r => {
+            statusEl.textContent = 'Done';
+            const out = r?.results?.video;
+            if (out) {
+              videoEl.src = out.replace(/^.*outputs\//, '/outputs/');
+              videoEl.load();
+              videoEl.play();
+            }
+          });
+        }
+        if (msg.status === 'error') statusEl.textContent = 'Error';
+      });
+
+      // Backend-Alive
+      apiGet('/api/ping').then(()=>{
+        document.getElementById('backend').textContent = 'Backend: OK';
+      }).catch(()=>{
+        document.getElementById('backend').textContent = 'Backend: not reachable';
+      });
+    });
+  </script>
 </body>
 </html>
