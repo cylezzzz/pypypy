@@ -1,192 +1,198 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Video Studio – AndioMediaStudio</title>
-  <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Video Studio – AndioMediaStudio</title>
+<link rel="icon" type="image/png" href="assets/logo/logo.png"/>
 <link rel="stylesheet" href="assets/styles.css"/>
-<script src="assets/app.js"></script>
-  <style>
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000}
-    .overlay.show{display:flex}
-    .modal{background:#111;color:#fff;max-width:90vw;max-height:90vh;width:960px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
-    .modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #222}
-    .modal .body{padding:12px 16px;overflow:auto}
-    .modal .body video{max-width:100%;max-height:70vh;border-radius:8px}
-    .modal footer{padding:10px 16px;border-top:1px solid #222;display:flex;gap:8px;justify-content:flex-end}
-    .grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
-    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
-    .row > label{min-width:110px;color:#888}
-    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-    .thumb{cursor:pointer}
-    .note{color:#888;font-size:.9em}
-    .sep{height:1px;background:#222;margin:12px 0}
-  </style>
+<style>
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000}
+  .overlay.show{display:flex}
+  .modal{background:#111;color:#fff;max-width:90vw;max-height:90vh;width:960px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
+  .modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #222}
+  .modal .body{padding:12px 16px;overflow:auto}
+  .modal .body video{max-width:100%;max-height:70vh;border-radius:8px}
+  .modal footer{padding:10px 16px;border-top:1px solid #222;display:flex;gap:8px;justify-content:flex-end}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
+  .row{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+  .note{color:#888;font-size:.9em}
+  .sep{height:1px;background:#222;margin:12px 0}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .hud{font-size:.9em;opacity:.9}
+</style>
 </head>
 <body>
-  <script src="/assets/app.js"></script>
-  <script>window.Andio && Andio.navbar && Andio.navbar('video-gen');</script>
+<script src="assets/app.js"></script>
+<script>window.Andio?.navbar?.('video-gen');</script>
 
-  <div class="container">
-    <h1>Video Studio</h1>
-    <p class="note">Text→Video & Bild→Video. Der Player öffnet nur für generierte Clips.</p>
+<div class="container">
+  <h1>Video Studio</h1>
+  <p class="note">Text→Video & Bild→Video. Player öffnet <strong>nur</strong> für generierte Clips.</p>
 
-    <div class="grid">
-      <div class="card">
-        <h3>Generierung</h3>
+  <div class="grid">
+    <div class="card">
+      <h3>Generierung</h3>
+      <div class="row">
+        <label for="v-mode">Modus</label>
+        <select id="v-mode"><option value="txt2vid">Text → Video</option><option value="img2vid">Bild → Video</option></select>
+      </div>
 
-        <div class="row">
-          <label for="v-mode">Modus</label>
-          <select id="v-mode">
-            <option value="txt2vid">Text → Video</option>
-            <option value="img2vid">Bild → Video</option>
+      <div class="row">
+        <label for="v-model">Modell</label>
+        <select id="v-model">
+          <option value="auto">auto</option>
+          <option value="stable-video-diffusion">Stable Video Diffusion</option>
+          <option value="gen-2">Runway Gen-2</option>
+          <option value="pika">Pika</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label for="v-prompt">Prompt</label>
+        <textarea id="v-prompt" rows="4" placeholder="Szene, Bewegung, Stil, Kamera …"></textarea>
+      </div>
+
+      <div class="grid-2">
+        <label>Negativ <input id="v-neg" type="text" placeholder="Was vermeiden? Artefakte, Flimmern …"/></label>
+        <label>Seed <input id="v-seed" type="number" placeholder="leer = zufällig"/></label>
+      </div>
+
+      <div class="grid-2">
+        <label>Dauer (s) <input id="v-dur" type="number" min="1" max="16" value="6"/></label>
+        <label>FPS <input id="v-fps" type="number" min="6" max="30" value="12"/></label>
+      </div>
+
+      <div class="grid-2">
+        <label>Auflösung
+          <select id="v-size">
+            <option value="768x432">768×432 (16:9)</option>
+            <option value="960x540">960×540 (16:9)</option>
+            <option value="1024x576">1024×576 (16:9)</option>
+            <option value="768x768">768×768 (1:1)</option>
+            <option value="576x1024">576×1024 (9:16)</option>
           </select>
-        </div>
-
-        <div class="row">
-          <label for="v-model">Modell</label>
-          <select id="v-model"></select>
-        </div>
-
-        <div class="row">
-          <label for="v-prompt">Prompt</label>
-          <textarea id="v-prompt" rows="4" placeholder="Beschreibe die Szene, Bewegung, Stil..."></textarea>
-        </div>
-
-        <div class="row">
-          <label for="v-dur">Dauer (s)</label>
-          <input id="v-dur" type="number" min="1" max="12" value="4" style="max-width:120px"/>
-          <label for="v-fps">FPS</label>
-          <input id="v-fps" type="number" min="6" max="30" value="12" style="max-width:120px"/>
-        </div>
-
-        <div class="sep"></div>
-
-        <div class="row">
-          <label for="v-ref">Referenzbild</label>
-          <input id="v-ref" type="file" accept="image/*"/>
-        </div>
-
-        <div class="row">
-          <button id="v-generate">Generieren</button>
-          <button id="v-clear" class="secondary">Zurücksetzen</button>
-        </div>
+        </label>
+        <label>Sampler
+          <select id="v-sampler"><option value="euler">Euler</option><option value="dpmpp_2m">DPM++ 2M</option><option value="dpmpp_sde">DPM++ SDE</option><option value="ddim">DDIM</option></select>
+        </label>
       </div>
 
-      <div class="card">
-        <h3>Vorschau & Historie</h3>
-        <div id="v-preview" class="cards"></div>
+      <div class="grid-2">
+        <label>Guidance (CFG) <input id="v-cfg" type="number" min="1" max="20" step="0.5" value="6.5"/></label>
+        <label>Steps <input id="v-steps" type="number" min="1" max="80" step="1" value="28"/></label>
+      </div>
+
+      <details class="card">
+        <summary>Erweitert</summary>
+        <div class="grid-2">
+          <label>Motion Strength <input id="v-motion" type="range" min="0" max="1" step="0.05" value="0.7"/></label>
+          <label>Camera Strength <input id="v-cam" type="range" min="0" max="1" step="0.05" value="0.4"/></label>
+        </div>
+        <div class="grid-2">
+          <label>Highres Upscale
+            <select id="v-hires"><option value="off">Aus</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+          </label>
+          <label>Loop
+            <select id="v-loop"><option value="off">Aus</option><option value="pingpong">Ping-Pong</option><option value="seamless">Seamless</option></select>
+          </label>
+        </div>
+      </details>
+
+      <div class="sep"></div>
+
+      <div class="row" id="v-ref-row"><label for="v-ref">Referenzbild</label><input id="v-ref" type="file" accept="image/*"/></div>
+
+      <div class="row">
+        <button id="v-random">Random</button>
+        <button id="v-generate" class="primary">Generieren</button>
+        <button id="v-clear" class="secondary">Zurücksetzen</button>
+        <span id="hud" class="hud"></span>
       </div>
     </div>
-  </div>
 
-  <!-- Overlay Player -->
-  <div id="v-overlay" class="overlay" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Player">
-      <header>
-        <strong id="v-ov-title">Player</strong>
-        <button id="v-ov-close" aria-label="Schließen">✕</button>
-      </header>
-      <div class="body">
-        <video id="v-ov-vid" controls style="display:block"></video>
-      </div>
-      <footer>
-        <a id="v-ov-download" class="secondary" download>Download</a>
-        <button id="v-ov-close2">Schließen</button>
-      </footer>
+    <div class="card">
+      <h3>Vorschau & Historie</h3>
+      <div id="v-preview" class="cards"></div>
     </div>
   </div>
+</div>
 
-  <footer>© AndioMediaStudio</footer>
+<!-- Overlay Player -->
+<div id="v-overlay" class="overlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Player">
+    <header><strong id="v-ov-title">Player</strong><button id="v-ov-close" aria-label="Schließen">✕</button></header>
+    <div class="body"><video id="v-ov-vid" controls playsinline></video></div>
+    <footer><a id="v-ov-download" class="secondary" download>Download</a><button id="v-ov-close2">Schließen</button></footer>
+  </div>
+</div>
 
-  <script>
-    async function safeAsset(url, fallbackDataUri) {
-      if (window.Andio && typeof Andio.safeAsset === 'function') return Andio.safeAsset(url, fallbackDataUri);
-      try { const r = await fetch(url,{method:'HEAD'}); if(r.ok) return url; } catch(e){}
-      return fallbackDataUri;
+<footer>© AndioMediaStudio</footer>
+
+<script>
+(()=> {
+  const $=s=>document.querySelector(s);
+  const els={ model:$('#v-model'), mode:$('#v-mode'), prompt:$('#v-prompt'), neg:$('#v-neg'), seed:$('#v-seed'),
+    dur:$('#v-dur'), fps:$('#v-fps'), size:$('#v-size'), sampler:$('#v-sampler'), cfg:$('#v-cfg'),
+    steps:$('#v-steps'), motion:$('#v-motion'), cam:$('#v-cam'), hires:$('#v-hires'), loop:$('#v-loop'),
+    ref:$('#v-ref'), refRow:$('#v-ref-row'), preview:$('#v-preview'), hud:$('#hud') };
+
+  els.mode.addEventListener('change', ()=> els.refRow.style.display = els.mode.value==='img2vid' ? '' : 'none');
+  els.refRow.style.display='none';
+
+  $('#v-random').addEventListener('click', ()=>{
+    const idea='cinematic night street, soft rain reflections, slow dolly, shallow depth of field';
+    els.prompt.value = (els.prompt.value.trim()? els.prompt.value+'\n' : '') + idea;
+  });
+
+  const overlay = (()=> {
+    const el=$('#v-overlay'), vid=$('#v-ov-vid'), title=$('#v-ov-title'), dl=$('#v-ov-download');
+    const close=()=>{el.classList.remove('show');el.setAttribute('aria-hidden','true');vid.pause();}
+    $('#v-ov-close').onclick=close; $('#v-ov-close2').onclick=close; el.addEventListener('click',(e)=>{ if(e.target===el) close(); });
+    return { open: (item)=>{ if(!item||!item.generated) return; title.textContent=item.name||'Player'; dl.href=item.url; dl.download=item.name||'output.mp4'; vid.src=item.url; el.classList.add('show'); el.setAttribute('aria-hidden','false'); } };
+  })();
+
+  const pickUrl=o=>o?.url||o?.result?.url||o?.data?.url||null;
+  async function postMultipart(endpoint,payload,files){
+    const fd=new FormData(); fd.append('payload', new Blob([JSON.stringify(payload)],{type:'application/json'}));
+    for(const [n,f] of Object.entries(files||{})){ if(f) fd.append(n,f,f.name||n); }
+    const r=await fetch(endpoint,{method:'POST',body:fd}); if(!r.ok) throw new Error(`HTTP ${r.status}`); return await r.json();
+  }
+  async function pollJob(id,{interval=1000,timeout=10*60*1000}={}){
+    const t0=Date.now(); while(true){
+      const r=await fetch(`/api/jobs/${id}`); if(!r.ok) throw new Error(`Job ${id}: HTTP ${r.status}`);
+      const d=await r.json(); const st=(d.status||d.state||'').toLowerCase();
+      if(['succeeded','success','done','finished'].includes(st)) return d;
+      if(['failed','error'].includes(st)) throw new Error(d.error||'Job fehlgeschlagen');
+      if(Date.now()-t0>timeout) throw new Error('Timeout'); await new Promise(rs=>setTimeout(rs,interval));
     }
+  }
+  function setBusy(b,msg){ $('#v-generate').disabled=b; $('#v-clear').disabled=b; els.hud.textContent=msg||''; }
+  function pushResult(item){ const btn=document.createElement('button'); btn.className='btn'; btn.textContent=item.name||'Clip'; btn.addEventListener('click',()=>overlay.open(item)); els.preview.prepend(btn); }
 
-    const overlay = (() => {
-      const el = document.getElementById('v-overlay');
-      const vid = document.getElementById('v-ov-vid');
-      const title = document.getElementById('v-ov-title');
-      const dl = document.getElementById('v-ov-download');
-      const close = ()=>{ el.classList.remove('show'); el.setAttribute('aria-hidden','true'); vid.pause(); };
-      document.getElementById('v-ov-close').onclick = close;
-      document.getElementById('v-ov-close2').onclick = close;
-      el.addEventListener('click', (e)=>{ if(e.target===el) close(); });
-      return {
-        open: (item) => {
-          if (!item || !item.generated) return;
-          title.textContent = item.name || 'Player';
-          dl.href = item.url; dl.download = item.name || 'output.mp4';
-          vid.src = item.url;
-          el.classList.add('show'); el.setAttribute('aria-hidden','false');
-        }
-      };
-    })();
-
-    const els = {
-      model: document.getElementById('v-model'),
-      mode: document.getElementById('v-mode'),
-      prompt: document.getElementById('v-prompt'),
-      dur: document.getElementById('v-dur'),
-      fps: document.getElementById('v-fps'),
-      ref: document.getElementById('v-ref'),
-      preview: document.getElementById('v-preview'),
-      gen: document.getElementById('v-generate'),
-      clear: document.getElementById('v-clear'),
+  $('#v-generate').addEventListener('click', async ()=>{
+    const payload={
+      mode: els.mode.value, model: els.model.value, prompt: els.prompt.value.trim(), negative: els.neg.value.trim(),
+      seed: els.seed.value? +els.seed.value : null, duration:+els.dur.value, fps:+els.fps.value, size:els.size.value,
+      sampler: els.sampler.value, cfg:+els.cfg.value, steps:+els.steps.value,
+      motion_strength:+els.motion.value, camera_strength:+els.cam.value, hires:els.hires.value, loop:els.loop.value
     };
+    if(payload.mode==='img2vid' && !els.ref.files?.[0]){ alert('Bitte Referenzbild wählen.'); return; }
+    try{
+      setBusy(true,'Starte Job …');
+      const start=await postMultipart('/api/video/generate', payload, {ref: els.ref.files?.[0]});
+      const direct=pickUrl(start); if(direct){ pushResult({name:'video_'+Date.now(), url:direct, generated:true}); setBusy(false,'Fertig (Direkt)'); return; }
+      const jobId=start.jobId||start.id||start.job; if(!jobId) throw new Error('Kein jobId');
+      setBusy(true,'Warte auf Ergebnis…');
+      const job=await pollJob(jobId);
+      const url=pickUrl(job); if(!url) throw new Error('Kein Ergebnis-URL');
+      pushResult({name:'video_'+Date.now(), url, generated:true}); setBusy(false,'Fertig');
+    }catch(e){ console.error(e); setBusy(false,'Fehler'); alert('Video-Fehler: '+(e?.message||e)); }
+  });
 
-    async function loadModels(){
-      const opt=(id,l)=>`<option value="${id}">${l}</option>`;
-      try{
-        const r=await fetch('/api/catalog');
-        if(r.ok){
-          const d=await r.json();
-          const items=(d.installed||d.featured||[]).map(m=>opt(m.id||m.name,'Video: '+(m.name||m.id)));
-          els.model.innerHTML = items.join('') || opt('svd-img2vid','Stable Video Diffusion');
-          return;
-        }
-      }catch(e){}
-      els.model.innerHTML = opt('svd-img2vid','Stable Video Diffusion');
-    }
-
-    function addPreview(obj){
-      const card=document.createElement('div');
-      card.className='card thumb';
-      card.innerHTML=`
-        <div class="note">${obj.name||'Output'}</div>
-        <video muted loop playsinline></video>
-        <div class="row" style="justify-content:flex-end;margin-top:8px">
-          <button class="secondary btn-open" ${obj.generated?'':'disabled title="Nur für generierte Inhalte"'}>Im Player öffnen</button>
-        </div>`;
-      card.querySelector('video').src=obj.url;
-      card.querySelector('.btn-open').addEventListener('click', ()=>overlay.open(obj));
-      els.preview.prepend(card);
-    }
-
-    async function onGenerate(){
-      if (els.ref.files[0]) {
-        // Zeige Referenz als Nicht-generiert
-        const url=URL.createObjectURL(els.ref.files[0]);
-        const imgCard=document.createElement('div');
-        imgCard.className='card';
-        imgCard.innerHTML=`<div class="note">Referenzbild</div><img style="max-width:100%"/>`;
-        imgCard.querySelector('img').src=url;
-        els.preview.prepend(imgCard);
-      }
-      // Generierter Clip (Platzhalter-URL → später API-Rückgabe einsetzen)
-      const genUrl = await safeAsset('/outputs/last_generated.mp4','/assets/placeholders/demo.mp4');
-      const ts=new Date().toISOString().replaceAll(':','').slice(0,15);
-      addPreview({name:`video_${ts}.mp4`, url:genUrl, type:'video', generated:true});
-    }
-
-    els.gen.addEventListener('click', onGenerate);
-    els.clear.addEventListener('click', ()=>{ els.prompt.value=''; els.ref.value=''; });
-
-    loadModels().finally(()=>{ window.Andio && Andio.polish && Andio.polish(); });
-  </script>
+  $('#v-clear').addEventListener('click', ()=>{ ['v-prompt','v-neg','v-seed'].forEach(id=>document.getElementById(id).value=''); els.preview.innerHTML=''; });
+})();
+</script>
 </body>
 </html>

@@ -1,493 +1,189 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Motion – AndioMediaStudio</title>
-  <link rel="stylesheet" href="assets/styles.css"/>
-  <style>
-    .page-grid{display:grid;grid-template-columns:320px 1fr 380px;gap:12px}
-    .card{background:#1112;border:1px solid #333;border-radius:12px;padding:12px}
-    .grid{display:grid;gap:8px}
-    .grid-2{grid-template-columns:1fr 1fr}
-    .grid-3{grid-template-columns:1fr 1fr 1fr}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .badge{padding:2px 6px;border-radius:8px;background:#222;border:1px solid #444;font-size:12px}
-    .canvas-wrap{position:relative;aspect-ratio:1/1;background:#000;border-radius:12px;overflow:hidden}
-    .canvas-wrap canvas{width:100%;height:100%;display:block}
-    .kp{position:absolute;width:12px;height:12px;border-radius:50%;border:2px solid #fff;background:#00aaff;cursor:grab;transform:translate(-6px,-6px)}
-    .kp.drag{cursor:grabbing}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-    .toolbar button.active{outline:2px solid #66f}
-    .list{display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow:auto}
-    /* Timeline */
-    .timeline{margin-top:8px;background:#0a0a0a;border:1px solid #222;border-radius:10px;padding:8px}
-    .tl-row{display:grid;grid-template-columns:80px 1fr;gap:8px;align-items:center;margin:6px 0}
-    .track{position:relative;height:36px;background:#141414;border:1px solid #2a2a2a;border-radius:8px}
-    .kf{position:absolute;top:4px;width:12px;height:24px;border-radius:4px;background:#55aaff;border:1px solid #cfe9ff;cursor:pointer;transform:translateX(-6px)}
-    .playbar{position:relative;height:8px;background:#222;border-radius:999px;margin-top:6px}
-    .needle{position:absolute;top:-4px;width:2px;height:16px;background:#fff}
-    .mini{font-size:12px;opacity:.85}
-    .preview-panel{display:grid;grid-template-columns:1fr;gap:8px}
-    video.preview, canvas.preview{max-width:100%;border:1px solid #222;border-radius:8px;background:#000}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Motion – AndioMediaStudio</title>
+<link rel="stylesheet" href="assets/styles.css"/>
+<style>
+  .page-grid{display:grid;grid-template-columns:320px 1fr 380px;gap:12px}
+  .card{background:#1112;border:1px solid #333;border-radius:12px;padding:12px}
+  .grid{display:grid;gap:8px}
+  .grid-2{grid-template-columns:1fr 1fr}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .canvas-wrap{position:relative;aspect-ratio:1/1;background:#000;border-radius:12px;overflow:hidden}
+  .canvas-wrap canvas{width:100%;height:100%;display:block}
+  .kp{position:absolute;width:12px;height:12px;border-radius:50%;border:2px solid #fff;background:#00aaff;cursor:grab;transform:translate(-6px,-6px)}
+  .kp.drag{cursor:grabbing}
+  .list{display:flex;flex-direction:column;gap:8px;max-height:42vh;overflow:auto}
+  .hud{font-size:.9em;opacity:.9}
+</style>
 </head>
 <body>
-  <script src="assets/app.js"></script>
-  <script>window.Andio?.navbar?.('motion');</script>
+<script src="assets/app.js"></script>
+<script>window.Andio?.navbar?.('motion');</script>
 
-  <div class="container">
-    <h1>Motion</h1>
-    <div class="page-grid">
-      <!-- LINKS: Quelle, Modus, Presets -->
-      <aside class="card">
-        <h3>Quelle & Modus</h3>
-        <div class="grid">
-          <label class="row">
-            <span class="badge">Bild laden</span>
-            <input id="fileInput" type="file" accept="image/*"/>
+<div class="container">
+  <h1>Motion</h1>
+  <div class="page-grid">
+    <aside class="card">
+      <h3>Quelle & Modus</h3>
+      <div class="grid">
+        <label class="row"><span>Bild</span><input id="file" type="file" accept="image/*"/></label>
+        <label class="row"><span>Audio (für Lip-Sync)</span><input id="audio" type="file" accept="audio/*"/></label>
+        <div class="grid grid-2">
+          <label>Modus
+            <select id="mode"><option value="action">Aktion</option><option value="pose">Pose</option><option value="lipsync">Lip-Sync</option><option value="camera">Kamera</option></select>
           </label>
-
-          <div class="grid grid-2">
-            <label>Modus
-              <select id="modeSelect">
-                <option value="action">Aktion</option>
-                <option value="pose">Pose</option>
-                <option value="lipsync">Lip-Sync</option>
-                <option value="camera">Kamera</option>
-              </select>
-            </label>
-            <label>Preview
-              <select id="previewMode">
-                <option value="off">Aus</option>
-                <option value="low">Low-Res</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="grid">
-            <label>Genre
-              <select id="genreSelect"></select>
-            </label>
-            <label>Stellung/Posen-Preset
-              <select id="poseSelect"></select>
-            </label>
-            <label>Aktion/Bewegung
-              <select id="actionSelect"></select>
-            </label>
-          </div>
-
-          <div class="row">
-            <button id="btnImportPresets" title="assets/motion_presets.json laden">Presets importieren</button>
-            <button id="btnRandom">Random</button>
-            <button id="btnRun" class="primary">Ausführen</button>
-          </div>
-
-          <details class="card">
-            <summary>Globale Optionen</summary>
-            <div class="grid grid-3">
-              <span class="badge">Weiche IK <input type="checkbox" id="softIk" checked></span>
-              <span class="badge">Geschw. <input type="range" id="speed" min="0.2" max="2" step="0.1" value="1"></span>
-              <span class="badge">Loop <input type="checkbox" id="loop" checked></span>
-            </div>
-          </details>
+          <label>Preview
+            <select id="preview"><option value="off">Aus</option><option value="low">Low-Res</option></select>
+          </label>
         </div>
-      </aside>
-
-      <!-- MITTE: Canvas, Tools, Timeline -->
-      <main class="card">
-        <div class="toolbar">
-          <button data-tool="rect" class="active">Rechteck</button>
-          <button data-tool="ellipse">Ellipse</button>
-          <button data-tool="lasso">Lasso</button>
-          <button data-tool="brush">Pinsel</button>
-          <button id="btnClearRegions">Regionen löschen</button>
-          <span class="badge">Keypoints anzeigen <input type="checkbox" id="showKp" checked></span>
+        <label>Prompt global <input id="prompt" placeholder="z. B. idle subtle sway"/></label>
+        <div class="grid grid-2">
+          <label>Dauer (s) <input id="dur" type="number" min="1" max="30" value="6"/></label>
+          <label>FPS <input id="fps" type="number" min="6" max="30" value="12"/></label>
         </div>
-
-        <div class="canvas-wrap" id="stage">
-          <canvas id="motionCanvas" width="1024" height="1024" aria-label="Vorschau"></canvas>
-          <canvas id="maskCanvas" width="1024" height="1024" style="position:absolute;inset:0;pointer-events:none"></canvas>
-          <!-- Keypoints kommen als .kp Elemente -->
+        <div class="grid grid-2">
+          <label>Geschw. <input id="speed" type="range" min="0.2" max="2" step="0.1" value="1"/></label>
+          <label>Loop <select id="loop"><option value="true">An</option><option value="false">Aus</option></select></label>
         </div>
-
-        <div class="timeline">
-          <div class="tl-row">
-            <div class="mini">Körper</div>
-            <div class="track" data-track="body"></div>
-          </div>
-          <div class="tl-row">
-            <div class="mini">Kopf</div>
-            <div class="track" data-track="head"></div>
-          </div>
-          <div class="tl-row">
-            <div class="mini">Arme</div>
-            <div class="track" data-track="arms"></div>
-          </div>
-          <div class="tl-row">
-            <div class="mini">Kamera</div>
-            <div class="track" data-track="cam"></div>
-          </div>
-
-          <div class="playbar">
-            <div class="needle" id="needle" style="left:0%"></div>
-          </div>
-          <div class="row mini">
-            <span>Keyframe: Klick in Spur • Ziehen = Zeit</span>
-            <span class="badge">Dauer (s): <input type="number" id="duration" min="1" max="30" step="1" value="6" style="width:64px"></span>
-          </div>
+        <div class="row">
+          <button id="random">Random</button>
+          <button id="run" class="primary">Ausführen</button>
+          <span id="hud" class="hud"></span>
         </div>
-      </main>
+      </div>
+    </aside>
 
-      <!-- RECHTS: Spuren/Prompts + Live-Vorschau -->
-      <aside class="card">
-        <h3>Spuren & Prompts</h3>
-        <div class="list" id="tracks"></div>
+    <main class="card">
+      <div class="row" style="margin-bottom:6px">
+        <button id="showKp" class="secondary">Keypoints umschalten</button>
+        <button id="clear" class="secondary">Regionen löschen</button>
+      </div>
+      <div class="canvas-wrap" id="stage">
+        <canvas id="canvas" width="1024" height="1024"></canvas>
+      </div>
+    </main>
 
-        <details open class="card" style="margin-top:10px">
-          <summary>Globaler Prompt</summary>
-          <textarea id="globalPrompt" rows="4" placeholder="z. B. 'Idle subtle sway, Atembewegung weich'"></textarea>
-        </details>
-
-        <div class="card" style="margin-top:10px">
-          <h3>Live-Vorschau</h3>
-          <div class="preview-panel">
-            <canvas class="preview" id="liveCanvas" width="512" height="512"></canvas>
-            <video class="preview" id="liveVideo" controls playsinline muted style="display:none"></video>
-          </div>
-          <div class="row mini">
-            <button id="btnPreviewOnce">Preview aktualisieren</button>
-            <span>Client-Preview: Skelett/Regionen. Server-Preview (wenn verfügbar) rendert Low-Res-Clip.</span>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:10px">
-          <h3>Ergebnisse</h3>
-          <div id="results" class="list"></div>
-        </div>
-      </aside>
-    </div>
+    <aside class="card">
+      <h3>Spuren & Ergebnisse</h3>
+      <div class="list" id="results"></div>
+    </aside>
   </div>
+</div>
 
-  <footer>© AndioMediaStudio</footer>
+<footer>© AndioMediaStudio</footer>
 
-  <script>
-  (()=>{
-    const $ = s=>document.querySelector(s);
-    const $$ = s=>Array.from(document.querySelectorAll(s));
+<div id="ov" style="position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000">
+  <div style="background:#111;max-width:90vw;max-height:90vh;border-radius:12px;padding:12px;border:1px solid #222;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>Player</strong><button id="ov-close">✕</button></div>
+    <video id="ov-video" controls playsinline style="max-width:86vw;max-height:72vh;border-radius:8px"></video>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><a id="ov-dl" class="secondary" download>Download</a><button id="ov-close2">Schließen</button></div>
+  </div>
+</div>
 
-    // ---------- State ----------
-    const state = {
-      img:null,
-      showKp:true,
-      selections:[], // regionen (rect/ellipse/lasso/brush)
-      kp:[
-        {id:'head', x:512, y:220},
-        {id:'l_shoulder', x:420, y:320},
-        {id:'r_shoulder', x:604, y:320},
-        {id:'l_elbow', x:370, y:420},
-        {id:'r_elbow', x:654, y:420},
-        {id:'hip', x:512, y:520},
-        {id:'l_knee', x:470, y:680},
-        {id:'r_knee', x:554, y:680},
-        {id:'l_ankle', x:450, y:820},
-        {id:'r_ankle', x:574, y:820},
-      ],
-      duration:6,
-      tracks:{
-        body:[], head:[], arms:[], cam:[]
-      },
-      presets:null, // aus JSON importiert
-      mode:'action'
+<script>
+(()=> {
+  const $=s=>document.querySelector(s);
+  const hud=$('#hud');
+  const canvas=$('#canvas'), ctx=canvas.getContext('2d'), stage=$('#stage');
+  let img=null, showKp=true;
+  const kp=[ // simple body rig
+    {id:'head',x:512,y:220},{id:'l_shoulder',x:420,y:320},{id:'r_shoulder',x:604,y:320},
+    {id:'l_elbow',x:370,y:420},{id:'r_elbow',x:654,y:420},{id:'hip',x:512,y:520},
+    {id:'l_knee',x:470,y:680},{id:'r_knee',x:554,y:680},{id:'l_ankle',x:450,y:820},{id:'r_ankle',x:574,y:820}
+  ];
+
+  function draw(){
+    ctx.clearRect(0,0,1024,1024);
+    if(img) ctx.drawImage(img,0,0,1024,1024);
+    if(showKp){
+      ctx.strokeStyle='#0ff'; ctx.lineWidth=2;
+      const J=id=>kp.find(k=>k.id===id);
+      [['head','l_shoulder'],['head','r_shoulder'],['l_shoulder','l_elbow'],['r_shoulder','r_elbow'],['l_shoulder','hip'],['r_shoulder','hip'],['hip','l_knee'],['hip','r_knee'],['l_knee','l_ankle'],['r_knee','r_ankle']]
+        .forEach(([a,b])=>{const A=J(a),B=J(b); if(A&&B){ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();}});
+    }
+  }
+  function placeKp(){
+    [...stage.querySelectorAll('.kp')].forEach(e=>e.remove());
+    if(!showKp) return;
+    kp.forEach(k=>{
+      const dot=document.createElement('div'); dot.className='kp'; dot.style.left=k.x+'px'; dot.style.top=k.y+'px';
+      let drag=false;
+      dot.addEventListener('mousedown',e=>{drag=true;dot.classList.add('drag');e.preventDefault();});
+      window.addEventListener('mousemove',e=>{
+        if(!drag) return; const r=canvas.getBoundingClientRect();
+        const x=(e.clientX-r.left)*1024/r.width, y=(e.clientY-r.top)*1024/r.height;
+        k.x=Math.max(0,Math.min(1024,x)); k.y=Math.max(0,Math.min(1024,y));
+        dot.style.left=k.x+'px'; dot.style.top=k.y+'px'; draw();
+      });
+      window.addEventListener('mouseup',()=>{ if(drag){drag=false;dot.classList.remove('drag');} });
+      stage.appendChild(dot);
+    });
+  }
+
+  $('#file').addEventListener('change', ()=>{
+    const f=$('#file').files?.[0]; if(!f) return;
+    const im=new Image(); im.onload=()=>{ img=im; draw(); placeKp(); }; im.src=URL.createObjectURL(f);
+  });
+  $('#showKp').addEventListener('click', ()=>{ showKp=!showKp; draw(); placeKp(); });
+  $('#clear').addEventListener('click', ()=>{ draw(); }); // (keine Regionen hier)
+
+  $('#random').addEventListener('click', ()=>{
+    const ideas=['idle subtle sway','small head nods','walk-in-place soft','dance tiny loop','camera slow dolly in'];
+    $('#prompt').value = ($('#prompt').value.trim()? $('#prompt').value+'\n':'') + ideas[Math.floor(Math.random()*ideas.length)];
+  });
+
+  // API Helpers
+  const pickUrl=o=>o?.url||o?.result?.url||o?.data?.url||null;
+  async function postMultipart(endpoint,payload,files){
+    const fd=new FormData(); fd.append('payload', new Blob([JSON.stringify(payload)],{type:'application/json'}));
+    for(const [n,f] of Object.entries(files||{})){ if(f) fd.append(n,f,f.name||n); }
+    const r=await fetch(endpoint,{method:'POST',body:fd}); if(!r.ok) throw new Error(`HTTP ${r.status}`); return await r.json();
+  }
+  async function pollJob(id,{interval=1000,timeout=10*60*1000}={}){
+    const t0=Date.now(); while(true){
+      const r=await fetch(`/api/jobs/${id}`); if(!r.ok) throw new Error(`Job ${id}: HTTP ${r.status}`);
+      const d=await r.json(); const st=(d.status||d.state||'').toLowerCase();
+      if(['succeeded','success','done','finished'].includes(st)) return d;
+      if(['failed','error'].includes(st)) throw new Error(d.error||'Job fehlgeschlagen');
+      if(Date.now()-t0>timeout) throw new Error('Timeout'); await new Promise(rs=>setTimeout(rs,interval));
+    }
+  }
+  function setBusy(b,msg){ $('#run').disabled=b; hud.textContent=msg||''; }
+
+  $('#run').addEventListener('click', async ()=>{
+    if(!img){ alert('Bitte Bild laden.'); return; }
+    const mode=$('#mode').value;
+    const audio=$('#audio').files?.[0];
+    if(mode==='lipsync' && !audio){ alert('Bitte eine Audiodatei für Lip-Sync wählen.'); return; }
+
+    const payload={
+      mode, prompt: $('#prompt').value.trim(),
+      duration:+$('#dur').value, fps:+$('#fps').value, speed:+$('#speed').value, loop: $('#loop').value==='true',
+      kp, canvas_size:{w:canvas.width,h:canvas.height}, preview: $('#preview').value
     };
+    try{
+      setBusy(true,'Starte Job …');
+      const start = await postMultipart('/api/motion/run', payload, {image: $('#file').files?.[0], audio});
+      const direct = pickUrl(start); if(direct){ pushResult(direct); setBusy(false,'Fertig (Direkt)'); return; }
+      const jobId=start.jobId||start.id||start.job; if(!jobId) throw new Error('Kein jobId');
+      setBusy(true,'Warte auf Ergebnis…');
+      const job = await pollJob(jobId);
+      const url = pickUrl(job); if(!url) throw new Error('Kein Ergebnis-URL');
+      pushResult(url); setBusy(false,'Fertig');
+    }catch(e){ console.error(e); setBusy(false,'Fehler'); alert('Motion-Fehler: '+(e?.message||e)); }
+  });
 
-    // ---------- Canvas & Tools ----------
-    const canvas = $('#motionCanvas'), maskCanvas = $('#maskCanvas'), stage = $('#stage');
-    const ctx = canvas.getContext('2d');
-    const annot = Andio.tools.attachAnnotator(canvas, maskCanvas, (sels)=>{ state.selections = sels; });
-    function draw(){
-      ctx.clearRect(0,0,1024,1024);
-      if (state.img) ctx.drawImage(state.img,0,0,1024,1024);
-      // Skelett
-      if (state.showKp){
-        ctx.strokeStyle='#0ff'; ctx.lineWidth=2;
-        const J = id=> state.kp.find(k=>k.id===id);
-        const links = [['head','l_shoulder'],['head','r_shoulder'],['l_shoulder','l_elbow'],['r_shoulder','r_elbow'],['l_shoulder','hip'],['r_shoulder','hip'],['hip','l_knee'],['hip','r_knee'],['l_knee','l_ankle'],['r_knee','r_ankle']];
-        links.forEach(([a,b])=>{ const A=J(a),B=J(b); if(A&&B){ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();} });
-      }
-    }
-    function placeKeypoints(){
-      $$('.kp', stage).forEach(el=>el.remove());
-      if (!state.showKp) return;
-      state.kp.forEach(k=>{
-        const dot = document.createElement('div');
-        dot.className='kp'; dot.style.left=k.x+'px'; dot.style.top=k.y+'px';
-        let drag=false;
-        dot.addEventListener('mousedown', e=>{drag=true;dot.classList.add('drag');e.preventDefault();});
-        window.addEventListener('mousemove', e=>{
-          if(!drag) return;
-          const r = canvas.getBoundingClientRect();
-          const x = (e.clientX - r.left) * 1024 / r.width;
-          const y = (e.clientY - r.top) * 1024 / r.height;
-          k.x=Math.max(0,Math.min(1024,x)); k.y=Math.max(0,Math.min(1024,y));
-          dot.style.left=k.x+'px'; dot.style.top=k.y+'px';
-          draw();
-        });
-        window.addEventListener('mouseup', ()=>{ if(drag){drag=false;dot.classList.remove('drag');} });
-        stage.appendChild(dot);
-      });
-    }
-
-    // Datei laden
-    $('#fileInput').addEventListener('change', ()=>{
-      const f = $('#fileInput').files?.[0]; if(!f) return;
-      const img = new Image(); img.onload=()=>{ state.img=img; draw(); placeKeypoints(); annot.markImageLoaded(); };
-      img.src = URL.createObjectURL(f);
-    });
-
-    // Tools
-    $$('.toolbar button[data-tool]').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        $$('.toolbar button[data-tool]').forEach(x=>x.classList.remove('active'));
-        b.classList.add('active'); annot.setTool(b.dataset.tool);
-      });
-    });
-    $('#btnClearRegions').addEventListener('click', ()=>{ annot.reset(); draw(); });
-
-    // KP togglen
-    $('#showKp').addEventListener('change', e=>{ state.showKp = e.target.checked; draw(); placeKeypoints(); });
-
-    // Modus
-    $('#modeSelect').addEventListener('change', e=>{ state.mode = e.target.value; renderTracksPanel(); });
-
-    // Dauer
-    $('#duration').addEventListener('input', e=>{ state.duration = Math.max(1, parseInt(e.target.value||6,10)); });
-
-    // ---------- Presets laden (extern) ----------
-    async function loadPresets(){
-      try{
-        const res = await fetch('assets/motion_presets.json', {cache:'no-store'});
-        if(!res.ok) throw new Error('HTTP '+res.status);
-        state.presets = await res.json();
-      }catch(e){
-        // Fallback-Defaults
-        state.presets = {
-          genres:["Neutral","Fashion","Fitness","Business","Glamour"],
-          poses:["Neutral Stand","Power Pose","Hand in Hüfte","Sitzpose locker","Dynamisch diagonal"],
-          actions:["Idle Sway","Winken leicht","Walk-in-place","Dance Groove minimal"],
-        };
-      }
-      fillPresetSelects();
-    }
-    function fillPresetSelects(){
-      const genres = state.presets.genres||[], poses=state.presets.poses||[], actions=state.presets.actions||[];
-      const mapFill = (sel, arr)=>{ sel.innerHTML=''; arr.forEach(x=>{ const o=document.createElement('option'); o.value=o.textContent=x; sel.appendChild(o); }); };
-      mapFill($('#genreSelect'), genres); mapFill($('#poseSelect'), poses); mapFill($('#actionSelect'), actions);
-    }
-    $('#btnImportPresets').addEventListener('click', loadPresets);
-    // beim Start einmal versuchen
-    loadPresets();
-
-    // ---------- Timeline / Keyframes ----------
-    const tracksEls = {
-      body: document.querySelector('.track[data-track="body"]'),
-      head: document.querySelector('.track[data-track="head"]'),
-      arms: document.querySelector('.track[data-track="arms"]'),
-      cam:  document.querySelector('.track[data-track="cam"]'),
-    };
-    Object.entries(tracksEls).forEach(([name, el])=>{
-      el.addEventListener('click', e=>{
-        const rect = el.getBoundingClientRect();
-        const t = Math.max(0, Math.min(1, (e.clientX - rect.left)/rect.width));
-        const kf = {t, val:1};
-        state.tracks[name].push(kf);
-        paintTrack(name);
-      });
-    });
-    function paintTrack(name){
-      const el = tracksEls[name];
-      el.innerHTML='';
-      state.tracks[name].forEach((kf,i)=>{
-        const d = document.createElement('div');
-        d.className='kf'; d.style.left = (kf.t*100)+'%';
-        let dragging=false;
-        d.addEventListener('mousedown', ev=>{dragging=true; ev.preventDefault();});
-        window.addEventListener('mousemove', ev=>{
-          if(!dragging) return;
-          const r = el.getBoundingClientRect();
-          const t = Math.max(0, Math.min(1, (ev.clientX - r.left)/r.width));
-          kf.t = t; d.style.left=(t*100)+'%';
-          updateNeedleFromT(t);
-        });
-        window.addEventListener('mouseup', ()=>{ dragging=false; });
-        el.appendChild(d);
-      });
-    }
-    function updateNeedleFromT(t){ $('#needle').style.left = (t*100)+'%'; }
-
-    // ---------- Tracks/Prompts Panel ----------
-    function renderTracksPanel(){
-      const host = $('#tracks'); host.innerHTML='';
-      const mode = $('#modeSelect').value;
-      const buckets = {
-        action: ['Körper','Kopf','Arme','Kamera'],
-        pose:   ['Pose-Prompt','Feinanpassung','Arme/Schultern','Kamera'],
-        lipsync:['Audio-Pfad','Mimik-Prompt','Kopfbewegung','Kamera'],
-        camera: ['Bewegung','Fokus','Parallax','Timing']
-      }[mode] || [];
-      buckets.forEach((name,i)=>{
-        const div = document.createElement('div'); div.className='card';
-        div.innerHTML = `<b>Spur #${i+1}: ${name}</b><textarea rows="2" placeholder="Prompt / Parameter"></textarea>`;
-        host.appendChild(div);
-      });
-    }
-    renderTracksPanel();
-
-    // ---------- Random ----------
-    $('#btnRandom').addEventListener('click', ()=>{
-      const mode = $('#modeSelect').value;
-      const idea = Andio.randomPrompt('motion', mode) || '';
-      const cur = $('#globalPrompt').value.trim();
-      $('#globalPrompt').value = cur ? (cur+'\n'+idea) : idea;
-      // Schnell-KF: start & end
-      ['body','head','arms','cam'].forEach(n=>{
-        if (state.tracks[n].length===0){
-          state.tracks[n].push({t:0, val:0});
-          state.tracks[n].push({t:1, val:1});
-          paintTrack(n);
-        }
-      });
-    });
-
-    // ---------- Live-Preview ----------
-    const liveCanvas = $('#liveCanvas'), lctx = liveCanvas.getContext('2d');
-    const liveVideo = $('#liveVideo');
-    function clientPreview(){
-      // Einfache Skelett-Tween-Vorschau basierend auf Keyframes & Speed
-      lctx.clearRect(0,0,liveCanvas.width, liveCanvas.height);
-      // Bild-Vorschau (wenn vorhanden) als Hintergrund
-      if (state.img){
-        // downscale draw
-        lctx.drawImage(state.img, 0,0, liveCanvas.width, liveCanvas.height);
-      }
-      // einfache animierte Linie (needle pos)
-      const t = parseFloat($('#needle').style.left)/100 || 0;
-      lctx.strokeStyle = '#0ff'; lctx.lineWidth=2;
-      const scale = (v)=> (0.9 + 0.1*v); // mini amplitude
-      // zeichne KP minimal versetzt
-      state.kp.forEach(k=>{
-        const x = (k.x/1024)*liveCanvas.width  * scale(t);
-        const y = (k.y/1024)*liveCanvas.height * scale(1-t);
-        lctx.beginPath(); lctx.arc(x,y,3,0,Math.PI*2); lctx.stroke();
-      });
-    }
-
-    async function serverPreview(){
-      if (Andio.api?.motionPreview){
-        const payload = collectPayload(true);
-        try{
-          const clip = await Andio.api.motionPreview(payload); // -> {url}
-          if (clip?.url){
-            liveVideo.src = clip.url; liveVideo.style.display='block'; liveCanvas.style.display='none';
-            liveVideo.play().catch(()=>{});
-            return;
-          }
-        }catch(e){ console.warn('motionPreview fehlgeschlagen', e); }
-      }
-      // fallback: client-preview
-      liveVideo.style.display='none'; liveCanvas.style.display='block';
-      clientPreview();
-    }
-
-    $('#btnPreviewOnce').addEventListener('click', ()=>{
-      if ($('#previewMode').value==='low') serverPreview();
-      else { liveVideo.style.display='none'; liveCanvas.style.display='block'; clientPreview(); }
-    });
-
-    // Needle Animation (einfaches Loop-Play)
-    let playTimer=null; 
-    function playPreview(){
-      clearInterval(playTimer);
-      const start = performance.now();
-      const durMs = state.duration*1000;
-      const loop = $('#loop').checked;
-      playTimer = setInterval(()=>{
-        const elapsed = (performance.now()-start) % (loop?durMs:Math.min(durMs, performance.now()-start));
-        const t = Math.max(0, Math.min(1, elapsed/durMs));
-        updateNeedleFromT(t);
-        if ($('#previewMode').value==='off') clientPreview(); else serverPreview();
-        if (!loop && elapsed>=durMs-20){ clearInterval(playTimer); }
-      }, 100);
-    }
-
-    // ---------- Generate / Job-HUD ----------
-    function collectPayload(forPreview=false){
-      return {
-        mode: $('#modeSelect').value,
-        preview: $('#previewMode').value,
-        softIk: $('#softIk').checked,
-        speed: parseFloat($('#speed').value),
-        loop: $('#loop').checked,
-        duration: state.duration,
-        keypoints: state.kp,
-        regions: state.selections, // gezeichnete Bereiche (rect/ellipse/lasso/brush)
-        tracks: state.tracks,
-        genre: $('#genreSelect').value,
-        pose: $('#poseSelect').value,
-        action: $('#actionSelect').value,
-        globalPrompt: $('#globalPrompt').value,
-        forPreview
-      };
-    }
-
-    $('#btnRun').addEventListener('click', async ()=>{
-      if(!state.img){ alert('Bitte zuerst ein Bild laden.'); return; }
-      const payload = collectPayload(false);
-
-      const {hud} = await Andio.startJobWithHUD('Motion: '+payload.mode, async ()=>{
-        if (Andio.api?.motionStart){ return await Andio.api.motionStart(payload); } 
-        return {jobId:'demo_'+Date.now()};
-      });
-
-      // Demo-Finish
-      setTimeout(async ()=>{
-        try{
-          let out=null;
-          if (Andio.api?.motionFinish){
-            out = await Andio.api.motionFinish(); // -> {files:[{url,type:'video'|'image',name,generated:true}]}
-          }else{
-            out = {files:[{url:'assets/placeholders/motion_preview.webm', type:'video', name:'motion.webm', generated:true}]};
-          }
-          addResults(out.files||[]);
-        }catch(e){ console.error(e); }
-      }, 250);
-
-      // Auto-Preview spielen
-      playPreview();
-    });
-
-    function addResults(files){
-      const list = $('#results');
-      files.forEach(f=>{
-        const card = document.createElement('div');
-        card.className='card';
-        card.innerHTML = `
-          <div class="row" style="justify-content:space-between">
-            <b>${f.name||'Output'}</b>
-            <span class="badge">${(f.type||'video').toUpperCase()}</span>
-          </div>
-          ${f.type==='image' ? `<img src="${f.url}" data-generated="${!!f.generated}" style="max-width:100%"/>`
-                              : `<video src="${f.url}" data-generated="${!!f.generated}" controls muted playsinline style="max-width:100%"></video>`}
-        `;
-        list.prepend(card);
-      });
-    }
-
-    // Init
-    draw(); placeKeypoints(); renderTracksPanel();
-  })();
-  </script>
-
-  <script>window.Andio?.polish?.();</script>
+  function pushResult(url){
+    const a=document.createElement('button'); a.className='btn'; a.textContent='Clip '+new Date().toLocaleTimeString();
+    const item={url,generated:true,type:'video'}; a.addEventListener('click',()=>openOverlay(item));
+    $('#results').prepend(a);
+  }
+  function openOverlay(item){ if(!item.generated) return; $('#ov-video').src=item.url; $('#ov-dl').href=item.url; $('#ov-dl').download='output.mp4'; $('#ov').style.display='flex'; }
+  $('#ov-close').onclick=()=> $('#ov').style.display='none'; $('#ov-close2').onclick=()=> $('#ov').style.display='none';
+})();
+</script>
 </body>
 </html>

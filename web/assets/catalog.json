@@ -1,0 +1,44 @@
+{
+  "featured": [
+    {
+      "id": "sdxl-base-1.0",
+      "name": "SDXL Base 1.0",
+      "family": "sdxl",
+      "cover": "assets/placeholders/model-cover.png",
+      "tags": [
+        "base",
+        "image"
+      ]
+    },
+    {
+      "id": "sdxl-refiner-1.0",
+      "name": "SDXL Refiner 1.0",
+      "family": "sdxl",
+      "cover": "assets/placeholders/model-cover.png",
+      "tags": [
+        "refiner",
+        "image"
+      ]
+    },
+    {
+      "id": "svd-img2vid",
+      "name": "Stable Video Diffusion",
+      "family": "svd",
+      "cover": "assets/placeholders/model-cover.png",
+      "tags": [
+        "video",
+        "diffusion"
+      ]
+    },
+    {
+      "id": "realistic-vision-v6",
+      "name": "Realistic Vision V6",
+      "family": "sd15",
+      "cover": "assets/placeholders/model-cover.png",
+      "tags": [
+        "photoreal",
+        "image"
+      ]
+    }
+  ]
+}

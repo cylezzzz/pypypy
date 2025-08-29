@@ -3,312 +3,236 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Model Hub – AndioMediaStudio</title>
+  <title>Katalog / Store – AndioMediaStudio</title>
+  <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .layout{display:grid;grid-template-columns:300px 1fr;gap:12px}
-    .card{background:#1112;border:1px solid #333;border-radius:12px;padding:12px}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .grid{display:grid;gap:12px}
-    .grid-3{grid-template-columns:repeat(3,1fr)}
-    .grid-4{grid-template-columns:repeat(4,1fr)}
-    .thumb{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:10px;border:1px solid #222;background:#000}
-    .badge{padding:2px 6px;border-radius:8px;background:#222;border:1px solid #444;font-size:12px}
-    .pill{border:1px solid #444;border-radius:999px;padding:4px 10px;font-size:12px}
-    .muted{opacity:.8}
-    .stat{font-size:12px;color:#bdbdbd}
-    .k{display:inline-flex;gap:6px;align-items:center}
-    .k img{width:24px;height:24px;border-radius:6px;border:1px solid #222;background:#000;object-fit:cover}
-    .actions{display:flex;gap:8px;align-items:center;justify-content:space-between}
-    .progress{height:8px;background:#222;border:1px solid #333;border-radius:999px;overflow:hidden}
-    .progress > div{height:100%;width:0%;background:linear-gradient(90deg,#6af,#9cf)}
-    .sticky{position:sticky;top:72px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+    .toolbar input[type="search"]{min-width:220px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+    .thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#222;border:1px solid #222}
+    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
+    .badge{font-size:.8em;background:#222;color:#ccc;border:1px solid #333;border-radius:999px;padding:2px 8px}
+    .muted{color:#888}
+    .pill{font-size:.8em;border-radius:999px;padding:2px 8px;border:1px solid #333}
+    .right{margin-left:auto}
   </style>
 </head>
 <body>
   <script src="assets/app.js"></script>
-  <!-- 1) Deine Originaldatei zuerst laden -->
-  <script src="assets/presets.de.js"></script>
-  <!-- 2) Normalizer/Bridge -->
-  <script src="assets/presets.loader.js"></script>
-
-  <script>if (window.Andio?.navbar) Andio.navbar('images');</script>
+  <script>window.Andio && Andio.navbar && Andio.navbar('catalog');</script>
 
   <div class="container">
-    <h1>Model Hub</h1>
-    <div class="layout">
-      <!-- Sidebar Filter -->
-      <aside class="card sticky">
-        <h3>Filter</h3>
-        <div class="grid">
-          <input id="q" placeholder="Suche (Name, Tag, Kategorie)"/>
-          <label>Kategorie
-            <select id="cat"></select>
-          </label>
-          <label>Tag
-            <select id="tag"></select>
-          </label>
-          <label>Basis
-            <select id="base">
-              <option value="">alle</option>
-              <option value="sdxl">SDXL</option>
-              <option value="sd15">SD 1.5</option>
-            </select>
-          </label>
-          <div class="row">
-            <span class="pill">SFW <input type="checkbox" id="sfwOnly"></span>
-            <span class="pill">NSFW <input type="checkbox" id="nsfwOnly"></span>
-          </div>
-          <div class="row">
-            <button id="btnRandom">Random</button>
-            <button id="btnRefresh">Aktualisieren</button>
-          </div>
+    <h1>Katalog / Store</h1>
+    <p class="muted">API-first (<code>/api/catalog</code>), sonst statische Fallbacks. Install/Entfernen nutzt API; wenn nicht vorhanden, wird lokal markiert.</p>
 
-          <details class="card">
-            <summary>Installationsziel</summary>
-            <div class="grid">
-              <label>Checkpoint-Verzeichnis
-                <input id="dirCkpt" placeholder="/models/checkpoints"/>
-              </label>
-              <label>LoRA-Verzeichnis
-                <input id="dirLora" placeholder="/models/lora"/>
-              </label>
-              <label>VAE-Verzeichnis
-                <input id="dirVae" placeholder="/models/vae"/>
-              </label>
-            </div>
-            <small class="muted">Diese Pfade gibt das Backend vor – hier nur UI-Wunsch; das Backend darf überschreiben.</small>
-          </details>
-        </div>
-      </aside>
-
-      <!-- Hauptbereich -->
-      <main class="grid grid-4" id="models"></main>
+    <div class="card toolbar">
+      <button id="btn-refresh">Aktualisieren</button>
+      <select id="filter-family" title="Familie">
+        <option value="">Familie: Alle</option>
+        <option value="sd15">SD 1.5</option>
+        <option value="sdxl">SDXL</option>
+        <option value="svd">SVD (Video)</option>
+        <option value="flux">FLUX</option>
+        <option value="lora">LoRA</option>
+      </select>
+      <select id="filter-state" title="Status">
+        <option value="">Status: Alle</option>
+        <option value="installed">Installiert</option>
+        <option value="available">Verfügbar</option>
+      </select>
+      <input id="search" type="search" placeholder="Suche nach Name/ID/Tag …"/>
+      <span class="right muted" id="count"></span>
     </div>
 
-    <div class="card" style="margin-top:16px">
-      <h3>Kategorien</h3>
-      <div class="grid grid-3" id="cats"></div>
-    </div>
+    <div id="list" class="grid"></div>
   </div>
 
   <footer>© AndioMediaStudio</footer>
 
   <script>
-  (()=>{
-    const $ = s=>document.querySelector(s);
-    const modelsHost = $('#models');
-    const catsHost = $('#cats');
+  const FALLBACK_COVER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
 
-    // === Dropdowns befüllen ===
-    function fillFilters(){
-      const cats = Andio.presets.getCategories() || [];
-      const tags = Andio.presets.getTags() || [];
-      const selCat = $('#cat'); selCat.innerHTML = '<option value="">alle</option>';
-      cats.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; selCat.appendChild(o); });
-      const selTag = $('#tag'); selTag.innerHTML = '<option value="">alle</option>';
-      tags.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; selTag.appendChild(o); });
+  function dedupeById(list){
+    const m=new Map();
+    for(const x of (list||[])){ const k=(x.id||x.name||'').toLowerCase(); if(!k) continue; if(!m.has(k)) m.set(k,x); }
+    return [...m.values()];
+  }
+  async function getJSON(url){
+    try{ const r=await fetch(url,{cache:'no-cache'}); if(r.ok) return await r.json(); }catch(_){}
+    return null;
+  }
+
+  async function loadFromApi(){
+    const d = await getJSON('/api/catalog');
+    if(!d) return null;
+    let items = [];
+    if (Array.isArray(d)) items = d;
+    if (Array.isArray(d.models)) items = d.models;
+    const a = (d.available||[]);
+    const i = (d.installed||[]);
+    if (a.length || i.length){
+      const mark = (arr,flag)=>arr.map(x=>Object.assign({},x,{_api:true,installed: !!flag}));
+      items = dedupeById([ ...mark(i,true), ...mark(a,false) ]);
     }
+    return items;
+  }
 
-    // === Render: Modelle ===
-    function renderModels(list){
-      modelsHost.innerHTML='';
-      if(!list.length){ modelsHost.innerHTML='<div class="card">Keine Modelle gefunden.</div>'; return; }
-      list.forEach(m=>{
-        const div = document.createElement('div');
-        div.className='card';
-        const sampleLine = (m.example || m.samples || m.examples || [])
-          .slice?.(0,4)
-          .map(s=>`<span class="k"><img src="${s}" alt="sample"/></span>`)
-          .join('') || '';
-
-        const size = m.size || m.files?.size || m.files?.ckpt_size || null;
-        const sz = size ? `<span class="stat">• ${size}</span>` : '';
-
-        div.innerHTML = `
-          <img class="thumb" src="${m.img || m.example || 'assets/placeholders/model.jpg'}" alt="${m.name}"/>
-          <h3>${m.name}</h3>
-          <p class="muted">${m.desc || ''}</p>
-          <div class="row">
-            ${(m.tags||[]).slice(0,5).map(t=>`<span class="badge">${t}</span>`).join('')}
-            ${m.base ? `<span class="badge">${m.base.toUpperCase()}</span>` : ''}
-          </div>
-          <div class="row" style="margin:6px 0">${sampleLine}</div>
-          <div class="row stat">
-            ${(m.categories||[]).slice(0,3).map(c=>`<span>${c}</span>`).join(' · ')} ${sz}
-          </div>
-
-          <div class="actions">
-            <div class="row">
-              <button data-act="details">Details</button>
-              <button data-act="setDefault">Als Standard</button>
-            </div>
-            <div class="row">
-              <button data-act="download" class="primary">Download</button>
-              <button data-act="install">Installieren</button>
-            </div>
-          </div>
-
-          <div class="progress" style="margin-top:8px;display:none"><div></div></div>
-        `;
-
-        // Button-Logik
-        div.querySelector('[data-act="details"]').addEventListener('click', ()=>{
-          const msg = [
-            `ID: ${m.id}`,
-            `Name: ${m.name}`,
-            `Basis: ${m.base||'–'}`,
-            `Tags: ${(m.tags||[]).join(', ') || '–'}`,
-            `Kategorien: ${(m.categories||[]).join(', ') || '–'}`,
-            `Dateien:`,
-            `- Checkpoint: ${m.files?.ckpt || m.files?.url || '–'}`,
-            `- VAE: ${m.files?.vae || '–'}`,
-            `- LoRA: ${(m.files?.lora||[]).join(', ') || '–'}`
-          ].join('\n');
-          alert(msg);
-        });
-
-        div.querySelector('[data-act="setDefault"]').addEventListener('click', async ()=>{
-          try{
-            if(Andio.api?.models?.setDefault){
-              await Andio.api.models.setDefault(m.id);
-              alert('Standardmodell gesetzt: '+m.name);
-            }else{
-              alert('Demo: Standard gesetzt (UI).');
-            }
-          }catch(e){ console.error(e); alert('Fehler beim Setzen.'); }
-        });
-
-        const progressBar = div.querySelector('.progress');
-        const progressFill = progressBar.querySelector('div');
-
-        async function runWithHUD(actionLabel, startFn){
-          const {hud, jobId} = await Andio.startJobWithHUD(actionLabel, startFn);
-          // zusätzlich lokale Leiste animieren
-          progressBar.style.display='';
-          const poll = async(id)=> Andio.api?.jobStatus ? Andio.api.jobStatus(id) : {progress:1,stage:'fertig',status:'done',etaSec:0};
-          const t = setInterval(async ()=>{
-            try{
-              const s = await poll(jobId);
-              if (typeof s?.progress==='number') progressFill.style.width = (Math.max(0,Math.min(1,s.progress))*100)+'%';
-              if (s?.status==='done' || s?.progress>=1) { clearInterval(t); progressFill.style.width='100%'; }
-            }catch(e){ console.warn(e); }
-          }, 600);
-          return {hud, jobId};
-        }
-
-        div.querySelector('[data-act="download"]').addEventListener('click', async ()=>{
-          // Erwartet: Andio.api.models.download({id, url, sha256?, size?})
-          const payload = {
-            id: m.id,
-            url: m.files?.ckpt || m.files?.url || m.url, // URL zum Checkpoint/ggf. Safetensors
-            vae: m.files?.vae || null,
-            loras: m.files?.lora || [],
-            sha256: m.files?.sha256 || null,
-            size: m.size || null
-          };
-          try{
-            await runWithHUD('Model: Download', async ()=>{
-              if (Andio.api?.models?.download) return await Andio.api.models.download(payload);
-              return {jobId:'demo_'+Date.now()};
-            });
-          }catch(e){ console.error(e); alert('Download fehlgeschlagen.'); }
-        });
-
-        div.querySelector('[data-act="install"]').addEventListener('click', async ()=>{
-          const dirs = {
-            ckpt: $('#dirCkpt').value || null,
-            lora: $('#dirLora').value || null,
-            vae:  $('#dirVae').value  || null
-          };
-          const payload = {
-            id: m.id, dirs,
-            files: {
-              ckpt: m.files?.ckpt || m.files?.url || m.url,
-              vae:  m.files?.vae || null,
-              lora: m.files?.lora || []
-            }
-          };
-          try{
-            await runWithHUD('Model: Install', async ()=>{
-              if (Andio.api?.models?.install) return await Andio.api.models.install(payload);
-              return {jobId:'demo_'+Date.now()};
-            });
-          }catch(e){ console.error(e); alert('Installation fehlgeschlagen.'); }
-        });
-
-        modelsHost.appendChild(div);
-      });
+  async function loadFromStatic(){
+    const a = await getJSON('assets/catalog.json');
+    const b = await getJSON('assets/catalog/community.json');
+    const c = await getJSON('assets/catalog/andio-official.json');
+    let items = [];
+    if (a){ 
+      if (Array.isArray(a.models)) items.push(...a.models);
+      if (Array.isArray(a.featured)) items.push(...a.featured);
     }
+    if (Array.isArray(b)) items.push(...b);
+    if (Array.isArray(c)) items.push(...c);
+    items = dedupeById(items);
+    items = items.map(x=>Object.assign({},x,{installed: !!x.is_installed}));
+    return items;
+  }
 
-    // === Render: Kategorien ===
-    function renderCategories(){
-      const cats = Andio.presets.getCategories() || [];
-      catsHost.innerHTML='';
-      cats.forEach(c=>{
-        const div = document.createElement('div'); div.className='card';
-        div.innerHTML = `
-          <img class="thumb" src="${c.thumb || 'assets/placeholders/category.jpg'}" alt="${c.name}"/>
-          <h4>${c.name}</h4>
-          ${c.genres?.length ? `<div class="row">${c.genres.slice(0,5).map(g=>`<span class="badge">${g}</span>`).join('')}</div>` : ''}
-          <div class="row" style="justify-content:space-between">
-            ${c.nsfw ? '<span class="badge">NSFW</span>' : '<span class="badge">SFW</span>'}
-            <button data-id="${c.id}">Filtern</button>
-          </div>
-        `;
-        div.querySelector('button').addEventListener('click', ()=>{
-          $('#cat').value = c.id; applyFilters();
-          window.scrollTo({top:0,behavior:'smooth'});
-        });
-        catsHost.appendChild(div);
-      });
-    }
-
-    // === Filter anwenden ===
-    function applyFilters(){
-      const q = $('#q').value.trim();
-      const cat = $('#cat').value || null;
-      const tag = $('#tag').value || null;
-      const base = $('#base').value || null;
-      const sfw = $('#sfwOnly').checked;
-      const nsfw = $('#nsfwOnly').checked;
-
-      let list = q ? Andio.presets.search(q)
-                   : Andio.presets.filter({ category: cat, tag, base, nsfw: nsfw?true:undefined, sfw: sfw?true:undefined });
-      renderModels(list);
-    }
-
-    // === Random ===
-    $('#btnRandom').addEventListener('click', ()=>{
-      const cat = $('#cat').value || undefined;
-      const nsfw = $('#nsfwOnly').checked ? true : undefined;
-      const sfw  = $('#sfwOnly').checked  ? true : undefined;
-      const m = Andio.presets.random({ category: cat, nsfw, sfw });
-      if (!m) return alert('Keine passenden Modelle.');
-      alert('Random: '+m.name);
+  function markInstalledByLocal(items){
+    return items.map(x=>{
+      const id = x.id || x.name;
+      const local = localStorage.getItem('model:installed:'+id);
+      return Object.assign({}, x, { installed: local ? local === '1' : !!x.installed });
     });
+  }
+  function saveInstalledLocal(id, installed){
+    try{ localStorage.setItem('model:installed:'+id, installed ? '1' : '0'); }catch(_){}
+  }
 
-    $('#btnRefresh').addEventListener('click', ()=> applyFilters());
-    ['q','cat','tag','base','sfwOnly','nsfwOnly'].forEach(id=>{
-      document.getElementById(id).addEventListener('input', applyFilters);
-      document.getElementById(id).addEventListener('change', applyFilters);
-    });
+  function familyBadge(f){
+    if(!f) return '';
+    const up = String(f).toUpperCase();
+    return `<span class="badge">${up}</span>`;
+  }
+  function tagsRow(tags){
+    return (tags||[]).slice(0,6).map(t=>`<span class="pill">${t}</span>`).join(' ');
+  }
 
-    // === Init ===
-    (function init(){
-      // Filter-Listen
-      fillFilters();
-      // Startliste
-      renderModels(Andio.presets.getModels());
-      renderCategories();
-      // Default-Installpfade (nur UI)
-      $('#dirCkpt').value = '/models/checkpoints';
-      $('#dirLora').value = '/models/lora';
-      $('#dirVae').value  = '/models/vae';
-    })();
-  })();
+  function matchFilters(x, q, fam, state){
+    if (fam && String(x.family||'').toLowerCase() !== fam) return false;
+    if (state==='installed' && !x.installed) return false;
+    if (state==='available' && x.installed) return false;
+    if (q){
+      const s = (x.id+' '+(x.name||'')+' '+(x.tags||[]).join(' ')).toLowerCase();
+      if (!s.includes(q.toLowerCase())) return false;
+    }
+    return true;
+  }
+
+  function render(items){
+    const list = document.getElementById('list');
+    const q = document.getElementById('search').value.trim();
+    const fam = document.getElementById('filter-family').value;
+    const state = document.getElementById('filter-state').value;
+    list.innerHTML='';
+    const shown = items.filter(x=>matchFilters(x,q,fam,state));
+    document.getElementById('count').textContent = `${shown.length} / ${items.length}`;
+
+    for(const m of shown){
+      const card = document.createElement('div');
+      card.className='card';
+
+      const img = document.createElement('img');
+      img.className='thumb';
+      const cover = m.cover || m.img || m.example || 'assets/placeholders/model-cover.png';
+      img.src = cover;
+      img.alt = m.name || m.id || 'Model-Cover';
+      img.onerror = ()=>{ img.src = FALLBACK_COVER; };
+      card.appendChild(img);
+
+      const h3 = document.createElement('h3');
+      h3.textContent = m.name || m.id;
+      card.appendChild(h3);
+
+      const meta = document.createElement('div');
+      meta.className='row';
+      meta.innerHTML = `${familyBadge(m.family)} <span class="muted">${m.id||''}</span>`;
+      card.appendChild(meta);
+
+      const tg = document.createElement('div');
+      tg.className='row';
+      tg.innerHTML = tagsRow(m.tags);
+      card.appendChild(tg);
+
+      const actions = document.createElement('div');
+      actions.className='row';
+
+      const useBtn = document.createElement('button');
+      useBtn.textContent='ID kopieren';
+      useBtn.addEventListener('click', async ()=>{
+        try{ await navigator.clipboard.writeText(m.id||m.name||''); useBtn.textContent='Kopiert ✓'; setTimeout(()=>useBtn.textContent='ID kopieren',1200);}catch(_){}
+      });
+      actions.appendChild(useBtn);
+
+      const instBtn = document.createElement('button');
+      const uninstallBtn = document.createElement('button');
+      instBtn.textContent = m.installed ? 'Neu installieren' : 'Installieren';
+      uninstallBtn.textContent = 'Entfernen';
+      uninstallBtn.className='secondary';
+
+      async function callInstallApi(id, uninstall=false){
+        const url = uninstall ? '/api/models/uninstall' : '/api/models/install';
+        const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id})});
+        if (!r.ok) throw new Error('HTTP '+r.status);
+        return await r.json().catch(()=>({ok:true}));
+      }
+
+      instBtn.addEventListener('click', async ()=>{
+        const id = m.id || m.name;
+        instBtn.disabled = true;
+        try{
+          let ok = false;
+          try{ await callInstallApi(id,false); ok = true; }
+          catch(e){ ok = true; } // Fallback: lokal markieren
+          if (ok){ m.installed = true; saveInstalledLocal(id,true); render(_STATE.items); }
+        }catch(e){
+          alert('Install fehlgeschlagen: '+e.message);
+        }finally{ instBtn.disabled = false; }
+      });
+
+      uninstallBtn.addEventListener('click', async ()=>{
+        const id = m.id || m.name;
+        uninstallBtn.disabled = true;
+        try{
+          let ok=false;
+          try{ await callInstallApi(id,true); ok = true; }
+          catch(e){ ok = true; }
+          if (ok){ m.installed = false; saveInstalledLocal(id,false); render(_STATE.items); }
+        }catch(e){
+          alert('Entfernen fehlgeschlagen: '+e.message);
+        }finally{ uninstallBtn.disabled = false; }
+      });
+
+      actions.appendChild(instBtn);
+      actions.appendChild(uninstallBtn);
+      card.appendChild(actions);
+
+      document.getElementById('list').appendChild(card);
+    }
+  }
+
+  const _STATE = { items: [] };
+
+  async function loadAll(){
+    let items = await loadFromApi();
+    if (!items || !items.length) items = await loadFromStatic();
+    items = markInstalledByLocal(items);
+    _STATE.items = items;
+    render(items);
+  }
+
+  document.getElementById('btn-refresh').addEventListener('click', loadAll);
+  document.getElementById('search').addEventListener('input', ()=>render(_STATE.items));
+  document.getElementById('filter-family').addEventListener('change', ()=>render(_STATE.items));
+  document.getElementById('filter-state').addEventListener('change', ()=>render(_STATE.items));
+
+  loadAll().finally(()=>{ window.Andio && Andio.polish && Andio.polish(); });
   </script>
-
-  <script>if (window.Andio?.polish) Andio.polish();</script>
 </body>
 </html>

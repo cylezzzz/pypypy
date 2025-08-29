@@ -1,235 +1,247 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Editor – AndioMediaStudio</title>
-  <link rel="icon" href="/favicon.ico"/>
-  <link rel="stylesheet" href="/assets/styles.css"/>
-  <style>
-    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-    .canvas-wrap{position:relative;background:#111;border-radius:8px;overflow:hidden;min-height:420px;display:flex;align-items:center;justify-content:center}
-    canvas{max-width:100%;max-height:65vh}
-    .badge{position:absolute;background:#2b5fd9;color:#fff;border-radius:999px;padding:2px 8px;font-size:12px;transform:translate(-50%,-50%);pointer-events:none;border:1px solid rgba(255,255,255,.3)}
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000}
-    .overlay.show{display:flex}
-    .modal{background:#111;color:#fff;max-width:90vw;max-height:90vh;width:960px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
-    .modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #222}
-    .modal .body{padding:12px 16px;overflow:auto}
-    .modal .body img{max-width:100%;max-height:70vh;border-radius:8px}
-    .modal footer{padding:10px 16px;border-top:1px solid #222;display:flex;gap:8px;justify-content:flex-end}
-    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
-    .row>label{min-width:120px;color:#888}
-    .note{color:#888;font-size:.9em}
-    .inputs{display:flex;flex-direction:column;gap:8px}
-    .inputs .card{padding:8px}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Editor – AndioMediaStudio</title>
+<link rel="icon" href="assets/logo/logo.png"/>
+<link rel="stylesheet" href="assets/styles.css"/>
+<style>
+  .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .canvas-wrap{position:relative;background:#111;border-radius:8px;overflow:hidden;min-height:420px;display:flex;align-items:center;justify-content:center}
+  canvas{max-width:100%;max-height:65vh;background:#000}
+  .badge{position:absolute;background:#2b5fd9;color:#fff;border-radius:999px;padding:2px 8px;font-size:12px;transform:translate(-50%,-50%);pointer-events:none;border:1px solid rgba(255,255,255,.3)}
+  .row{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
+  .note{color:#888;font-size:.9em}
+  .result-list{display:flex;flex-direction:column;gap:8px}
+  .small{font-size:.9em;opacity:.85}
+  .hud{font-size:.9em;opacity:.9}
+  button[disabled]{opacity:.6;pointer-events:none}
+</style>
 </head>
 <body>
-  <script src="/assets/app.js"></script>
-  <script>window.Andio && Andio.navbar && Andio.navbar('editor');</script>
+<script src="assets/app.js"></script>
+<script>window.Andio?.navbar?.('editor');</script>
 
-  <div class="container">
-    <h1>Editor</h1>
-    <p class="note">Photoshop-ähnlich: Bereich(e) markieren → für jeden #n Prompt eingeben → generieren. Player öffnet nur für generierte Resultate.</p>
+<div class="container">
+  <h1>Editor</h1>
+  <p class="note">Bild laden → Bereiche (#1, #2, …) aufziehen → je Bereich Prompt → <strong>Generieren</strong>. Der Player öffnet nur bei generierten Ergebnissen.</p>
 
-    <div class="grid">
-      <!-- Linke Seite: Bild & Markierung -->
-      <div>
-        <div class="toolbar card">
-          <input id="ed-file" type="file" accept="image/*"/>
-          <select id="ed-mode" title="Modus">
-            <option value="inpaint">Generieren (Inpainting)</option>
-            <option value="remove">Entfernen</option>
-            <option value="filter">Filter/Variante</option>
-            <option value="pose">Pose</option>
-          </select>
-          <button id="ed-clear" class="secondary">Markierungen löschen</button>
-          <button id="ed-generate">Generieren</button>
-        </div>
-
-        <div class="canvas-wrap card" id="ed-canvas-wrap">
-          <canvas id="ed-canvas"></canvas>
-          <!-- Badges (#1,#2,...) werden dynamisch eingesetzt -->
-        </div>
-
-        <p class="note">Tipp: Mit gedrückter Maustaste ziehen, um einen Bereich aufzuziehen. Mehrere Bereiche sind möglich; sie werden nummeriert (#1, #2 ...).</p>
+  <div class="grid">
+    <div>
+      <div class="toolbar card">
+        <input id="ed-file" type="file" accept="image/*"/>
+        <select id="ed-mode" title="Modus">
+          <option value="inpaint">Generieren (Inpainting)</option>
+          <option value="remove">Entfernen</option>
+          <option value="filter">Filter/Variante</option>
+          <option value="pose">Pose</option>
+        </select>
+        <button id="ed-clear" class="secondary">Markierungen löschen</button>
+        <button id="ed-generate">Generieren</button>
+        <span id="hud" class="hud"></span>
       </div>
 
-      <!-- Rechte Seite: Eingaben pro Bereich -->
-      <div class="inputs">
-        <div class="card">
-          <h3>Globale Einstellungen</h3>
-          <div class="row">
-            <label>Negativ</label>
-            <input id="ed-neg" type="text" placeholder="z.B. Unschärfe, Verzerrungen"/>
-          </div>
-          <div class="row">
-            <label>Guidance</label>
-            <input id="ed-cfg" type="number" min="0" max="20" step="0.5" value="7.5" style="max-width:120px"/>
-            <label>Steps</label>
-            <input id="ed-steps" type="number" min="1" max="150" value="30" style="max-width:120px"/>
-          </div>
-        </div>
+      <div class="canvas-wrap card" id="ed-cwrap">
+        <canvas id="ed-canvas" width="1024" height="1024"></canvas>
+      </div>
 
-        <div id="ed-regions" class="card">
-          <h3>Bereiche (#)</h3>
-          <p class="note">Zu jedem markierten Bereich erscheint hier ein Eingabefeld.</p>
-          <div id="ed-fields"></div>
-        </div>
+      <p class="note">Rechteck ziehen: Maus drücken → ziehen → loslassen. Mehrere Bereiche sind möglich. Zum Entfernen: „Markierungen löschen“.</p>
+    </div>
 
-        <div id="ed-history" class="card">
-          <h3>Historie</h3>
-          <div id="ed-preview"></div>
+    <div>
+      <div class="card">
+        <h3>Globale Einstellungen</h3>
+        <div class="row">
+          <label>Negativ</label>
+          <input id="ed-neg" type="text" placeholder="z. B. Unschärfe, Verzerrungen"/>
         </div>
+        <div class="row">
+          <label>Guidance</label><input id="ed-cfg" type="number" min="0" max="20" step="0.5" value="7.5" style="max-width:120px"/>
+          <label>Steps</label><input id="ed-steps" type="number" min="1" max="150" value="30" style="max-width:120px"/>
+          <label>Seed</label><input id="ed-seed" type="number" placeholder="leer=zufällig" style="max-width:140px"/>
+        </div>
+      </div>
+
+      <div id="ed-regions" class="card">
+        <h3>Bereiche (#)</h3>
+        <div id="ed-fields" class="result-list"></div>
+      </div>
+
+      <div id="ed-history" class="card">
+        <h3>Ergebnisse</h3>
+        <div id="ed-results" class="result-list"></div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Overlay Player (nur generierte Bilder) -->
-  <div id="ed-overlay" class="overlay" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Player">
-      <header>
-        <strong id="ed-ov-title">Player</strong>
-        <button id="ed-ov-close" aria-label="Schließen">✕</button>
-      </header>
-      <div class="body">
-        <img id="ed-ov-img" alt="Bild"/>
-      </div>
-      <footer>
-        <a id="ed-ov-download" class="secondary" download>Download</a>
-        <button id="ed-ov-close2">Schließen</button>
-      </footer>
+<footer>© AndioMediaStudio</footer>
+
+<!-- Minimaler Overlay-Viewer nur für generierte Inhalte -->
+<div id="ov" style="position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000">
+  <div style="background:#111;max-width:90vw;max-height:90vh;border-radius:12px;padding:12px;border:1px solid #222;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <strong>Player</strong>
+      <button id="ov-close">✕</button>
+    </div>
+    <img id="ov-img" alt="Bild" style="max-width:86vw;max-height:72vh;border-radius:8px"/>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+      <a id="ov-dl" class="secondary" download>Download</a>
+      <button id="ov-close2">Schließen</button>
     </div>
   </div>
+</div>
 
-  <footer>© AndioMediaStudio</footer>
+<script>
+(()=> {
+  const $=s=>document.querySelector(s);
+  const hud = $('#hud');
+  const c = $('#ed-canvas'), ctx = c.getContext('2d'), cwrap = $('#ed-cwrap');
+  let img=null, dragging=false, start=null;
+  const regions=[]; // {id,x,y,w,h,form:{what,style}}
 
-  <script>
-    // Canvas & Markierungen
-    const fileInput = document.getElementById('ed-file');
-    const wrap = document.getElementById('ed-canvas-wrap');
-    const canvas = document.getElementById('ed-canvas');
-    const ctx = canvas.getContext('2d');
-    const fields = document.getElementById('ed-fields');
-    const preview = document.getElementById('ed-preview');
-
-    let img = new Image();
-    let regions = []; // {id, x,y,w,h}
-    let dragging=false, start=null;
-
-    function resizeCanvasToImage(){
-      const maxW = wrap.clientWidth - 16;
-      const maxH = 520;
-      let w = img.width, h = img.height;
-      const ratio = Math.min(maxW / w, maxH / h, 1);
-      canvas.width = Math.floor(w * ratio);
-      canvas.height = Math.floor(h * ratio);
-    }
-    function draw(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      if (img.src) ctx.drawImage(img,0,0,canvas.width,canvas.height);
-      ctx.strokeStyle = '#2b5fd9'; ctx.lineWidth = 2; ctx.setLineDash([6,4]);
-      regions.forEach(r => { ctx.strokeRect(r.x,r.y,r.w,r.h); });
-    }
-    function addBadge(r){
-      const b=document.createElement('div');
-      b.className='badge';
-      b.textContent='#'+r.id;
-      b.style.left=(r.x + r.w/2)+'px';
-      b.style.top=(r.y + r.h/2)+'px';
-      wrap.appendChild(b);
-      r._badge=b;
-    }
-    function clearBadges(){ [...wrap.querySelectorAll('.badge')].forEach(b=>b.remove()); }
-    function rebuildBadges(){ clearBadges(); regions.forEach(addBadge); }
-
-    canvas.addEventListener('mousedown', (e)=>{
-      if (!img.src) return;
-      dragging=true;
-      const rect=canvas.getBoundingClientRect();
-      start={ x:e.clientX-rect.left, y:e.clientY-rect.top };
+  function nextId(){ return regions.length? Math.max(...regions.map(r=>r.id))+1 : 1; }
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    if (img) ctx.drawImage(img,0,0,c.width,c.height);
+    ctx.strokeStyle='#2b5fd9'; ctx.setLineDash([6,4]); ctx.lineWidth=2;
+    regions.forEach(r=> ctx.strokeRect(r.x,r.y,r.w,r.h));
+    rebuildBadges();
+  }
+  function rebuildBadges(){
+    [...cwrap.querySelectorAll('.badge')].forEach(b=>b.remove());
+    regions.forEach(r=>{
+      const b=document.createElement('div'); b.className='badge'; b.textContent='#'+r.id;
+      b.style.left=(r.x+r.w/2)+'px'; b.style.top=(r.y+r.h/2)+'px';
+      cwrap.appendChild(b);
     });
-    canvas.addEventListener('mousemove', (e)=>{
-      if (!dragging) return;
-      const rect=canvas.getBoundingClientRect();
-      const cur={ x:e.clientX-rect.left, y:e.clientY-rect.top };
-      const x=Math.min(start.x,cur.x), y=Math.min(start.y,cur.y);
-      const w=Math.abs(cur.x-start.x), h=Math.abs(cur.y-start.y);
+  }
+
+  $('#ed-file').addEventListener('change', ()=>{
+    const f=$('#ed-file').files?.[0]; if(!f) return;
+    const im=new Image(); im.onload=()=>{
+      img=im;
+      const ratio=Math.min(1024/im.width,1024/im.height,1);
+      c.width=Math.floor(im.width*ratio); c.height=Math.floor(im.height*ratio);
       draw();
-      ctx.setLineDash([6,4]); ctx.strokeStyle='#2b5fd9'; ctx.strokeRect(x,y,w,h);
-    });
-    canvas.addEventListener('mouseup', (e)=>{
-      if (!dragging) return; dragging=false;
-      const rect=canvas.getBoundingClientRect();
-      const end={ x:e.clientX-rect.left, y:e.clientY-rect.top };
-      const x=Math.min(start.x,end.x), y=Math.min(start.y,end.y);
-      const w=Math.abs(end.x-start.x), h=Math.abs(end.y-start.y);
-      if (w<8 || h<8) { draw(); return; }
-      const id = regions.length+1;
-      const r={id,x,y,w,h}; regions.push(r); addBadge(r); draw(); addField(r);
-    });
+    };
+    im.src=URL.createObjectURL(f);
+  });
 
-    function addField(r){
-      const wrap=document.createElement('div');
-      wrap.className='card';
-      wrap.innerHTML=`
-        <div class="row"><strong>Bereich #${r.id}</strong></div>
-        <div class="row"><label>Was?</label><input data-k="what" type="text" placeholder="z.B. 'rotes Kleid'"/></div>
-        <div class="row"><label>Wo?</label><input data-k="where" type="text" placeholder="optional"/></div>
-        <div class="row"><label>Stil/Material</label><input data-k="style" type="text" placeholder="z.B. Seide, realistisch"/></div>
-      `;
-      fields.appendChild(wrap);
+  c.addEventListener('mousedown', e=>{
+    if(!img) return;
+    dragging=true;
+    const r=c.getBoundingClientRect(); start={x:e.clientX-r.left,y:e.clientY-r.top};
+  });
+  c.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    const r=c.getBoundingClientRect(); const x=e.clientX-r.left, y=e.clientY-r.top;
+    draw(); ctx.strokeStyle='#2b5fd9'; ctx.setLineDash([6,4]); ctx.strokeRect(start.x,start.y,x-start.x,y-start.y);
+  });
+  c.addEventListener('mouseup', e=>{
+    if(!dragging) return; dragging=false;
+    const r=c.getBoundingClientRect(); const x1=Math.min(start.x,e.clientX-r.left), y1=Math.min(start.y,e.clientY-r.top);
+    const w=Math.abs(e.clientX-r.left-start.x), h=Math.abs(e.clientY-r.top-start.y); if(w<6||h<6) return;
+    const item={id:nextId(),x:x1,y:y1,w,h,form:{what:'',style:''}}; regions.push(item); draw(); addField(item);
+  });
+
+  $('#ed-clear').addEventListener('click', ()=>{ regions.splice(0,regions.length); draw(); $('#ed-fields').innerHTML=''; });
+
+  function addField(r){
+    const el=document.createElement('div'); el.className='card';
+    el.innerHTML=`
+      <strong>#${r.id}</strong>
+      <div class="row"><input data-k="what" placeholder="Was? z. B. BH-Träger entfernen / Satinband hinzufügen" style="width:100%"></div>
+      <div class="row"><input data-k="style" placeholder="Stil/Hinweise (Studio-Licht, realistisch …)" style="width:100%"></div>
+    `;
+    ['what','style'].forEach(k=>{
+      const input=el.querySelector(`[data-k="${k}"]`);
+      input.value=r.form[k]||'';
+      input.addEventListener('input',()=>{ r.form[k]=input.value; });
+    });
+    $('#ed-fields').appendChild(el);
+  }
+
+  // ------- API helpers (echte Calls, Polling) -------
+  const pickUrl = (obj)=> obj?.url || obj?.result?.url || obj?.data?.url || null;
+
+  async function postMultipart(endpoint, payload, files){
+    const fd=new FormData();
+    fd.append('payload', new Blob([JSON.stringify(payload)], {type:'application/json'}));
+    for(const [name,file] of Object.entries(files||{})){ if(file) fd.append(name, file, file.name||name); }
+    const res=await fetch(endpoint,{method:'POST', body:fd});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  }
+  async function pollJob(jobId, {interval=1000, timeout=10*60*1000}={}){
+    const t0=Date.now();
+    while(true){
+      const r=await fetch(`/api/jobs/${jobId}`); if(!r.ok) throw new Error(`Job ${jobId}: HTTP ${r.status}`);
+      const data=await r.json();
+      const st=(data.status||data.state||'').toLowerCase();
+      if(['succeeded','success','done','finished','ok'].includes(st)){ return data; }
+      if(['failed','error'].includes(st)){ const msg=data.error||'Job fehlgeschlagen'; throw new Error(msg); }
+      if(Date.now()-t0>timeout) throw new Error('Timeout beim Warten auf das Ergebnis.');
+      await new Promise(r=>setTimeout(r, interval));
     }
+  }
 
-    function resetMarks(){ regions=[]; fields.innerHTML=''; clearBadges(); draw(); }
+  async function generate(){
+    if(!img){ alert('Bitte erst ein Bild laden.'); return; }
+    const file=$('#ed-file').files?.[0];
+    const payload={
+      mode: $('#ed-mode').value,
+      neg: $('#ed-neg').value.trim(),
+      cfg: +$('#ed-cfg').value,
+      steps: +$('#ed-steps').value,
+      seed: $('#ed-seed').value? +$('#ed-seed').value : null,
+      // Koordinaten im Canvasmaßstab (0..width/height)
+      regions: regions.map(r=>({id:r.id,x:r.x,y:r.y,w:r.w,h:r.h,form:r.form||{}})),
+      canvas_size: {w:c.width,h:c.height}
+    };
+    try{
+      setBusy(true,'Starte Job …');
+      const startResp = await postMultipart('/api/editor/run', payload, {image:file});
+      const directUrl = pickUrl(startResp);
+      if(directUrl){
+        pushResult(directUrl); setBusy(false,'Fertig (Direkt)');
+        return;
+      }
+      const jobId = startResp.jobId || startResp.id || startResp.job || null;
+      if(!jobId) throw new Error('Kein jobId im API-Response.');
+      setBusy(true,`Warte auf Ergebnis… (Job ${jobId})`);
+      const jobResp = await pollJob(jobId);
+      const url = pickUrl(jobResp);
+      if(!url) throw new Error('Kein Ergebnis-URL im Job-Response.');
+      pushResult(url);
+      setBusy(false,'Fertig');
+    }catch(err){
+      console.error(err);
+      setBusy(false,'Fehler');
+      alert('Editor-Fehler: '+(err?.message||err));
+    }
+  }
 
-    fileInput.addEventListener('change', ()=>{
-      const f=fileInput.files[0];
-      if (!f) return;
-      const url=URL.createObjectURL(f);
-      img = new Image();
-      img.onload = ()=>{ resizeCanvasToImage(); draw(); resetMarks(); };
-      img.src = url;
-    });
-    window.addEventListener('resize', ()=>{ if (img.src){ resizeCanvasToImage(); draw(); rebuildBadges(); } });
+  function setBusy(b,msg){ $('#ed-generate').disabled=b; $('#ed-clear').disabled=b; hud.textContent=msg||''; }
+  function pushResult(url){
+    const btn=document.createElement('button'); btn.className='btn'; btn.textContent='Result '+new Date().toLocaleTimeString();
+    const item={url,generated:true};
+    btn.addEventListener('click', ()=> openOverlay(item));
+    $('#ed-results').prepend(btn);
+  }
 
-    // Overlay Player (nur generierte Bilder)
-    const edOverlay = (() => {
-      const el=document.getElementById('ed-overlay');
-      const im=document.getElementById('ed-ov-img');
-      const dl=document.getElementById('ed-ov-download');
-      const title=document.getElementById('ed-ov-title');
-      const close=()=>{el.classList.remove('show'); el.setAttribute('aria-hidden','true');};
-      document.getElementById('ed-ov-close').onclick=close;
-      document.getElementById('ed-ov-close2').onclick=close;
-      el.addEventListener('click',(e)=>{ if(e.target===el) close(); });
-      return { open:(item)=>{ if(!item||!item.generated) return; im.src=item.url; dl.href=item.url; dl.download=item.name||'edit.png'; title.textContent=item.name||'Player'; el.classList.add('show'); el.setAttribute('aria-hidden','false'); } };
-    })();
-
-    // Generierung (Stub, bindet später echte API an)
-    document.getElementById('ed-generate').addEventListener('click', async ()=>{
-      if (!img.src){ alert('Bitte zuerst ein Bild laden.'); return; }
-      // Hier später: Masken/Prompts an Backend senden.
-      // UI-Dummy: füge generiertes Ergebnis (Platzhalter) zur Historie hinzu.
-      const url = '/assets/placeholders/demo.jpg';
-      const ts=new Date().toISOString().replaceAll(':','').slice(0,15);
-      const name=`edit_${ts}.png`;
-      const card=document.createElement('div'); card.className='card';
-      card.innerHTML=`<div class="row" style="justify-content:space-between">
-          <div class="note">${name}</div>
-          <button class="secondary btn-open">Im Player öffnen</button>
-        </div>
-        <img style="max-width:100%"/>`;
-      card.querySelector('img').src=url;
-      card.querySelector('.btn-open').addEventListener('click', ()=>edOverlay.open({name, url, type:'image', generated:true}));
-      preview.prepend(card);
-    });
-
-    document.getElementById('ed-clear').addEventListener('click', resetMarks);
-
-    window.Andio && Andio.polish && Andio.polish();
-  </script>
+  // Overlay (nur generated)
+  function openOverlay(item){
+    if(!item.generated) return;
+    $('#ov-img').src=item.url; $('#ov-dl').href=item.url; $('#ov-dl').download='output.png';
+    $('#ov').style.display='flex';
+  }
+  $('#ov-close').onclick=()=> $('#ov').style.display='none';
+  $('#ov-close2').onclick=()=> $('#ov').style.display='none';
+  $('#ed-generate').addEventListener('click', generate);
+})();
+</script>
 </body>
 </html>
