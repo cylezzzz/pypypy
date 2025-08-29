@@ -1,183 +1,233 @@
 <!doctype html>
-<!-- === Brand / Navbar (standardisiert) === -->
-<header class="header" role="banner">
-  <nav role="navigation" aria-label="Hauptnavigation">
-    <div class="brand">
-      <a href="index.html" class="brand-link" aria-label="Zur Startseite">
-        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
-        <span class="wordmark">Andio Media Studio</span>
-      </a>
-    </div>
-    <div class="spacer"></div>
-    <div class="links" role="menubar">
-      <a role="menuitem" href="index.html" data-link="index">Übersicht</a>
-      <a role="menuitem" href="images.html" data-link="images">Image Studio</a>
-      <a role="menuitem" href="video-gen.html" data-link="video-gen">Video Studio</a>
-      <a role="menuitem" href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
-      <a role="menuitem" href="motion.html" data-link="motion">Motion</a>
-      <a role="menuitem" href="gallery.html" data-link="gallery">Gallery</a>
-      <a role="menuitem" href="catalog.html" data-link="catalog">Store</a>
-      <a role="menuitem" href="editor.html" data-link="editor">Editor</a>
-    </div>
-  </nav>
-</header>
-<script>
-  // Set active nav item based on data-page or current path; add aria-current for a11y
-  (function(){
-    try {
-      var dataPage = document.body && document.body.getAttribute('data-page');
-      if(!dataPage){
-        var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-        var map = {
-          'index.html':'index','images.html':'images','video-gen.html':'video-gen',
-          'wandrobe.html':'wardrobe','motion.html':'motion','gallery.html':'gallery',
-          'catalog.html':'catalog','editor.html':'editor'
-        };
-        dataPage = map[path] || 'index';
-        document.body && document.body.setAttribute('data-page', dataPage);
-      }
-      var sel = '.links a[data-link="' + dataPage + '"]';
-      var a = document.querySelector(sel);
-      if(a){
-        a.classList.add('active');
-        a.setAttribute('aria-current','page');
-      }
-    } catch(e){ console && console.warn('navbar init failed', e); }
-  })();
-</script>
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Übersicht · AndioMediaStudio</title>
-  <link rel="stylesheet" href="assets/styles.css"/>
+  <title>Image Studio – AndioMediaStudio</title>
   <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
+<link rel="stylesheet" href="assets/styles.css"/>
+<script src="assets/app.js"></script>
   <style>
-    .lead{color:var(--muted);margin-top:6px}
-    .card .kicker{margin-bottom:8px}
+    /* Minimaler Overlay-/Utility-Style (restlicher Look bleibt aus styles.css) */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000}
+    .overlay.show{display:flex}
+    .modal{background:#111;color:#fff;max-width:90vw;max-height:90vh;width:960px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
+    .modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #222}
+    .modal .body{padding:12px 16px;overflow:auto}
+    .modal .body img,.modal .body video{max-width:100%;max-height:70vh;border-radius:8px}
+    .modal footer{padding:10px 16px;border-top:1px solid #222;display:flex;gap:8px;justify-content:flex-end}
+    .grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
+    .row > label{min-width:110px;color:#888}
+    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+    .thumb{cursor:pointer}
+    .sep{height:1px;background:#222;margin:12px 0}
+    .note{color:#888;font-size:.9em}
   </style>
 </head>
-<body data-page="index">
-<script src="assets/app.js"></script>
+<body>
+  <script src="/assets/app.js"></script>
+  <script>window.Andio && Andio.navbar && Andio.navbar('images');</script>
 
-<!-- === Brand / Navbar (statisch) === -->
+  <div class="container">
+    <h1>Image Studio</h1>
+    <p class="note">Text→Bild & Bild→Bild. Generierte Ergebnisse erscheinen rechts und können im Player geöffnet werden.</p>
 
-<script>
-  // Aktiven Link markieren
-  (function(){
-    const p=document.body.getAttribute('data-page');
-    const a=document.querySelector(`.links a[data-link="${p}"]`);
-    if(a) a.classList.add('active');
-  })();
-</script>
+    <div class="grid">
+      <!-- Links: Steuerung -->
+      <div class="card">
+        <h3>Generierung</h3>
 
-<div class="container">
-  <h1>Willkommen</h1>
-  <p class="lead">Wähle eine Seite – jede Kachel erklärt kurz, was dort passiert und wofür sie gedacht ist.</p>
+        <div class="row">
+          <label for="gen-mode">Modus</label>
+          <select id="gen-mode">
+            <option value="txt2img">Text → Bild</option>
+            <option value="img2img">Bild → Bild</option>
+            <option value="inpaint">Inpainting</option>
+          </select>
+        </div>
 
-  <div class="grid cols-3" style="margin-top:14px">
-    <!-- Create -->
-    <div class="card">
-      <div class="kicker"><span class="badge">Bild · Generieren & Bearbeiten</span></div>
-      <h3>Create</h3>
-      <p>Text→Bild, Bild→Bild und Inpaint. Pinsel/Masken, Parameter (Steps/Guidance/Seed), optional NSFW (mit Alters-/Consent-Gate).</p>
-      <div class="toolbar">
-        <a class="btn primary" href="images.html">Öffnen</a>
-        <span class="badge">Pinsel/Masken</span>
-        <span class="badge">NSFW (gated)</span>
+        <div class="row">
+          <label for="model">Modell</label>
+          <select id="model"></select>
+        </div>
+
+        <div class="row">
+          <label for="prompt">Prompt</label>
+          <textarea id="prompt" rows="4" placeholder="Beschreibe das gewünschte Bild..."></textarea>
+        </div>
+
+        <div class="row">
+          <label for="neg">Negativ</label>
+          <input id="neg" type="text" placeholder="Ungewünschtes (z.B. lowres, artifacts)"/>
+        </div>
+
+        <div class="row">
+          <label>Guidance</label>
+          <input id="cfg" type="number" step="0.5" min="0" max="20" value="7.5" style="max-width:120px"/>
+          <label>Steps</label>
+          <input id="steps" type="number" min="1" max="150" value="30" style="max-width:120px"/>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="row">
+          <label for="ref">Referenzbild</label>
+          <input id="ref" type="file" accept="image/*"/>
+        </div>
+        <p class="note">Für „Bild→Bild“ oder „Inpainting“ optional ein Referenzbild wählen.</p>
+
+        <div class="row">
+          <button id="btn-generate">Generieren</button>
+          <button id="btn-clear" class="secondary">Zurücksetzen</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Wardrobe -->
-    <div class="card">
-      <div class="kicker"><span class="badge">Bild · Outfit/Objekte/Style</span></div>
-      <h3>Wardrobe</h3>
-      <p>Kleidung ändern, Accessoires/Objekte platzieren (Klick-Position), Style Transfer. Enthält <em>Undress</em> (NSFW, mit Bestätigung), inkl. Masken-Tools.</p>
-      <div class="toolbar">
-        <a class="btn primary" href="images.html">Öffnen</a>
-        <span class="badge">Positions-Klick</span>
-        <span class="badge">Undress (gated)</span>
-      </div>
-    </div>
-
-    <!-- Talking -->
-    <div class="card">
-      <div class="kicker"><span class="badge">Video · Avatar spricht</span></div>
-      <h3>Talking</h3>
-      <p>Gesicht + Audio oder TTS → lipsync-Video. Regler für Lipsync & Bewegung. Export als MP4/GIF/WEBM.</p>
-      <div class="toolbar">
-        <a class="btn primary" href="video-gen.html">Öffnen</a>
-        <span class="badge">TTS/Audio</span>
-        <span class="badge">MP4/GIF/WEBM</span>
-      </div>
-    </div>
-
-    <!-- Video -->
-    <div class="card">
-      <div class="kicker"><span class="badge">Video · Effekte</span></div>
-      <h3>Video</h3>
-      <p>Ken Burns, Slideshow oder Stylize auf Bildern/Videos anwenden. Parameter setzen, Rendern, Vorschau & Speichern.</p>
-      <div class="toolbar">
-        <a class="btn primary" href="video-gen.html">Öffnen</a>
-        <span class="badge">Ken Burns</span>
-        <span class="badge">Stylize</span>
-      </div>
-    </div>
-
-    <!-- Store / Catalog -->
-    <div class="card">
-      <div class="kicker"><span class="badge">Modelle · Verwaltung</span></div>
-      <h3>Store</h3>
-      <p>Modelle durchsuchen, installieren und aktivieren (z. B. SDXL/Anime/Video). Für Live-Betrieb an Backend gekoppelt.</p>
-      <div class="toolbar">
-        <a class="btn primary" href="catalog.html">Öffnen</a>
-        <span class="badge">Installieren</span>
-        <span class="badge">Aktivieren</span>
-      </div>
-    </div>
-
-    <!-- Gallery -->
-    <div class="card">
-      <div class="kicker"><span class="badge">Ergebnisse · Übersicht</span></div>
-      <h3>Gallery</h3>
-      <p>Generierte Bilder/Videos ansehen, nach Typ filtern, Details prüfen. Praktisch für Vergleiche und Auswahl.</p>
-      <div class="toolbar">
-        <a class="btn primary" href="gallery.html">Öffnen</a>
-        <span class="badge">Filter</span>
-        <span class="badge">Grid</span>
-      </div>
-    </div>
-
-    <!-- Player -->
-    <div class="card">
-      <div class="kicker"><span class="badge">Viewer · Metadaten</span></div>
-      <h3>Player</h3>
-      <p>Bilder/Videos aus URL/Datei abspielen, Metadaten-Overlay anzeigen (z. B. Modell/Seed/NSFW-Level), Download.</p>
-      <div class="toolbar">
-        <span class="badge">Overlay</span>
-        <span class="badge">Download</span>
-      </div>
-    </div>
-
-    <!-- Hinweise -->
-    <div class="card">
-      <div class="kicker"><span class="badge">Hinweis</span></div>
-      <h3>NSFW & Sicherheit</h3>
-      <p>NSFW-Funktionen sind optional und nur mit Alters- & Einwilligungsbestätigung aktiv. Keine realen Personen ohne Consent. Keine Minderjährigen.</p>
-      <div class="toolbar">
-        <a class="btn" href="images.html">Zu Image</a>
-        <a class="btn" href="video-gen.html">Zu Video</a>
+      <!-- Rechts: Vorschau / Historie -->
+      <div class="card">
+        <h3>Vorschau & Historie</h3>
+        <div id="preview" class="cards"></div>
       </div>
     </div>
   </div>
-</div>
 
-<footer>© AndioMediaStudio</footer>
+  <!-- Overlay Player (nur für generierte Inhalte) -->
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Player">
+      <header>
+        <strong id="ov-title">Player</strong>
+        <button id="ov-close" aria-label="Schließen">✕</button>
+      </header>
+      <div class="body">
+        <img id="ov-img" alt="Bild" style="display:none"/>
+        <video id="ov-vid" controls style="display:none"></video>
+      </div>
+      <footer>
+        <a id="ov-download" class="secondary" download>Download</a>
+        <button id="ov-close2">Schließen</button>
+      </footer>
+    </div>
+  </div>
 
-<script>
-  if (window.Andio?.polish) Andio.polish();
-</script>
+  <footer>© AndioMediaStudio</footer>
 
-<div class="container"><div id="andio-counters" class="toolbar" style="gap:8px"></div></div>
+  <script>
+    // --- Fallback für sichere Asset-Pfade, falls Andio.safeAsset nicht existiert
+    async function safeAsset(url, fallbackDataUri) {
+      if (window.Andio && typeof Andio.safeAsset === 'function') {
+        return Andio.safeAsset(url, fallbackDataUri);
+      }
+      try {
+        const res = await fetch(url, { method: 'HEAD' });
+        if (res.ok) return url;
+      } catch(e){}
+      return fallbackDataUri;
+    }
+
+    const FALLBACK_IMG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAMAAACahl6sAAAABlBMVEUAAP8AAACg6jRcAAAASElEQVR4nO3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4Gg0AAAGcM8dNAAAAAElFTkSuQmCC';
+
+    // --- Overlay Player API (öffnet nur für generierte Inhalte)
+    const overlay = (() => {
+      const el = document.getElementById('overlay');
+      const img = document.getElementById('ov-img');
+      const vid = document.getElementById('ov-vid');
+      const title = document.getElementById('ov-title');
+      const dl = document.getElementById('ov-download');
+      const close = () => { el.classList.remove('show'); el.setAttribute('aria-hidden', 'true'); vid.pause(); };
+      document.getElementById('ov-close').onclick = close;
+      document.getElementById('ov-close2').onclick = close;
+      el.addEventListener('click', (e)=>{ if(e.target===el) close(); });
+      return {
+        open: (item) => {
+          if (!item || !item.generated) return; // nur generiert!
+          img.style.display = 'none'; vid.style.display = 'none';
+          title.textContent = item.name || 'Player';
+          dl.href = item.url; dl.download = item.name || 'output';
+          if (item.type === 'video') {
+            vid.src = item.url; vid.style.display = 'block';
+          } else {
+            img.src = item.url; img.style.display = 'block';
+          }
+          el.classList.add('show'); el.setAttribute('aria-hidden', 'false');
+        }
+      };
+    })();
+
+    // --- UI-Logik
+    const els = {
+      model: document.getElementById('model'),
+      mode: document.getElementById('gen-mode'),
+      prompt: document.getElementById('prompt'),
+      neg: document.getElementById('neg'),
+      cfg: document.getElementById('cfg'),
+      steps: document.getElementById('steps'),
+      ref: document.getElementById('ref'),
+      preview: document.getElementById('preview'),
+      gen: document.getElementById('btn-generate'),
+      clear: document.getElementById('btn-clear'),
+    };
+
+    // Modelle laden (API, mit Fallback)
+    async function loadModels() {
+      const opt = (id, label) => `<option value="${id}">${label}</option>`;
+      try {
+        const r = await fetch('/api/catalog');
+        if (r.ok) {
+          const data = await r.json();
+          const items = (data.installed || data.featured || []).map(m => opt(m.id || m.name || 'model', `${m.name || m.id} (${m.family||'?'})`));
+          els.model.innerHTML = items.join('') || opt('sdxl-base-1.0','SDXL Base 1.0 (sdxl)');
+          return;
+        }
+      } catch(e){}
+      // Fallback auf statische Datei
+      try {
+        const r2 = await fetch('/assets/catalog.json');
+        if (r2.ok) {
+          const d2 = await r2.json();
+          const items2 = (d2.featured || []).map(m => opt(m.id, `${m.name} (${m.family||'?'})`));
+          els.model.innerHTML = items2.join('') || opt('sdxl-base-1.0','SDXL Base 1.0 (sdxl)');
+          return;
+        }
+      } catch(e){}
+      els.model.innerHTML = opt('sdxl-base-1.0','SDXL Base 1.0 (sdxl)');
+    }
+
+    // Vereinfachte Vorschau-Kachel
+    function addPreviewCard(obj) {
+      const card = document.createElement('div');
+      card.className = 'card thumb';
+      card.innerHTML = `
+        <div class="note">${obj.name || 'Output'}</div>
+        <img alt="" />
+        <div class="row" style="justify-content:flex-end;margin-top:8px">
+          <button class="secondary btn-open" ${obj.generated ? '' : 'disabled title="Nur für generierte Inhalte"'}>Im Player öffnen</button>
+        </div>
+      `;
+      safeAsset(obj.thumb || obj.url, FALLBACK_IMG).then(src => {
+        card.querySelector('img').src = src;
+      });
+      card.querySelector('.btn-open').addEventListener('click', () => overlay.open(obj));
+      els.preview.prepend(card);
+    }
+
+    // Simulierte Generate-Action (hier nur UI-Dummy → bindet später echte API an)
+    async function onGenerate() {
+      const ts = new Date().toISOString().replaceAll(':','').slice(0,15);
+      const name = `image_${ts}.png`;
+      // Wenn Referenz gewählt, zeigen wir sie als "Quelle" (nicht generiert)
+      if (els.ref.files[0]) {
+        const fileUrl = URL.createObjectURL(els.ref.files[0]);
+        addPreviewCard({ name: `Referenz: ${els.ref.files[0].name}`, url: fileUrl, thumb: fileUrl, type: 'image', generated: false });
+      }
+      // Generiertes Ergebnis (hier Platzhalterbild; später API-URL einsetzen)
+      const genUrl = await safeAsset('/outputs/last_generated.png','/assets/placeholders/demo.jpg');
+      addPreviewCard({ name, url: genUrl, thumb: genUrl, type: 'image', generated: true });
+    }
+
+    els.gen.addEventListener('click', onGenerate);
+    els.clear.addEventListener('click', () => { els.prompt.value=''; els.neg.value=''; els.ref.value=''; });
+
+    loadModels().then(()=>{}).finally(()=>{ window.Andio && Andio.polish && Andio.polish(); });
+  </script>
 </body>
 </html>

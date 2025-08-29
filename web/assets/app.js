@@ -1,582 +1,444 @@
-/*! Andio – global utilities & overlay (additive) */
-/* File: web/assets/app.js */
+// web/assets/app.js
+// =====================================================================
+// Andio Media Studio - UI Helpers (Navbar, Polish, JobHUD, Tools, Random, API)
+// =====================================================================
+
+window.Andio = window.Andio || {};
 
 (function () {
-  "use strict";
+  // ---------- Navbar ----------
+  Andio.navbar = function (active) {
+    const nav = document.createElement('div');
+    nav.className = 'andio-navbar';
+    nav.innerHTML = `
+      <a data-link="index" href="index.html">Übersicht</a>
+      <a data-link="images" href="images.html">Image Studio</a>
+      <a data-link="video-gen" href="video-gen.html">Video Studio</a>
+      <a data-link="editor" href="editor.html">Editor</a>
+      <a data-link="wardrobe" href="wandrobe.html">Wardrobe</a>
+      <a data-link="motion" href="motion.html">Motion</a>
+      <span class="spacer"></span>
+      <span class="brand">AndioMediaStudio</span>
+    `;
+    document.body.prepend(nav);
+    if (active) {
+      nav.querySelectorAll('a').forEach(a => {
+        if (a.dataset.link === active) a.classList.add('active');
+      });
+    }
+  };
 
-  // ---- Safe define/augment ---------------------------------------------------
-  const Andio = (function initAndioNamespace(root) {
-    const ns = root.Andio || {};
-    ns.version = ns.version || "1.0.0";
-    ns.state = ns.state || {
-      nsfw: localStorage.getItem("andio.nsfw") === "1",
-      models: null,
-      overlayOpen: false,
-      lastOpen: null,
-    };
-    ns.ui = ns.ui || {};
-    ns.utils = ns.utils || {};
-    ns.player = ns.player || {};
-    ns.models = ns.models || {};
-    ns.llm = ns.llm || {};
-    ns.suggest = ns.suggest || {};
-    return ns;
-  })(window);
+  // ---------- Polish ----------
+  Andio.polish = function () {
+    // kleine UI-Verbesserungen, falls nötig
+  };
 
-  // ---- Utils -----------------------------------------------------------------
-  if (!Andio.utils.qs) {
-    Andio.utils.qs = (sel, el) => (el || document).querySelector(sel);
-  }
-  if (!Andio.utils.qsa) {
-    Andio.utils.qsa = (sel, el) => Array.from((el || document).querySelectorAll(sel));
-  }
-  if (!Andio.utils.on) {
-    Andio.utils.on = function (el, ev, fn, opts) {
-      if (!el) return;
-      el.addEventListener(ev, fn, opts || false);
-    };
-  }
-  if (!Andio.utils.cssInjectOnce) {
-    Andio.utils.cssInjectOnce = function (id, cssText) {
-      if (document.getElementById(id)) return;
-      const style = document.createElement("style");
-      style.id = id;
-      style.type = "text/css";
-      style.appendChild(document.createTextNode(cssText));
-      document.head.appendChild(style);
-    };
-  }
-  if (!Andio.utils.createEl) {
-    Andio.utils.createEl = function (tag, attrs, children) {
-      const el = document.createElement(tag);
-      if (attrs) {
-        Object.keys(attrs).forEach((k) => {
-          if (k === "style" && typeof attrs[k] === "object") {
-            Object.assign(el.style, attrs[k]);
-          } else if (k in el) {
-            el[k] = attrs[k];
-          } else {
-            el.setAttribute(k, attrs[k]);
-          }
-        });
-      }
-      (children || []).forEach((c) => el.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
-      return el;
-    };
-  }
-  if (!Andio.utils.human) {
-    Andio.utils.human = {
-      bytes(n) {
-        if (n == null || isNaN(n)) return "-";
-        const u = ["B", "KB", "MB", "GB", "TB"];
-        let i = 0;
-        while (n >= 1024 && i < u.length - 1) {
-          n /= 1024; i++;
-        }
-        return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${u[i]}`;
-      },
-    };
-  }
+  // =====================================================================
+  // RANDOM PROMPTS / IDEEN pro Seite & Modus
+  // =====================================================================
+  const RANDOM_BANK = {
+    editor: {
+      generate: [
+        "hochwertige Lederjacke, studio light, realistische Textur",
+        "Goldkette dezent, kleines Anhängerchen, soft highlights",
+        "Make-up subtle, skin unify, cinematic rim light",
+        "Sticker entfernen, Kanten sauber, Lichtausgleich"
+      ],
+      remove: [
+        "Entferne BH-Träger rechts, Hauttöne angleichen",
+        "Entferne Logo auf T-Shirt, Stoffstruktur erhalten",
+        "Entferne Sensorfleck, Farbton lokal anpassen",
+        "Entferne Objekte im Hintergrund, weiche Bokeh-Rekonstruktion"
+      ],
+      filter: [
+        "Farblook: warm, leichte Vignette, Körnung 15%",
+        "Kontrast +10, Klarheit +8, Glanz reduzieren",
+        "Filmlook 90s, leichter Cyan-Shift in Schatten",
+        "High-key Portrait, Shadow Lift, weiches Skin Smoothing"
+      ],
+      pose: [
+        "Kopf minimal nach links, Blick leicht nach oben",
+        "Rechter Arm Bisschen heben, Hand offen, natürlich",
+        "Becken 2° rotieren, Standbein rechts",
+        "Schulterblätter entspannen, Nacken verlängern"
+      ]
+    },
+    wardrobe: {
+      sfw: [
+        "Casual Jeans + weiße Bluse (Seide), weiche Falten",
+        "Business: Blazer schwarz, Hose mit Bügelfalte",
+        "Street: Oversized Hoodie, Cargo-Pants, Sneaker",
+        "Glamour: Kleid aus Satin, subtile Lichtreflexe"
+      ],
+      nsfw: [
+        "Lingerie (Satin/Spitze), sanfte Highlights, natürliche Hauttöne",
+        "Body (schwarz), weiches Studiolicht, dezenter Schmuck",
+        "Slip/Tanga ton-in-ton, saubere Kantenretusche",
+        "Transparente Akzente, detailreiche Stofftextur"
+      ],
+      nude: [
+        "Nahtlose Hautrekonstruktion, realistische Übergänge",
+        "Feine Poren, gleichmäßige Tonwerte, korrektes Schattenspiel",
+        "Kanten sauber, Pose beibehalten, Artefakte vermeiden",
+        "Subtle Specular Highlights, keine Überglättung"
+      ]
+    },
+    motion: {
+      action: [
+        "Idle subtle sway, Atembewegung weich",
+        "Winken leicht, natürliches Timing",
+        "Walk in place slow, Schwerpunkt stabil",
+        "Dance groove minimal, Hüfte soft"
+      ],
+      pose: [
+        "Pose anmutig, Kopf 5° neigen, Arme entspannt",
+        "Power-Pose, Schultern zurück, Standbein links",
+        "Sitzpose locker, Blick zur Kamera, rechter Arm stützt",
+        "Dynamik: diagonale Linie, Schwerpunkt vorverlagert"
+      ],
+      lipsync: [
+        "Klarer Lippenkontakt, leichte Kieferbewegung",
+        "Natürliche Blinzler, Mikromimik zufällig",
+        "Kopf-Nicken minimal zum Rhythmus",
+        "Gesichts-Deformationen subtil halten"
+      ],
+      camera: [
+        "Parallax slow, sanfte Ease-in/out",
+        "Dolly-in minimal, Fokus auf Augen",
+        "Orbit leicht, Schulterhöhe",
+        "Crane up, 10% speed, Ende auf Brusthöhe"
+      ]
+    }
+  };
 
-  // ---- Overlay CSS (injected, minimal) ---------------------------------------
-  Andio.utils.cssInjectOnce("andio-overlay-css", `
-    #andio-overlay-backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:9999}
-    #andio-overlay-backdrop[aria-hidden="false"]{display:flex}
-    .andio-modal{position:relative;max-width:92vw;max-height:88vh;background:#111;border:1px solid #333;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.5);overflow:hidden}
-    .andio-modal header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #333;background:#0e0e0e;color:#eee;font-weight:600}
-    .andio-modal .andio-body{display:flex;gap:12px;padding:12px}
-    .andio-modal .andio-media{display:flex;align-items:center;justify-content:center;max-width:70vw;max-height:70vh;background:#000;border-radius:12px;overflow:hidden}
-    .andio-modal .andio-media img,.andio-modal .andio-media video{max-width:100%;max-height:70vh;display:block}
-    .andio-modal .andio-meta{min-width:260px;max-width:28vw;color:#ddd;font-size:13px}
-    .andio-close{appearance:none;border:0;background:#222;color:#ddd;border-radius:10px;padding:6px 10px;cursor:pointer}
-    .andio-close:hover{background:#2d2d2d}
-    .andio-badge{display:inline-block;background:#1f2937;border:1px solid #374151;color:#e5e7eb;border-radius:999px;font-size:11px;padding:2px 8px;margin-left:8px}
-    .andio-meta dl{display:grid;grid-template-columns:90px 1fr;gap:6px;padding:8px 0;margin:0}
-    .andio-meta dt{color:#aaa}
-    .andio-meta dd{margin:0;color:#eee;overflow-wrap:anywhere}
-    .andio-actions{display:flex;gap:8px;margin-top:8px}
-    .andio-btn{appearance:none;border:1px solid #374151;background:#111;color:#e5e7eb;border-radius:10px;padding:7px 10px;cursor:pointer}
-    .andio-btn:hover{background:#1a1a1a}
-    .andio-hidden{display:none!important}
-    .andio-toast{position:fixed;right:16px;bottom:16px;background:#111;color:#eee;border:1px solid #333;border-radius:10px;padding:10px 12px;z-index:10000}
-    .andio-nsfw-toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
-    .andio-nsfw-toggle input{accent-color:#6b7280}
-  `);
+  Andio.randomPrompt = function (page, modeOrKind) {
+    const bank = RANDOM_BANK[page] || {};
+    const bucket = bank[modeOrKind] || bank['sfw'] || [];
+    if (!bucket.length) return "";
+    return bucket[Math.floor(Math.random() * bucket.length)];
+  };
 
-  // ---- Overlay creation (idempotent) -----------------------------------------
-  function ensureOverlay() {
-    if (document.getElementById("andio-overlay-backdrop")) return;
-
-    const closeBtn = Andio.utils.createEl("button", { className: "andio-close", type: "button", innerText: "Schließen (Esc)" });
-    const titleSpan = Andio.utils.createEl("span", { innerText: "Player" });
-    const badge = Andio.utils.createEl("span", { className: "andio-badge", innerText: "Overlay" });
-
-    const img = Andio.utils.createEl("img", { id: "andio-overlay-img", className: "andio-hidden", alt: "preview" });
-    const vid = Andio.utils.createEl("video", { id: "andio-overlay-vid", className: "andio-hidden", controls: true });
-
-    const mediaBox = Andio.utils.createEl("div", { className: "andio-media" }, [img, vid]);
-
-    const metaBox = Andio.utils.createEl("div", { className: "andio-meta" });
-    const metaList = Andio.utils.createEl("dl", { id: "andio-overlay-meta" });
-    const actions = Andio.utils.createEl("div", { className: "andio-actions" }, [
-      Andio.utils.createEl("button", { className: "andio-btn", type: "button", innerText: "Download", onclick: () => {
-        const src = Andio.state?.lastOpen?.src;
-        if (!src) return;
-        const a = document.createElement("a");
-        a.href = src; a.download = ""; a.click();
-      }}),
-      Andio.utils.createEl("button", { className: "andio-btn", type: "button", innerText: "In neuem Tab", onclick: () => {
-        const src = Andio.state?.lastOpen?.src;
-        if (src) window.open(src, "_blank");
-      }}),
-    ]);
-    metaBox.appendChild(metaList);
-    metaBox.appendChild(actions);
-
-    const header = Andio.utils.createEl("header", null, [
-      Andio.utils.createEl("div", null, [titleSpan, badge]),
-      closeBtn
-    ]);
-
-    const body = Andio.utils.createEl("div", { className: "andio-body" }, [mediaBox, metaBox]);
-    const modal = Andio.utils.createEl("div", { className: "andio-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "andio-overlay-title" }, [header, body]);
-
-    const backdrop = Andio.utils.createEl("div", { id: "andio-overlay-backdrop", "aria-hidden": "true" }, [modal]);
-
-    document.body.appendChild(backdrop);
-
-    // Events
-    Andio.utils.on(closeBtn, "click", Andio.closePlayer);
-    Andio.utils.on(backdrop, "click", (e) => { if (e.target === backdrop) Andio.closePlayer(); });
-    Andio.utils.on(document, "keydown", (e) => { if (e.key === "Escape") Andio.closePlayer(); });
-  }
-
-  // ---- Player controls --------------------------------------------------------
-  if (!Andio.openPlayer) {
-    Andio.openPlayer = function openPlayer(opts) {
-      ensureOverlay();
-      const o = Object.assign({ type: "image", src: "", meta: null, autoplay: true }, opts || {});
-      const backdrop = document.getElementById("andio-overlay-backdrop");
-      const img = document.getElementById("andio-overlay-img");
-      const vid = document.getElementById("andio-overlay-vid");
-      const meta = document.getElementById("andio-overlay-meta");
-      if (!backdrop || !img || !vid || !meta) return;
-
-      // Reset
-      img.classList.add("andio-hidden");
-      vid.classList.add("andio-hidden");
-      try { vid.pause(); vid.currentTime = 0; } catch (_) {}
-
-      // Media
-      if (o.type === "video") {
-        vid.src = o.src || "";
-        vid.classList.remove("andio-hidden");
-        if (o.autoplay) {
-          setTimeout(() => { try { vid.play(); } catch (_) {} }, 50);
-        }
-      } else {
-        img.src = o.src || "";
-        img.classList.remove("andio-hidden");
-      }
-
-      // Meta
-      meta.innerHTML = "";
-      const entries = [];
-      if (o.meta && typeof o.meta === "object") {
-        for (const k of Object.keys(o.meta)) {
-          entries.push([k, String(o.meta[k])]);
-        }
-      } else if (o.src) {
-        // Fallback meta
+  // =====================================================================
+  // JOB HUD – Fortschritt, Stage, ETA
+  // =====================================================================
+  class JobHUD {
+    constructor() {
+      this.root = document.createElement('div');
+      this.root.className = 'andio-jobhud';
+      this.root.innerHTML = `
+        <div class="hud-card">
+          <div class="hud-row">
+            <span class="hud-title">KI-Aufgabe</span>
+            <button class="hud-close" title="ausblenden">×</button>
+          </div>
+          <div class="hud-line"><b>Aktion:</b> <span data-k="action">–</span></div>
+          <div class="hud-line"><b>Stage:</b> <span data-k="stage">–</span></div>
+          <div class="hud-line"><b>Fortschritt:</b> <span data-k="pct">0%</span></div>
+          <div class="hud-line"><b>ETA:</b> <span data-k="eta">—</span></div>
+          <div class="hud-bar"><div class="hud-bar-fill" style="width:0%"></div></div>
+        </div>
+      `;
+      document.body.appendChild(this.root);
+      this.root.querySelector('.hud-close').addEventListener('click', () => {
+        this.root.classList.add('hidden');
+      });
+      this.timer = null;
+      this.jobId = null;
+    }
+    show(action) {
+      this.root.classList.remove('hidden');
+      this.set('action', action || '–');
+      this.set('stage', 'initialisieren…');
+      this.setPct(0);
+      this.set('eta', '—');
+    }
+    set(key, val) {
+      const el = this.root.querySelector(`[data-k="${key}"]`);
+      if (el) el.textContent = val;
+    }
+    setPct(pct) {
+      pct = Math.max(0, Math.min(100, Math.round(pct)));
+      this.set('pct', pct + '%');
+      const bar = this.root.querySelector('.hud-bar-fill');
+      if (bar) bar.style.width = pct + '%';
+    }
+    attach(jobId, pollFn) {
+      this.jobId = jobId;
+      if (this.timer) clearInterval(this.timer);
+      if (!pollFn) return;
+      this.timer = setInterval(async () => {
         try {
-          const url = new URL(o.src, window.location.href);
-          entries.push(["Datei", url.pathname.split("/").pop()]);
-          entries.push(["Pfad", url.pathname]);
-        } catch {
-          entries.push(["Quelle", o.src]);
-        }
-      }
-      if (entries.length === 0) entries.push(["Info", "—"]);
-
-      for (const [k, v] of entries) {
-        const dt = Andio.utils.createEl("dt", { innerText: k });
-        const dd = Andio.utils.createEl("dd", { innerText: v });
-        meta.appendChild(dt); meta.appendChild(dd);
-      }
-
-      Andio.state.lastOpen = { type: o.type, src: o.src, meta: o.meta };
-      backdrop.setAttribute("aria-hidden", "false");
-      Andio.state.overlayOpen = true;
-    };
-  }
-
-  if (!Andio.closePlayer) {
-    Andio.closePlayer = function closePlayer() {
-      const backdrop = document.getElementById("andio-overlay-backdrop");
-      const vid = document.getElementById("andio-overlay-vid");
-      if (!backdrop) return;
-      if (vid && !vid.classList.contains("andio-hidden")) {
-        try { vid.pause(); } catch (_) {}
-      }
-      backdrop.setAttribute("aria-hidden", "true");
-      Andio.state.overlayOpen = false;
-    };
-  }
-
-  // ---- Navbar mark active -----------------------------------------------------
-  if (!Andio.navbar) {
-    Andio.navbar = function navbar(active) {
-      // Sucht Links mit data-nav oder href, markiert .active
-      const links = Andio.utils.qsa('[data-nav], nav a, .navbar a');
-      links.forEach((a) => a.classList.remove("active"));
-      if (!active) return;
-      links.forEach((a) => {
-        const key = a.getAttribute("data-nav") || a.id || a.textContent?.trim()?.toLowerCase();
-        if (key && String(key).toLowerCase() === String(active).toLowerCase()) {
-          a.classList.add("active");
-        } else if (a.getAttribute("href")) {
-          const href = a.getAttribute("href").toLowerCase();
-          if (href.includes(`${active}.html`)) a.classList.add("active");
-        }
-      });
-    };
-  }
-
-  // ---- NSFW toggle ------------------------------------------------------------
-  if (!Andio.toggleNSFW) {
-    Andio.toggleNSFW = function toggleNSFW(on) {
-      const newVal = !!on;
-      Andio.state.nsfw = newVal;
-      localStorage.setItem("andio.nsfw", newVal ? "1" : "0");
-      // UI: Schalter syncen (optional)
-      const inputs = Andio.utils.qsa('#nsfw-toggle, [data-toggle="nsfw"]');
-      inputs.forEach((el) => {
-        if ("checked" in el) el.checked = newVal;
-        el.setAttribute("aria-pressed", String(newVal));
-      });
-      Andio.toast(`NSFW ${newVal ? "aktiv" : "deaktiviert"}`);
-    };
-  }
-
-  // ---- Toast helper -----------------------------------------------------------
-  if (!Andio.toast) {
-    Andio.toast = function toast(msg, ms) {
-      const div = document.createElement("div");
-      div.className = "andio-toast";
-      div.textContent = msg || "";
-      document.body.appendChild(div);
-      setTimeout(() => div.remove(), ms || 2200);
-    };
-  }
-
-  // ---- Polish (auto hooks) ----------------------------------------------------
-  if (!Andio.polish) {
-    Andio.polish = function polish() {
-      ensureOverlay();
-
-      // Doppelklick auf Bilder/Videos in .card oder [data-open-player]
-      document.addEventListener("dblclick", (e) => {
-        const t = e.target;
-        if (!(t instanceof HTMLElement)) return;
-        // Direct <img>/<video>
-        if (t.tagName === "IMG" || t.tagName === "VIDEO") {
-          const src = (t).getAttribute("src");
-          if (src) {
-            Andio.openPlayer({ type: t.tagName === "VIDEO" ? "video" : "image", src });
+          const s = await pollFn(jobId);
+          if (s?.stage) this.set('stage', s.stage);
+          if (typeof s?.progress === 'number') this.setPct(s.progress * 100);
+          if (typeof s?.etaSec === 'number') {
+            const m = Math.floor(s.etaSec / 60);
+            const sec = Math.max(0, Math.round(s.etaSec % 60));
+            this.set('eta', (m ? m + 'm ' : '') + sec + 's');
           }
-          return;
-        }
-        // Click on a wrapper element that declares data-open-player/src/type
-        const opener = t.closest("[data-open-player]");
-        if (opener) {
-          const src = opener.getAttribute("data-src") || opener.querySelector("img,video")?.getAttribute("src");
-          const type = opener.getAttribute("data-type") || (opener.querySelector("video") ? "video" : "image");
-          if (src) Andio.openPlayer({ type, src });
-        }
-      });
-
-      // NSFW UI Hook (optional)
-      const nsfwInputs = Andio.utils.qsa('#nsfw-toggle, [data-toggle="nsfw"]');
-      nsfwInputs.forEach((el) => {
-        if ("checked" in el) el.checked = Andio.state.nsfw;
-        el.setAttribute("aria-pressed", String(Andio.state.nsfw));
-        el.addEventListener("change", (ev) => {
-          const val = "checked" in ev.target ? !!ev.target.checked : ev.target.getAttribute("aria-pressed") !== "true";
-          Andio.toggleNSFW(val);
-        });
-        el.addEventListener("click", (ev) => {
-          if (!("checked" in ev.target)) {
-            const newVal = ev.target.getAttribute("aria-pressed") !== "true";
-            Andio.toggleNSFW(newVal);
+          if (s?.status === 'done' || (typeof s?.progress === 'number' && s.progress >= 1)) {
+            this.set('stage', 'fertig');
+            this.setPct(100);
+            clearInterval(this.timer);
           }
-        });
-      });
-
-      // Basic drag&drop (optional)
-      document.addEventListener("dragover", (e) => { e.preventDefault(); });
-      document.addEventListener("drop", (e) => {
-        if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
-        e.preventDefault();
-        Andio.toast(`${e.dataTransfer.files.length} Datei(en) gedroppt`);
-      });
-
-      // Auto Navbar markieren anhand aktueller Seite
-      try {
-        const page = (location.pathname.split("/").pop() || "").replace(".html", "");
-        if (page) Andio.navbar(page);
-      } catch {}
-    };
-  }
-
-  // ---- Models API -------------------------------------------------------------
-  if (!Andio.models.load) {
-    Andio.models.load = async function loadModels() {
-      try {
-        const res = await fetch("/api/models");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        Andio.state.models = data;
-        // Optional: simple render if container exists
-        const host = document.getElementById("catalog-list");
-        if (host && Array.isArray(data?.items)) {
-          host.innerHTML = "";
-          data.items.forEach((m) => {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.innerHTML = `
-              <h4>${m.name || "Model"}</h4>
-              <p>Kategorie: ${m.category || "-"}</p>
-              <p>Pfad: <code>${m.path || "-"}</code></p>
-            `;
-            host.appendChild(card);
-          });
+        } catch (e) {
+          console.warn('JobHUD poll error', e);
         }
-        return data;
-      } catch (err) {
-        Andio.toast("Modelle konnten nicht geladen werden");
-        console.error("Andio.models.load:", err);
-        return null;
-      }
-    };
+      }, 700);
+    }
   }
+  Andio.JobHUD = JobHUD;
 
-  // ---- LLM proxy --------------------------------------------------------------
-  if (!Andio.llm.ask) {
-    Andio.llm.ask = async function ask(prompt, options) {
-      try {
-        const res = await fetch("/api/llm", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: String(prompt || ""), options: options || {} }),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json().catch(() => ({}));
-        return data;
-      } catch (err) {
-        console.error("Andio.llm.ask:", err);
-        Andio.toast("LLM nicht erreichbar");
-        return null;
-      }
-    };
-  }
+  // =====================================================================
+  // Canvas-Annotator: Pinsel / Lasso / Rechteck / Ellipse
+  // =====================================================================
+  Andio.tools = Andio.tools || {};
+  Andio.tools.attachAnnotator = function (canvas, maskCanvas, onChange) {
+    const state = { tool: 'rect', selections: [], imgLoaded: false, start: null, dragging: false };
+    const mctx = maskCanvas.getContext('2d');
 
-  // ---- Suggest prompts --------------------------------------------------------
-  if (!Andio.suggest.prompt) {
-    Andio.suggest.prompt = function prompt(kind) {
-      const nsfw = Andio.state.nsfw;
-      const pools = {
-        image: [
-          { t: "cinematic portrait, shallow depth of field, soft light" },
-          { t: "studio still life, high contrast, rim light" },
-          { t: "macro photo of a flower with dewdrops, bokeh" },
-          { t: "[NSFW] tasteful artistic nude, chiaroscuro lighting" },
-        ],
-        video: [
-          { t: "slow camera push-in on a city skyline at sunset" },
-          { t: "looping particle animation, hypnotic flow" },
-          { t: "[NSFW] sensual silhouette dance, low key lighting" },
-        ],
-        editor: [
-          { t: "inpainting: add a red scarf, soft wool texture" },
-          { t: "remove: unwanted object on the right, blend background" },
-          { t: "[NSFW] bikini to lingerie, lace texture, soft shadows" },
-        ],
-        motion: [
-          { t: "pose transfer: T-pose to relaxed stance, subtle sway" },
-          { t: "action: waving hand, slow rhythm" },
-          { t: "lip-sync: natural speech with gentle head motion" },
-        ],
+    function draw() {
+      if (!state.imgLoaded) return;
+      mctx.clearRect(0,0,maskCanvas.width,maskCanvas.height);
+      mctx.lineWidth = 2; mctx.strokeStyle = '#66f'; mctx.setLineDash([6,4]);
+      state.selections.forEach(s=>{
+        if (s.type==='rect') {
+          mctx.strokeRect(s.x, s.y, s.w, s.h);
+        } else if (s.type==='ellipse') {
+          mctx.beginPath();
+          mctx.ellipse(s.x+s.w/2, s.y+s.h/2, Math.abs(s.w/2), Math.abs(s.h/2), 0, 0, 2*Math.PI);
+          mctx.stroke();
+        } else {
+          mctx.beginPath();
+          s.points.forEach((p,i)=> i? mctx.lineTo(p.x,p.y): mctx.moveTo(p.x,p.y));
+          if (s.type==='lasso') mctx.closePath();
+          mctx.stroke();
+        }
+        // Nummer
+        mctx.setLineDash([]);
+        mctx.fillStyle='#000a';
+        mctx.fillRect(s.x, s.y-18, 24,16);
+        mctx.fillStyle='#fff';
+        mctx.font='12px system-ui';
+        mctx.fillText('#'+s.id, s.x+4, s.y-6);
+        mctx.setLineDash([6,4]);
+      });
+    }
+
+    function setTool(t){ state.tool = t; }
+    function reset(){ state.selections=[]; draw(); onChange && onChange(state.selections); }
+
+    function canvasPoint(e) {
+      const r = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - r.left) * canvas.width / r.width,
+        y: (e.clientY - r.top) * canvas.height / r.height
       };
-      const list = pools[kind] || pools.image;
-      const filtered = nsfw ? list : list.filter((x) => !/\[NSFW\]/i.test(x.t));
-      if (filtered.length === 0) return "—";
-      const pick = filtered[Math.floor(Math.random() * filtered.length)];
-      return pick.t.replace(/\[NSFW\]\s*/i, "");
-    };
-  }
+    }
 
-  // ---- Expose back ------------------------------------------------------------
-  window.Andio = Andio;
-
-  // Auto-polish on DOM ready (non-breaking)
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      try { Andio.polish(); } catch (e) { console.error(e); }
+    canvas.addEventListener('mousedown', e=>{
+      if (!state.imgLoaded) return;
+      state.dragging = true;
+      state.start = canvasPoint(e);
+      if (state.tool==='lasso' || state.tool==='brush') {
+        state.selections.push({id:state.selections.length+1, type:state.tool, points:[state.start]});
+        onChange && onChange(state.selections);
+      }
     });
-  } else {
-    try { Andio.polish(); } catch (e) { console.error(e); }
-  }
-})();
 
-/* === Andio Full-KI additions === */
-(function(){
-  const A = window.Andio || {};
-
-  // Simple API wrapper
-  if (!A.api) A.api = {};
-  if (!A.api.get) {
-    A.api.get = async function get(url){
-      try {
-        const r = await fetch(url);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return await r.json();
-      } catch (e) {
-        console.warn("GET failed", url, e);
-        return null;
+    canvas.addEventListener('mousemove', e=>{
+      if (!state.dragging) return;
+      const cur = canvasPoint(e);
+      const last = state.selections[state.selections.length-1];
+      if (state.tool==='rect' || state.tool==='ellipse') {
+        if (!last || last.final) {
+          const sel = {id:state.selections.length+1, type:state.tool, x:state.start.x, y:state.start.y, w:0, h:0, final:false};
+          state.selections.push(sel); onChange && onChange(state.selections);
+        }
+        last.x = Math.min(state.start.x, cur.x); last.y = Math.min(state.start.y, cur.y);
+        last.w = Math.abs(cur.x - state.start.x); last.h = Math.abs(cur.y - state.start.y);
+      } else {
+        last.points.push(cur);
       }
+      draw();
+    });
+
+    window.addEventListener('mouseup', ()=>{
+      if (!state.dragging) return;
+      state.dragging = false;
+      const last = state.selections[state.selections.length-1];
+      if (last) last.final = true;
+      draw();
+      onChange && onChange(state.selections);
+    });
+
+    return {
+      setTool, reset, draw, state,
+      markImageLoaded(){ state.imgLoaded = true; },
     };
+  };
+
+  // =====================================================================
+  // API-Bindings: FastAPI-Backend + FormData Uploads + Live Previews
+  // =====================================================================
+  Andio.api = Andio.api || {};
+
+  async function jfetch(path, opts = {}) {
+    const res = await fetch(path, { ...opts });
+    if (!res.ok) throw new Error(`${path} ${res.status}`);
+    return await res.json();
   }
 
-  // Outputs loader with fallbacks
-  if (!A.outputs) A.outputs = {};
-  if (!A.outputs.load) {
-    A.outputs.load = async function load(){
-      // try unified
-      let data = await A.api.get('/api/outputs');
-      if (data && (data.images || data.videos)) return data;
-      // fallbacks
-      const images = await A.api.get('/api/outputs/images') || [];
-      const videos = await A.api.get('/api/outputs/videos') || [];
-      return { images, videos };
-    };
+  function toFormData(payload = {}, files = {}) {
+    const fd = new FormData();
+    fd.append('json', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+    if (files.image) fd.append('image', files.image);
+    if (files.mask) fd.append('mask', files.mask);
+    if (files.audio) fd.append('audio', files.audio);
+    if (Array.isArray(files.storyboard)) files.storyboard.forEach((f,i)=> fd.append('storyboard', f, f.name || `frame_${i}.png`));
+    if (files.extras && typeof files.extras === 'object') {
+      Object.entries(files.extras).forEach(([k,v])=> { if (v!=null) fd.append(k, v); });
+    }
+    return fd;
   }
 
-  // Card element factory
-  function mediaCard(path){
-    const ext = (path||'').split('.').pop().toLowerCase();
-    const isVideo = ['mp4','webm','mkv','avi','mov'].includes(ext);
-    const card = A.utils.createEl('div', { className:'media-card', tabIndex:0 });
-    const media = A.utils.createEl(isVideo ? 'video':'img', { className:'thumb', src:path });
-    if (isVideo) { media.muted = true; media.playsInline = true; media.loop = true; }
-    const meta = A.utils.createEl('div', { className:'meta' });
-    const row = A.utils.createEl('div', { className:'row' });
-    const name = A.utils.createEl('span', { className:'muted' }, [ (path.split('/').pop() || 'media') ]);
-    const badge = A.utils.createEl('span', { className:'badge sfw' }, [ 'KI' ]);
-    row.appendChild(name); row.appendChild(badge);
-    meta.appendChild(row);
-    card.appendChild(media); card.appendChild(meta);
-    const open = () => A.openPlayer({ type: isVideo ? 'video':'image', src: path });
-    card.addEventListener('dblclick', open);
-    card.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') open(); });
-    return card;
-  }
+  Andio.api.jobStatus = async (jobId) => jfetch(`/api/jobs/${encodeURIComponent(jobId)}`);
 
-  // Gallery render
-  if (!A.gallery) A.gallery = {};
-  if (!A.gallery.render) {
-    A.gallery.render = async function render(selector){
-      const host = document.querySelector(selector || '#gallery') || document.querySelector('.grid.gallery');
-      if (!host) return;
-      host.classList.add('is-loading');
-      host.innerHTML = '';
-      const data = await A.outputs.load();
-      const items = [];
-      (data.images || []).forEach(p => items.push(p));
-      (data.videos || []).forEach(p => items.push(p));
-      host.classList.remove('is-loading');
-      if (!items.length){
-        host.innerHTML = '<div class="muted">Noch keine generierten Inhalte.</div>';
-        return;
+  // Models
+  Andio.api.models = {
+    download: (body) => jfetch('/api/models/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+    install:  (body) => jfetch('/api/models/install',  { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+    setDefault: (modelId) => jfetch('/api/models/set-default', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ modelId }) }),
+  };
+
+  // Image
+  Andio.api.image = {
+    start: (payload, files) => {
+      if (files && (files.image || files.mask)) {
+        const fd = toFormData(payload, files);
+        return jfetch('/api/image/start', { method: 'POST', body: fd });
       }
-      const frag = document.createDocumentFragment();
-      items.forEach(p => frag.appendChild(mediaCard(p)));
-      host.appendChild(frag);
-    };
-  }
+      return jfetch('/api/image/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    },
+    finish: (jobId) => jfetch(`/api/image/finish${jobId ? ('?jobId='+encodeURIComponent(jobId)) : ''}`),
+    preview: (payload, files) => {
+      const fd = toFormData(payload, files || {});
+      return jfetch('/api/editor/preview', { method: 'POST', body: fd });
+    },
+  };
 
-  // Catalog render (models)
-  if (!A.catalog) A.catalog = {};
-  if (!A.catalog.render) {
-    A.catalog.render = async function render(selector){
-      const host = document.querySelector(selector || '#catalog-list') || document.querySelector('.grid');
-      if (!host) return;
-      host.classList.add('is-loading');
-      host.innerHTML = '';
-      let data = await A.api.get('/api/catalog');
-      if (!data || !Array.isArray(data.models)) {
-        // fallback to /api/models shape
-        const alt = await A.api.get('/api/models');
-        const list = Array.isArray(alt?.items) ? alt.items : [];
-        data = { models: list };
+  // Video
+  Andio.api.video = {
+    start: (payload, files) => {
+      if (files && (files.image || files.mask || files.audio || (files.storyboard && files.storyboard.length))) {
+        const fd = toFormData(payload, files);
+        return jfetch('/api/video/start', { method: 'POST', body: fd });
       }
-      host.classList.remove('is-loading');
-      if (!data || !Array.isArray(data.models) || data.models.length === 0){
-        host.innerHTML = '<div class="muted">Keine Modelle gefunden.</div>';
-        return;
-      }
-      const frag = document.createDocumentFragment();
-      data.models.forEach(m => {
-        const card = A.utils.createEl('div', { className:'card reveal in' });
-        const title = (m.name || m.model_id || 'Model');
-        const badgeCls = m.nsfw ? 'badge nsfw' : 'badge sfw';
-        card.innerHTML = `
-          <h3>${title} <span class="${badgeCls}">${m.nsfw?'NSFW':'SFW'}</span></h3>
-          <div class="muted">${m.family || ''}</div>
-          <div class="chips">${(m.tags||[]).slice(0,8).map(t=>`<span class="badge">${t}</span>`).join(' ')}</div>
-          <div class="toolbar" style="margin-top:10px;display:flex;gap:8px;align-items:center">
-            <button class="btn primary" data-action="select">Auswählen</button>
-            ${m.size_gb ? `<span class="badge">${m.size_gb} GB</span>`:''}
-            ${m.path ? `<span class="badge">${(m.path.split('/').pop())}</span>`:''}
-          </div>`;
-        const btn = card.querySelector('[data-action="select"]');
-        if (btn) btn.addEventListener('click', ()=>{
-          A.toast(`${title} ausgewählt`);
-          // Hook: hier könnte man A.state.selectedModel setzen
-          A.state.selectedModel = (m.model_id || m.name || title);
-        });
-        frag.appendChild(card);
-      });
-      host.appendChild(frag);
+      return jfetch('/api/video/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    },
+    finish: (jobId) => jfetch(`/api/video/finish${jobId ? ('?jobId='+encodeURIComponent(jobId)) : ''}`),
+  };
+
+  // Editor
+  Andio.api.editorRunStart  = (payload, files) => {
+    if (files && (files.image || files.mask)) {
+      const fd = toFormData(payload, files);
+      return jfetch('/api/editor/run/start', { method: 'POST', body: fd });
+    }
+    return jfetch('/api/editor/run/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  };
+  Andio.api.editorRunFinish = (jobId) => jfetch(`/api/editor/run/finish${jobId ? ('?jobId='+encodeURIComponent(jobId)) : ''}`);
+  Andio.api.editorPreview   = (payload, files) => {
+    const fd = toFormData(payload, files || {});
+    return jfetch('/api/editor/preview', { method: 'POST', body: fd });
+  };
+
+  // Wardrobe
+  Andio.api.wardrobeDetectStart  = () => jfetch('/api/wardrobe/detect/start', { method: 'POST' });
+  Andio.api.wardrobeDetectFinish = () => jfetch('/api/wardrobe/detect/finish');
+  Andio.api.wardrobeApplyStart   = (payload, files) => {
+    if (files && (files.image || files.mask)) {
+      const fd = toFormData(payload, files);
+      return jfetch('/api/wardrobe/apply/start', { method: 'POST', body: fd });
+    }
+    return jfetch('/api/wardrobe/apply/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  };
+  Andio.api.wardrobeApplyFinish  = (jobId) => jfetch(`/api/wardrobe/apply/finish${jobId ? ('?jobId='+encodeURIComponent(jobId)) : ''}`);
+  Andio.api.wardrobePreview      = (payload, files) => {
+    const fd = toFormData(payload, files || {});
+    return jfetch('/api/wardrobe/preview', { method: 'POST', body: fd });
+  };
+
+  // Motion
+  Andio.api.motionStart   = (payload) => jfetch('/api/motion/start',   { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  Andio.api.motionPreview = (payload) => jfetch('/api/motion/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  Andio.api.motionFinish  = (jobId) => jfetch(`/api/motion/finish${jobId ? ('?jobId='+encodeURIComponent(jobId)) : ''}`);
+
+  // Job-Helfer
+  Andio.startJobWithHUD = async function (actionLabel, startFn /* -> {jobId} */) {
+    const hud = new Andio.JobHUD();
+    hud.show(actionLabel);
+    let jobId = null;
+    try {
+      const started = await startFn();
+      jobId = started?.jobId || ('demo_' + Date.now());
+      hud.attach(jobId, Andio.api.jobStatus);
+      return { hud, jobId, started };
+    } catch (e) {
+      console.error(e);
+      hud.set('stage', 'Fehler'); hud.setPct(0); hud.set('eta', '—');
+      throw e;
+    }
+  };
+
+  // =====================================================================
+  // Global Media Overlay (Bilder/Videos überall im Overlay öffnen)
+  // =====================================================================
+  (function(){
+    if (document.getElementById('andio-media-overlay')) return;
+    const root = document.createElement('div');
+    root.id = 'andio-media-overlay';
+    root.style.cssText = 'position:fixed;inset:0;display:none;place-items:center;background:#000a;z-index:99999;';
+    root.innerHTML = `
+      <div style="width:min(92vw,1080px);max-height:92vh;background:#111;border:1px solid #333;border-radius:14px;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto">
+        <header style="padding:10px 12px;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center">
+          <div id="ameta" style="color:#ddd">–</div>
+          <button id="aclose" style="background:#222;border:1px solid #444;border-radius:8px;padding:6px 10px;cursor:pointer">Schließen</button>
+        </header>
+        <div id="astage" style="background:#000;display:grid;place-items:center"></div>
+        <footer style="padding:10px 12px;border-top:1px solid #222;display:flex;gap:8px;justify-content:flex-end">
+          <button id="afit" style="background:#222;border:1px solid #444;border-radius:8px;padding:6px 10px;cursor:pointer">Fit</button>
+          <button id="a1"   style="background:#222;border:1px solid #444;border-radius:8px;padding:6px 10px;cursor:pointer">1:1</button>
+        </footer>
+      </div>`;
+    document.body.appendChild(root);
+    const stage = root.querySelector('#astage');
+    const meta  = root.querySelector('#ameta');
+    root.querySelector('#aclose').onclick = ()=> root.style.display='none';
+    root.querySelector('#afit').onclick = ()=> { const el=stage.querySelector('img,video'); if(!el) return; el.style.maxWidth='100%'; el.style.maxHeight='100%'; };
+    root.querySelector('#a1').onclick   = ()=> { const el=stage.querySelector('img,video'); if(!el) return; el.style.maxWidth='none'; el.style.maxHeight='none'; };
+
+    Andio.openMedia = function(url, type='image', name='Output'){
+      stage.innerHTML='';
+      const el = type==='video' ? document.createElement('video') : document.createElement('img');
+      if (type==='video'){ el.src = url; el.controls = true; el.muted = true; el.playsInline = true; el.autoplay = true; }
+      else { el.src = url; el.alt = name; }
+      el.style.maxWidth='100%'; el.style.maxHeight='100%';
+      stage.appendChild(el);
+      meta.textContent = name;
+      root.style.display='grid';
     };
-  }
 
-  // Page init dispatcher
-  if (!A.page) A.page = {};
-  if (!A.page.init) {
-    A.page.init = function init(){
-      const file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-      const page = (document.body.getAttribute('data-page') || file.replace('.html','')).toLowerCase();
-      const key = page === 'wandrobe' ? 'wardrobe' : page; // normalize
-      if (key === 'gallery') A.gallery.render('#gallery');
-      if (key === 'catalog') A.catalog.render('#catalog-list');
-      if (key === 'index') {
-        // optional quick counters
-        A.outputs.load().then(d=>{
-          const imgCount = (d.images||[]).length;
-          const vidCount = (d.videos||[]).length;
-          const el = document.getElementById('andio-counters');
-          if (el) el.innerHTML = `<span class="badge">Bilder: ${imgCount}</span> <span class="badge">Videos: ${vidCount}</span>`;
-        });
+    // Auto: jedes generierte Medium mit data-generated="true" öffnet Overlay
+    document.addEventListener('click', (e)=>{
+      const m = e.target;
+      if (!m) return;
+      if ((m.tagName === 'IMG' || m.tagName === 'VIDEO') && m.dataset.generated === 'true') {
+        const t = m.tagName === 'VIDEO' ? 'video' : 'image';
+        const name = m.getAttribute('alt') || m.closest('[data-name]')?.dataset?.name || 'Output';
+        Andio.openMedia(m.currentSrc || m.src, t, name);
       }
-    };
-  }
+    }, true);
+  })();
 
-  // Auto-run init once DOM is ready (in addition to Andio.polish)
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => { try { A.page.init(); } catch(e){ console.warn(e); } });
-  } else {
-    try { A.page.init(); } catch(e){ console.warn(e); }
-  }
-
-  window.Andio = A;
 })();

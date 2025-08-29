@@ -1,0 +1,39 @@
+# Nur funktionsfähige Modelle konfigurieren
+models:
+  base_path: "X:/pypygennew/models"
+  
+  # Nur getestete, funktionierende Modelle
+  image_models:
+    sdxl_base:
+      path: "X:/pypygennew/models/image/stable-diffusion-xl-base-1.0"
+      type: "txt2img"
+      pipeline: "StableDiffusionXLPipeline"
+      default: true
+      working: true
+      
+    # Weitere Modelle nach Reparatur hinzufügen
+    # realistic_vision:
+    #   path: "X:/pypygennew/models/image/Realistic_Vision_V6.0_B1_noVAE_diffusers"
+    #   type: "txt2img" 
+    #   pipeline: "StableDiffusionPipeline"
+    #   working: false  # Erst nach Test auf true
+      
+  video_models:
+    svd_xt:
+      path: "X:/pypygennew/models/video/stable-video-diffusion-img2vid-xt"
+      type: "img2vid"
+      pipeline: "StableVideoDiffusionPipeline"
+      default: true
+      working: true
+
+# Server
+server:
+  host: "127.0.0.1"
+  port: 3000
+  debug: true
+  
+# Performance
+performance:
+  prefer_gpu: true
+  low_vram_mode: false
+  enable_attention_slicing: true

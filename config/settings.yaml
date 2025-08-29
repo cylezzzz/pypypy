@@ -1,0 +1,38 @@
+# AndioMediaStudio - Einfache Konfiguration
+models:
+  base_path: "models"
+  
+  # Nur funktionierende Modelle
+  working_models:
+    sdxl_base:
+      path: "models/image/stable-diffusion-xl-base-1.0"
+      type: "txt2img"
+      pipeline: "StableDiffusionXLPipeline"
+      enabled: true
+      default: true
+      
+    sd15_checkpoint:
+      path: "models/image/checkpoints/sd15.safetensors"
+      type: "txt2img"  
+      pipeline: "StableDiffusionPipeline"
+      enabled: false  # Erst nach Test aktivieren
+      format: "checkpoint"
+
+# Server-Einstellungen
+server:
+  host: "127.0.0.1"
+  port: 3000
+  debug: true
+  
+# Performance
+performance:
+  prefer_gpu: true
+  low_vram_mode: false
+  enable_xformers: true
+  
+# Content-Generierung
+generation:
+  default_steps: 20
+  default_guidance: 7.5
+  default_size: [1024, 1024]
+  max_batch_size: 1

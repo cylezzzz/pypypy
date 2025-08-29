@@ -1,0 +1,22 @@
+[
+  {
+    "id": "img_001",
+    "kind": "image",
+    "src": "outputs/2025-08-28/img_001.png",
+    "thumb": "outputs/2025-08-28/thumbs/img_001.jpg",
+    "nsfw": false,
+    "name": "Portrait",
+    "tags": ["portrait","studio"],
+    "date": "2025-08-28T12:00:00Z"
+  },
+  {
+    "id": "vid_001",
+    "kind": "video",
+    "src": "outputs/2025-08-28/clip_001.mp4",
+    "thumb": "outputs/2025-08-28/clip_001.jpg",
+    "nsfw": false,
+    "name": "Cinematic Pan",
+    "tags": ["motion","pan"],
+    "date": "2025-08-28T12:05:00Z"
+  }
+]

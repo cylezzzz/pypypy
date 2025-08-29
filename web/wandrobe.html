@@ -1,767 +1,384 @@
 <!doctype html>
-<!-- === Brand / Navbar (standardisiert) === -->
-<header class="header" role="banner">
-  <nav role="navigation" aria-label="Hauptnavigation">
-    <div class="brand">
-      <a href="index.html" class="brand-link" aria-label="Zur Startseite">
-        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
-        <span class="wordmark">Andio Media Studio</span>
-      </a>
-    </div>
-    <div class="spacer"></div>
-    <div class="links" role="menubar">
-      <a role="menuitem" href="index.html" data-link="index">Übersicht</a>
-      <a role="menuitem" href="images.html" data-link="images">Image Studio</a>
-      <a role="menuitem" href="video-gen.html" data-link="video-gen">Video Studio</a>
-      <a role="menuitem" href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
-      <a role="menuitem" href="motion.html" data-link="motion">Motion</a>
-      <a role="menuitem" href="gallery.html" data-link="gallery">Gallery</a>
-      <a role="menuitem" href="catalog.html" data-link="catalog">Store</a>
-      <a role="menuitem" href="editor.html" data-link="editor">Editor</a>
-    </div>
-  </nav>
-</header>
-<script>
-  // Set active nav item based on data-page or current path; add aria-current for a11y
-  (function(){
-    try {
-      var dataPage = document.body && document.body.getAttribute('data-page');
-      if(!dataPage){
-        var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-        var map = {
-          'index.html':'index','images.html':'images','video-gen.html':'video-gen',
-          'wandrobe.html':'wardrobe','motion.html':'motion','gallery.html':'gallery',
-          'catalog.html':'catalog','editor.html':'editor'
-        };
-        dataPage = map[path] || 'index';
-        document.body && document.body.setAttribute('data-page', dataPage);
-      }
-      var sel = '.links a[data-link="' + dataPage + '"]';
-      var a = document.querySelector(sel);
-      if(a){
-        a.classList.add('active');
-        a.setAttribute('aria-current','page');
-      }
-    } catch(e){ console && console.warn('navbar init failed', e); }
-  })();
-</script>
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Wardrobe · AndioMediaStudio</title>
+  <title>Wardrobe – AndioMediaStudio</title>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .page{display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start}
-    @media (max-width:980px){.page{grid-template-columns:1fr}}
-    .preview{position:relative;width:100%;min-height:560px;border-radius:14px;border:1px solid rgba(140,160,210,.18);background:linear-gradient(180deg,#0c1220,#0a0e18);overflow:hidden}
-    .preview img{display:block;max-width:100%;height:auto;margin:auto}
-    .overlay{position:absolute;inset:0;pointer-events:none}
-    .region{position:absolute;border:2px solid;color:inherit;border-radius:10px;pointer-events:none}
-    .region.fill{background:currentColor;opacity:.18}
-    .region-label{position:absolute;top:-18px;left:0;background:rgba(20,28,48,.8);padding:2px 6px;border-radius:6px;font-size:12px;color:#fff;pointer-events:auto}
-    .legend{position:absolute;right:10px;top:10px;z-index:6;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:rgba(20,28,48,.66);backdrop-filter:blur(6px);padding:6px 8px;border-radius:10px;border:1px solid rgba(140,160,210,.22)}
-    .legend .dot{width:12px;height:12px;border-radius:50%}
-    .mask{position:absolute;inset:0;mix-blend-mode:normal;opacity:.6;pointer-events:auto}
-    .under-preview{margin-top:12px}
-    .tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:980px){.tools-grid{grid-template-columns:1fr}}
-    textarea.input{min-height:88px;resize:vertical}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(140,160,210,.25)}
-    .seg{display:flex;gap:8px;align-items:center}
-    .progress{position:absolute;inset:0;display:none;place-content:center;background:rgba(8,12,22,.45)}
-    .progress>div{width:56px;height:56px;border-radius:50%;border:4px solid rgba(120,160,255,.25);border-top-color:rgba(120,160,255,.95);animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .ghost-hints{position:absolute;inset:0;pointer-events:none;z-index:3}
-    .ghost-hints svg{position:absolute;inset:0;margin:auto;max-width:80%;max-height:90%;opacity:.38;filter:drop-shadow(0 0 6px rgba(120,160,255,.25))}
-    .hintbar{display:flex;gap:8px;flex-wrap:wrap}
-    .hintbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(140,160,210,.25);background:rgba(20,28,48,.45)}
-    .hintbtn.active{outline:1px solid rgba(120,160,255,.75);background:rgba(20,28,48,.7)}
-    .muted{opacity:.7}
-    /* Regionliste */
-    .region-list{display:flex;flex-direction:column;gap:8px}
-    .region-item{display:grid;grid-template-columns: 1fr auto;gap:8px;align-items:center;border:1px solid rgba(140,160,210,.25);border-radius:10px;padding:8px}
-    .region-item .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .chip{padding:4px 8px;border-radius:999px;border:1px solid rgba(140,160,210,.25);background:rgba(20,28,48,.55)}
-    /* HINT SUBCATS */
-    .hintcats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
-    .thumb{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid rgba(140,160,210,.25);border-radius:12px;overflow:hidden;aspect-ratio:1/1;background:rgba(20,28,48,.5);cursor:pointer}
-    .thumb img{width:100%;height:100%;object-fit:cover}
-    .thumb .fallback{font-weight:700;opacity:.85}
-    .thumb.active{outline:2px solid #9fbaff;box-shadow:0 0 0 2px rgba(159,186,255,.35) inset}
-    .thumb .badge{position:absolute;right:6px;bottom:6px;padding:2px 6px;border-radius:999px;background:rgba(12,18,32,.75);border:1px solid rgba(140,160,210,.35);font-size:12px}
+    .page-grid{display:grid;grid-template-columns:320px 1fr 380px;gap:12px}
+    .card{background:#1112;border:1px solid #333;border-radius:12px;padding:12px}
+    .grid{display:grid;gap:8px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    .grid-3{grid-template-columns:1fr 1fr 1fr}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .badge{padding:2px 6px;border-radius:8px;background:#222;border:1px solid #444;font-size:12px}
+    .canvas-wrap{position:relative;aspect-ratio:1/1;background:#000;border-radius:12px;overflow:hidden}
+    .canvas-wrap canvas{width:100%;height:100%;display:block}
+    .list{display:flex;flex-direction:column;gap:8px;max-height:42vh;overflow:auto}
+    .prompt-item{border:1px dashed #444;border-radius:10px;padding:8px}
+    .prompt-item h4{margin:0 0 6px 0;font-size:13px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .toolbar button.active{outline:2px solid #66f}
+    small.hint{opacity:.8}
   </style>
 </head>
-<body data-page="wardrobe">
-<script src="assets/app.js"></script>
+<body>
+  <script src="assets/app.js"></script>
+  <script>window.Andio?.navbar?.('wardrobe');</script>
 
+  <div class="container">
+    <h1>Wardrobe</h1>
+    <div class="page-grid">
+      <!-- LINKS: Quelle & globale Optionen -->
+      <aside class="card">
+        <h3>Quelle & Optionen</h3>
+        <div class="grid">
+          <label class="row">
+            <span class="badge">Bild laden</span>
+            <input id="fileInput" type="file" accept="image/*"/>
+          </label>
 
-<div class="container">
-  <h1>Wardrobe</h1>
-
-  <div class="page">
-    <!-- LINKS: LOGISCHE AUSWAHL -->
-    <aside class="card">
-      <h3>Outfit-Auswahl</h3>
-
-      <!-- 1) Quelle -->
-      <section>
-        <div class="pill"><strong>1) Quelle</strong><span class="badge">Bild laden</span></div>
-        <div class="grid cols-2" style="margin-top:10px">
-          <div>
-            <label>Bild-Datei</label>
-            <input id="file" type="file" accept="image/*" class="input"/>
-            <small class="badge" style="margin-top:6px">Oder per Drag & Drop in die Vorschau</small>
-          </div>
-          <div>
-            <label>Auto-Segmentierung</label>
-            <div class="seg">
-              <label class="pill"><input id="segCloth" type="checkbox" checked> Kleidung</label>
-              <label class="pill"><input id="segPerson" type="checkbox"> Person</label>
-            </div>
-            <small class="help">Nutzt vorhandene Cloth-/Person-Masken (falls Server das anbietet).</small>
-          </div>
-        </div>
-        <div class="row" style="margin-top:10px;gap:8px">
-          <button id="btn-detect" class="btn">👗 Kleidung erkennen</button>
-          <small class="help">Erkennt Top/Bottom/BH/Slip/Jacket/Schuhe/Accessoires und legt Regionen an.</small>
-        </div>
-      </section>
-      <hr/>
-
-      <!-- 2) Ziel-Look -->
-      <section>
-        <div class="pill"><strong>2) Ziel-Look</strong><span class="badge">einfach & logisch</span></div>
-        <div class="toolbar" style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-          <button class="btn look primary" data-look="nackt" title="Nackt">Nackt</button>
-          <button class="btn look" data-look="dessous" title="Dessous / Lingerie">Dessous</button>
-          <button class="btn look" data-look="bikini" title="Bikini / Swim">Bikini</button>
-          <button class="btn look" data-look="casual" title="Casual/Alltag">Casual</button>
-          <button class="btn look" data-look="dress" title="Kleid/Abend">Dress</button>
-          <button class="btn look" data-look="sport" title="Sport/Active">Sport</button>
-          <button class="btn look" data-look="business" title="Business">Business</button>
-          <button class="btn look" data-look="street" title="Streetwear">Street</button>
-        </div>
-
-        <!-- Detail-Optionen (ausgegraut, wenn Look=Nackt) -->
-        <div id="clothesOptions" style="margin-top:12px">
-          <div class="grid cols-2">
-            <div>
-              <label>Farbe</label>
-              <div class="row">
-                <input id="colorText" class="input" placeholder="z. B. Schwarz, Navy, Weinrot"/>
-                <input id="colorPick" type="color" value="#111111" style="width:56px;height:42px;border:0;border-radius:10px"/>
-              </div>
-            </div>
-            <div>
-              <label>Material</label>
-              <select id="material" class="input">
-                <option>Baumwolle</option><option>Leder</option><option>Spitze</option><option>Seide</option><option>Denim</option><option>Leinen</option>
+          <div class="grid grid-2">
+            <label>Inhalt
+              <select id="contentSelect">
+                <option value="sfw">SFW</option>
+                <option value="nsfw">NSFW</option>
               </select>
-            </div>
-            <div>
-              <label>Passform</label>
-              <select id="fit" class="input">
-                <option>Regulär</option><option>Eng</option><option>Oversized</option>
+            </label>
+            <label>Stil-Preset
+              <select id="stylePreset">
+                <option value="realistic">Realistisch / Studio</option>
+                <option value="fashion">Fashion Editorial</option>
+                <option value="street">Street / Urban</option>
+                <option value="glamour">Glamour</option>
               </select>
-            </div>
-            <div>
-              <label>Details</label>
-              <select id="details" class="input">
-                <option>Neutral</option><option>Minimal</option><option>Statement</option><option>Transparenz</option><option>Cutouts</option>
-              </select>
-            </div>
+            </label>
           </div>
-          <small class="help">Diese Optionen sind **nur relevant**, wenn der Ziel-Look **nicht „Nackt“** ist.</small>
+
+          <details id="nsfwConsent" class="card" style="border-style:solid;display:none">
+            <summary>NSFW-Bestätigung (erforderlich für z. B. „Nackt“)</summary>
+            <label><input type="checkbox" id="ageOk"/> Ich bin 18+.</label>
+            <label><input type="checkbox" id="rightsOk"/> Rechte am Bild vorhanden.</label>
+            <label><input type="checkbox" id="lawOk"/> Nutzung legal & privat.</label>
+          </details>
+
+          <div class="grid">
+            <label>Allgemeine Anpassungen
+              <input id="tweaks" placeholder="z. B. Farben/Material, Accessoires, Licht"/>
+            </label>
+          </div>
+
+          <div class="row">
+            <button id="btnRandom">Random</button>
+            <button id="btnDetect" title="Auto-Erkennung von Kleidung/Körperform">Erkennen</button>
+            <button id="btnApply" class="primary">Ausführen</button>
+          </div>
+
+          <div class="row">
+            <span class="badge">Auto-Maske <input type="checkbox" id="autoMask" checked></span>
+            <span class="badge">Pose beibehalten <input type="checkbox" id="keepPose" checked></span>
+            <span class="badge">Falten/Physik <input type="checkbox" id="clothPhys"></span>
+          </div>
+          <small class="hint">„Ausführen“ startet die KI. Oben rechts zeigt der Job-HUD **Stage, % und ETA**.</small>
         </div>
-      </section>
-      <hr/>
+      </aside>
 
-      <!-- 3) Remover & Qualität -->
-      <section>
-        <div class="pill"><strong>3) Remover & Qualität</strong><span class="badge">saubere Ergebnisse</span></div>
-        <div class="grid cols-2" style="margin-top:10px">
-          <div>
-            <label>Entfernen (Stärke)</label>
-            <input id="removeStrength" type="range" min="0" max="100" value="85"/>
-            <small class="help">Wie aggressiv Kleidung entfernt/übermalt wird.</small>
-          </div>
-          <div>
-            <label>Haut-Realismus</label>
-            <input id="skinRealism" type="range" min="0" max="10" value="8"/>
-          </div>
-          <div>
-            <label>Schritte (Steps)</label>
-            <input id="steps" type="number" class="input" value="28"/>
-          </div>
-          <div>
-            <label>Guidance</label>
-            <input id="guidance" type="number" step="0.1" class="input" value="7.5"/>
-          </div>
-          <div>
-            <label>Seed</label>
-            <input id="seed" type="number" class="input" placeholder="leer = zufällig"/>
-          </div>
-          <div>
-            <label>Modell</label>
-            <select id="model" class="input">
-              <option>sdxl-real</option><option>realvis</option><option>anime-v4</option>
-            </select>
-          </div>
+      <!-- MITTE: Canvas & Werkzeuge -->
+      <main class="card">
+        <div class="toolbar">
+          <button data-tool="rect" class="active">Rechteck</button>
+          <button data-tool="ellipse">Ellipse</button>
+          <button data-tool="lasso">Lasso</button>
+          <button data-tool="brush">Pinsel</button>
+          <button id="btnClearSel">Auswahlen löschen</button>
+          <span class="badge">Zoom: Strg + Mausrad</span>
         </div>
-        <div class="row" style="margin-top:8px">
-          <label class="pill"><input id="useMask" type="checkbox"> Maskenwerkzeug nutzen</label>
-          <label class="pill"><input id="protectSkinTone" type="checkbox" checked> Hautton schützen</label>
-          <label class="pill"><input id="edgeClean" type="checkbox" checked> Kanten-Clean</label>
+        <div class="canvas-wrap">
+          <canvas id="wardrobeCanvas" width="1024" height="1024" aria-label="Vorschau"></canvas>
+          <canvas id="maskCanvas" width="1024" height="1024" style="position:absolute;inset:0;pointer-events:none"></canvas>
         </div>
-      </section>
-      <hr/>
+      </main>
 
-      <!-- 4) Ausführen -->
-      <section>
-        <div class="pill"><strong>4) Ausführen</strong><span class="badge">Generieren & Speichern</span></div>
-        <div class="toolbar" style="margin-top:10px">
-          <button id="btn-apply" class="btn primary" title="Generieren (G)">Anwenden</button>
-          <button id="btn-save" class="btn ok" title="Speichern (S)">Download</button>
-          <button id="btn-reset" class="btn">Zurücksetzen</button>
-        </div>
-        <small class="help">Shortcuts: <b>G</b> Generieren · <b>S</b> Speichern · <b>B</b> Pinsel · <b>E</b> Radierer · <b>H</b> Maske an/aus</small>
-      </section>
-    </aside>
+      <!-- RECHTS: Bereiche (mit Kategorie & Was/Wie) + Ergebnisse -->
+      <aside class="card">
+        <h3>Markierte Bereiche (Kleidung)</h3>
+        <div id="areas" class="list"></div>
 
-    <!-- RECHTS: VORSCHAU + WERKZEUGE + REGIONLISTE -->
-    <main class="card">
-      <h3>Vorschau</h3>
-      <div id="preview" class="preview">
-        <div class="progress"><div></div></div>
-
-        <!-- Legende -->
-        <div id="legend" class="legend" style="display:none"></div>
-
-        <!-- Ghost-Hints Overlay (optional) -->
-        <div id="ghostHints" class="ghost-hints" style="display:none">
-          <svg viewBox="0 0 100 160" preserveAspectRatio="xMidYMid meet">
-            <path d="M50 10 C35 20, 30 35, 30 48 C30 65, 40 72, 50 75 C60 72, 70 65, 70 48 C70 35, 65 20, 50 10 Z
-                     M30 48 C25 65, 25 95, 30 120 C35 140, 45 150, 50 150 C55 150, 65 140, 70 120 C75 95, 75 65, 70 48"
-                  fill="none" stroke="rgba(120,160,255,.85)" stroke-width="2"/>
-          </svg>
+        <div class="row" style="margin-top:6px">
+          <button id="btnAddAreaFromCategory">Bereich aus Kategorie hinzufügen</button>
         </div>
 
-        <!-- Masken-Tools (schwebend) -->
-        <div class="mask-tools" id="maskTools" style="display:none;position:absolute;left:12px;top:12px;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:rgba(20,28,48,.66);backdrop-filter:blur(6px);padding:8px;border-radius:12px;border:1px solid rgba(140,160,210,.22)">
-          <button id="mt-draw"   class="btn" title="B">Pinsel</button>
-          <button id="mt-erase"  class="btn" title="E">Radierer</button>
-          <label class="pill">Größe <input id="mt-size" type="range" min="6" max="64" value="24"/></label>
-          <label class="pill">Weiche <input id="mt-feather" type="range" min="0" max="40" value="8"/></label>
-          <button id="mt-invert" class="btn">Invert</button>
-          <button id="mt-clear"  class="btn">Clear</button>
-          <button id="mt-toggle" class="btn" title="H">Maske zeigen</button>
-          <button id="mt-export" class="btn">Maske PNG</button>
+        <details open class="card" style="margin-top:10px">
+          <summary>Freier Prompt (optional – ohne Filter)</summary>
+          <textarea id="freePrompt" rows="5" placeholder="Zusätzliche Anweisungen, die global gelten sollen."></textarea>
+        </details>
+
+        <div class="card" style="margin-top:10px">
+          <h3>Ergebnisse</h3>
+          <div id="results" class="list"></div>
         </div>
-
-        <!-- Overlay für Regions -->
-        <div id="overlay" class="overlay"></div>
-      </div>
-
-      <!-- Werkzeuge -->
-      <div class="under-preview">
-        <div class="tools-grid">
-          <div class="card">
-            <h4>Remover & Retusche</h4>
-            <div class="row" style="gap:8px;flex-wrap:wrap">
-              <button id="tw-autoEdges" class="btn">Auto-Edges</button>
-              <button id="tw-skinUnify" class="btn">Hautton angleichen</button>
-              <button id="tw-specReduce" class="btn">Glanz reduzieren</button>
-              <button id="tw-seamClean" class="btn">Nähte säubern</button>
-              <button id="tw-undo" class="btn">Undo</button>
-              <button id="tw-redo" class="btn">Redo</button>
-            </div>
-            <small class="help">Verfeinert das Ergebnis lokal, ohne Prompt.</small>
-          </div>
-
-          <!-- KÖRPER-HINWEISE MIT UNTERKATEGORIEN 1/2/3 -->
-          <div class="card">
-            <h4>Körper-Hinweise</h4>
-            <div class="hintbar">
-              <button class="hintbtn" data-hint="bust" title="Brust-Hinweis">👙 Brust</button>
-              <button class="hintbtn" data-hint="waist" title="Taille-Hinweis">〰️ Taille</button>
-              <button class="hintbtn" data-hint="hips" title="Hüfte-Hinweis">🜁 Hüfte</button>
-              <button class="hintbtn" data-hint="butt" title="Po-Hinweis">🍑 Po</button>
-            </div>
-
-            <!-- Unterkategorien (lädt Bilder aus web/ -->
-            <div id="hintCats" style="margin-top:6px">
-              <!-- Wird dynamisch für die aktive Kategorie befüllt -->
-            </div>
-            <small class="help">Wähle 1/2/3 pro Kategorie. Falls kein Bild vorhanden ist, wird eine Fallback-Marke angezeigt.</small>
-          </div>
-        </div>
-
-        <!-- REGION-LISTE -->
-        <div class="card" style="margin-top:12px">
-          <h4>Erkannte Kleidung – Regionen</h4>
-          <div id="regionList" class="region-list"></div>
-          <div class="row" style="gap:8px;margin-top:8px">
-            <button id="btn-clearRegions" class="btn">Regionen löschen</button>
-            <small class="help">Klick auf einen Eintrag fokussiert die Region in der Vorschau.</small>
-          </div>
-        </div>
-
-        <!-- PROMPT -->
-        <div class="card" style="margin-top:12px">
-          <h4>Prompt (optional, für Feinsteuerung)</h4>
-          <div class="grid cols-2">
-            <div>
-              <label>Prompt</label>
-              <textarea id="prompt" class="input" placeholder="Präzise Beschreibung des Ziel-Looks oder Retusche-Wunsch …"></textarea>
-              <div class="row" style="margin-top:6px;gap:8px">
-                <button id="btn-suggest" class="btn">Zufallsvorschlag</button>
-                <small id="charCount" class="help">0 Zeichen</small>
-              </div>
-            </div>
-            <div>
-              <label>Negative Prompt</label>
-              <textarea id="negPrompt" class="input" placeholder="Artefakte, falsche Falten, Farbabweichungen, unsaubere Kanten …"></textarea>
-              <div class="row" style="margin-top:6px;gap:8px">
-                <label class="pill"><input id="keepComposition" type="checkbox" checked> Komposition bewahren</label>
-                <label class="pill"><input id="colorLock" type="checkbox" checked> Haut/Farben schützen</label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
+      </aside>
+    </div>
   </div>
-</div>
 
-<footer>© AndioMediaStudio</footer>
+  <footer>© AndioMediaStudio</footer>
 
-<script>
-/* ===== Utilities ===== */
-const $=(q,r=document)=>r.querySelector(q); const $$=(q,r=document)=>Array.from(r.querySelectorAll(q));
-class Progress{constructor(c){this.c=c;this.el=c.querySelector('.progress')}show(){this.el.style.display='grid'}hide(){this.el.style.display='none'}async fake(ms=1200){this.show();await new Promise(r=>setTimeout(r,ms));this.hide()}}
-const pm=new Progress($('#preview'));
+  <script>
+  (()=> {
+    const $ = s=>document.querySelector(s);
+    const $$ = s=>Array.from(document.querySelectorAll(s));
 
-/* ===== State ===== */
-let look='nackt'; let lastImageURL=null; let mask=null; let maskVisible=true;
-const overlay = $('#overlay'); const legend = $('#legend'); const regionList = $('#regionList');
+    // === State ===
+    const state = {
+      img:null,
+      selections:[], // [{id,type,geom,final,..., form:{piece,action,what,material,color,style}}]
+      content:'sfw'
+    };
 
-/* Hints State */
-const hints = {
-  active: null, // 'bust' | 'waist' | 'hips' | 'butt'
-  selected: { bust:null, waist:null, hips:null, butt:null }, // 1|2|3|null
-  images: { bust:null, waist:null, hips:null, butt:null }     // tatsächlicher Pfad oder null
-};
+    // === Canvas & Annotator ===
+    const canvas = $('#wardrobeCanvas'), maskCanvas = $('#maskCanvas');
+    const ctx = canvas.getContext('2d');
+    const annot = Andio.tools.attachAnnotator(canvas, maskCanvas, (sels)=>{
+      state.selections = sels;
+      ensureFormsForSelections();
+      renderAreas();
+    });
 
-/* Kategorien & Farben (Auto-Detect) */
-const CATEGORY_COLORS = {
-  top:'#8ab4ff', bottom:'#80e4a4', bra:'#f29ad2', panties:'#f2c59a',
-  dress:'#d4a5ff', jacket:'#9be1ff', shoes:'#ffd280', accessory:'#b0bec5'
-};
-const CATEGORIES = Object.keys(CATEGORY_COLORS);
-
-/* ===== MaskCanvas ===== */
-class MaskCanvas{
-  constructor(container){
-    this.container=container; this.canvas=document.createElement('canvas'); this.canvas.className='mask';
-    this.ctx=this.canvas.getContext('2d'); this.brush={size:24,feather:8,mode:'draw'}; this._active=false;
-    container.appendChild(this.canvas); this.resize();
-    window.addEventListener('resize',()=>this.resize());
-    this.canvas.addEventListener('mousedown',e=>this.start(e));
-    window.addEventListener('mousemove',e=>this.move(e));
-    window.addEventListener('mouseup',()=>this.stop());
-  }
-  resize(){ const r=this.container.getBoundingClientRect(); this.canvas.width=Math.max(1,r.width); this.canvas.height=Math.max(1,r.height); }
-  rel(e){ const b=this.canvas.getBoundingClientRect(); return {x:e.clientX-b.left,y:e.clientY-b.top}; }
-  start(e){ this._active=true; this.draw(e); }
-  move(e){ if(!this._active) return; this.draw(e); }
-  stop(){ this._active=false; }
-  draw(e){
-    const {x,y}=this.rel(e);
-    const g=this.ctx.createRadialGradient(x,y,Math.max(1,this.brush.size-this.brush.feather),x,y,this.brush.size);
-    const isDraw=this.brush.mode==='draw';
-    g.addColorStop(0,isDraw?'rgba(255,255,255,1)':'rgba(0,0,0,1)');
-    g.addColorStop(1,'rgba(255,255,255,0)');
-    this.ctx.globalCompositeOperation=isDraw?'source-over':'destination-out';
-    this.ctx.fillStyle=g; this.ctx.beginPath(); this.ctx.arc(x,y,this.brush.size,0,Math.PI*2); this.ctx.fill();
-  }
-  setSize(s){this.brush.size=s} setFeather(f){this.brush.feather=f} setMode(m){this.brush.mode=m}
-  clear(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)}
-  invert(){ const img=this.ctx.getImageData(0,0,this.canvas.width,this.canvas.height); const d=img.data;
-    for(let i=0;i<d.length;i+=4){d[i]=255-d[i];d[i+1]=255-d[i+1];d[i+2]=255-d[i+2]} this.ctx.putImageData(img,0,0)}
-  toggle(){ maskVisible=!maskVisible; this.canvas.style.opacity=maskVisible?'0.6':'0.0'; this.canvas.style.pointerEvents=maskVisible?'auto':'none';
-    $('#mt-toggle').textContent = maskVisible ? 'Maske verbergen' : 'Maske zeigen'; }
-  toDataURL(){ return this.canvas.toDataURL('image/png'); }
-}
-
-/* ===== Look Auswahl ===== */
-function setLook(val){
-  look=val;
-  $$('.look').forEach(b=>b.classList.toggle('primary', b.dataset.look===val));
-  const disabled=(val==='nackt');
-  $('#clothesOptions').classList.toggle('muted', disabled);
-  $('#colorText').disabled=disabled; $('#colorPick').disabled=disabled;
-  $('#material').disabled=disabled; $('#fit').disabled=disabled; $('#details').disabled=disabled;
-}
-$$('.look').forEach(b=>b.addEventListener('click',()=>setLook(b.dataset.look)));
-setLook('nackt');
-
-/* Farbe sync */
-$('#colorPick').addEventListener('input', e => $('#colorText').value = e.target.value);
-$('#colorText').addEventListener('change', e => { try{ $('#colorPick').value = e.target.value; }catch(_){} });
-
-/* Datei laden & DnD */
-function putImage(url){ lastImageURL=url; let img=$('#preview img'); if(!img){img=document.createElement('img'); $('#preview').appendChild(img);} img.src=url; }
-$('#file').addEventListener('change', e=>{ const f=e.target.files?.[0]; if(!f) return; putImage(URL.createObjectURL(f)); });
-$('#preview').addEventListener('dragover', e=>e.preventDefault());
-$('#preview').addEventListener('drop', e=>{
-  e.preventDefault(); const f=e.dataTransfer.files?.[0];
-  if(f && f.type.startsWith('image')) putImage(URL.createObjectURL(f));
-});
-
-/* Masken-Tools */
-function updateMaskTools(){
-  const tools=$('#maskTools'); const want=$('#useMask')?.checked;
-  tools.style.display = want ? 'flex' : 'none';
-  if(want && !mask){ mask=new MaskCanvas($('#preview')); }
-  if(!want && mask){ mask.canvas.remove(); mask=null; }
-}
-$('#useMask').addEventListener('change', updateMaskTools);
-$('#mt-draw').addEventListener('click', ()=>mask?.setMode('draw'));
-$('#mt-erase').addEventListener('click', ()=>mask?.setMode('erase'));
-$('#mt-size').addEventListener('input', e=>mask?.setSize(+e.target.value));
-$('#mt-feather').addEventListener('input', e=>mask?.setFeather(+e.target.value));
-$('#mt-invert').addEventListener('click', ()=>mask?.invert());
-$('#mt-clear').addEventListener('click', ()=>mask?.clear());
-$('#mt-toggle').addEventListener('click', ()=>mask?.toggle());
-$('#mt-export').addEventListener('click', ()=>{ if(!mask) return; const a=document.createElement('a'); a.href=mask.toDataURL(); a.download='wardrobe_mask.png'; a.click(); });
-
-/* ===== Körper-Hinweise + Unterkategorien ===== */
-$$('.hintbtn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const key = btn.dataset.hint; // bust|waist|hips|butt
-    const wasActive = btn.classList.contains('active');
-    $$('.hintbtn').forEach(b=>b.classList.remove('active'));
-    hints.active = null;
-    if(!wasActive){
-      btn.classList.add('active'); hints.active = key;
-      renderHintSubcats(key);
-    } else {
-      $('#hintCats').innerHTML = '';
+    function drawImage(){
+      ctx.clearRect(0,0,1024,1024);
+      if (state.img) ctx.drawImage(state.img,0,0,1024,1024);
     }
-  });
-});
 
-/* Bilderzeugung für 1/2/3 */
-const HINT_PATHS = {
-  bust:  idx => `web/
-  waist: idx => `web/
-  hips:  idx => `web/
-  butt:  idx => `web/
-};
-
-/* Subcat Renderer */
-function renderHintSubcats(key){
-  const host = $('#hintCats');
-  host.innerHTML = '';
-  const grid = document.createElement('div'); grid.className = 'hintcats';
-  [1,2,3].forEach(idx=>{
-    const wrap = document.createElement('div'); wrap.className='thumb'; wrap.dataset.idx=idx;
-    // falls Bild nicht existiert → onerror -> Fallback-Badge
-    const img = document.createElement('img');
-    img.alt = `${key} Variante ${idx}`;
-    img.src = HINT_PATHS[key](idx);
-    img.onerror = ()=>{ img.remove(); const fb=document.createElement('div'); fb.className='fallback'; fb.textContent=idx; wrap.appendChild(fb); };
-    wrap.appendChild(img);
-    const badge = document.createElement('div'); badge.className='badge'; badge.textContent = idx;
-    wrap.appendChild(badge);
-
-    if(hints.selected[key]===idx) wrap.classList.add('active');
-
-    wrap.addEventListener('click', ()=>{
-      // toggle selection
-      const already = hints.selected[key]===idx;
-      hints.selected[key] = already ? null : idx;
-      hints.images[key]   = already ? null : (already ? null : img?.src || HINT_PATHS[key](idx));
-      // update UI
-      $$('.thumb', grid).forEach(t=>t.classList.remove('active'));
-      if(!already) wrap.classList.add('active');
+    // Datei laden
+    $('#fileInput').addEventListener('change', ()=>{
+      const f = $('#fileInput').files?.[0]; if(!f) return;
+      const img = new Image();
+      img.onload = ()=>{ state.img=img; drawImage(); annot.markImageLoaded(); };
+      img.src = URL.createObjectURL(f);
     });
 
-    grid.appendChild(wrap);
-  });
-  host.appendChild(grid);
-}
-
-/* ===== Prompt */
-const suggestPool={
-  nackt:[
-    'saubere Haut, natürliche Textur, gleichmäßige Töne, realistische Schatten, weich überblendete Kanten',
-    'realistische Hautporen, feine Details, keine Artefakte, natürliche Farbverläufe'
-  ],
-  dessous:[
-    'schwarze Spitze, filigrane Muster, zarte Träger, dezente Transparenz, körpernahe Passform',
-    'Seiden-Lingerie in Champagner, feine Kanten, elegante Formen'
-  ],
-  bikini:[
-    'schwarzer Triangel-Bikini, matte Oberfläche, feine Nähte, minimaler Schnitt',
-    'Sport-Bikini navy, strukturierter Stoff, klare Konturen'
-  ],
-  casual:[
-    'schlichte Baumwoll-T-Shirt-Silhouette, weicher Fall, matte Textur',
-    'feiner Strick, leicht oversized, neutrale Farbe'
-  ],
-  dress:[
-    'Seidiges Slipdress, sanfte Drapierung, dezente Reflexe, Abendlicht',
-    'Satinkleid, körpernah, klare Taille, fließender Saum'
-  ],
-  sport:[
-    'Techwear-Top, atmungsaktiv, dezente Mesh-Einsätze, ergonomische Nähte',
-    'Sport-BH mit matter Struktur, stützende Passform'
-  ],
-  business:[
-    'taillierter Blazer, klare Linien, feine Webstruktur, monochrom',
-    'Bluse mit leichter Transparenz, zurückhaltende Knopfleiste'
-  ],
-  street:[
-    'cropped Top, leichte Waschung, lockere Silhouette, urban',
-    'Layer-Look, kontrastierende Texturen, minimalistische Farben'
-  ]
-};
-function updateCount(){ $('#charCount').textContent = `${($('#prompt').value||'').length} Zeichen`; }
-$('#btn-suggest').addEventListener('click', ()=>{
-  const arr=suggestPool[look]||[]; if(!arr.length) return;
-  const s=arr[Math.floor(Math.random()*arr.length)];
-  $('#prompt').value=s; updateCount();
-});
-$('#prompt').addEventListener('input', updateCount);
-
-/* ===== Auto-Detect Kleidung (Demo-Stub) ===== */
-let regions = []; // {id, category, bbox:[x0,y0,x1,y1], confidence, include, coverage, priority, to_mask:false}
-let regionCounter = 0;
-
-const regionListEl = $('#regionList');
-
-function clearRegions(){
-  regions = []; regionCounter = 0;
-  overlay.innerHTML=''; regionListEl.innerHTML='';
-  legend.style.display='none'; legend.innerHTML='';
-}
-
-function pxRectFromBox(bbox, refEl){
-  const r = refEl.getBoundingClientRect();
-  const w = r.width, h = r.height;
-  return { left:bbox[0]*w, top:bbox[1]*h, width:(bbox[2]-bbox[0])*w, height:(bbox[3]-bbox[1])*h };
-}
-
-function drawRegionOverlay(reg){
-  const color = CATEGORY_COLORS[reg.category] || '#9fbaff';
-  const node = document.createElement('div');
-  node.className='region fill';
-  node.style.color = color;
-  const box = pxRectFromBox(reg.bbox, $('#preview'));
-  node.style.left = box.left+'px'; node.style.top = box.top+'px';
-  node.style.width = box.width+'px'; node.style.height = box.height+'px';
-  node.dataset.id = reg.id;
-  const lbl = document.createElement('div');
-  lbl.className='region-label';
-  lbl.innerHTML = `#${reg.id} · ${reg.category} <span class="chip">conf ${Math.round(reg.confidence*100)}%</span>`;
-  node.appendChild(lbl);
-  overlay.appendChild(node);
-}
-
-function refreshOverlays(){
-  overlay.innerHTML='';
-  regions.filter(r=>r.include).forEach(drawRegionOverlay);
-  const cats = [...new Set(regions.map(r=>r.category))];
-  if(cats.length){
-    legend.style.display='flex'; legend.innerHTML='';
-    cats.forEach(c=>{
-      const item = document.createElement('div'); item.style.display='flex'; item.style.alignItems='center'; item.style.gap='6px';
-      const dot = document.createElement('div'); dot.className='dot'; dot.style.background=CATEGORY_COLORS[c]||'#9fbaff';
-      const txt = document.createElement('span'); txt.textContent=c;
-      item.appendChild(dot); item.appendChild(txt); legend.appendChild(item);
+    // Tools
+    $$('.toolbar button[data-tool]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        $$('.toolbar button[data-tool]').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        annot.setTool(b.dataset.tool);
+      });
     });
-  }else{
-    legend.style.display='none';
-  }
-}
+    $('#btnClearSel').addEventListener('click', ()=>{ annot.reset(); state.selections=[]; renderAreas(); });
 
-function addRegionItem(reg){
-  const item = document.createElement('div'); item.className='region-item'; item.dataset.id=reg.id;
-  item.innerHTML = `
-    <div class="row">
-      <b>#${reg.id}</b>
-      <select class="input ri-cat">
-        ${CATEGORIES.map(c=>`<option ${c===reg.category?'selected':''}>${c}</option>`).join('')}
-      </select>
-      <label class="pill"><input type="checkbox" class="ri-vis" ${reg.include?'checked':''}/> sichtbar</label>
-      <span class="chip">conf ${Math.round(reg.confidence*100)}%</span>
-    </div>
-    <div class="row">
-      <label class="pill">Abdeckung <input class="ri-cov" type="range" min="0" max="100" value="${reg.coverage}"/></label>
-      <label class="pill">Priorität <input class="ri-pri" type="number" min="0" max="9" value="${reg.priority}" style="width:64px"/></label>
-      <button class="btn ri-mask">→ In Maske</button>
-      <button class="btn ri-focus">Fokus</button>
-      <button class="btn ri-del">Löschen</button>
-    </div>
-  `;
-  item.querySelector('.ri-cat').addEventListener('change', e=>{ reg.category = e.target.value; refreshOverlays(); });
-  item.querySelector('.ri-vis').addEventListener('change', e=>{ reg.include = e.target.checked; refreshOverlays(); });
-  item.querySelector('.ri-cov').addEventListener('input', e=>{ reg.coverage = +e.target.value; });
-  item.querySelector('.ri-pri').addEventListener('change', e=>{ reg.priority = +e.target.value; });
-  item.querySelector('.ri-mask').addEventListener('click', ()=>{ reg.to_mask = true; $('#useMask').checked = true; updateMaskTools(); });
-  item.querySelector('.ri-focus').addEventListener('click', ()=>{
-    const el = overlay.querySelector(`.region[data-id="${reg.id}"]`) || overlay.querySelector(`.region.fill[data-id="${reg.id}"]`);
-    if(!el) return; el.style.transition='box-shadow .2s'; el.style.boxShadow='0 0 0 3px rgba(255,255,255,.9) inset'; setTimeout(()=>{ el.style.boxShadow='none'; }, 450);
-  });
-  item.querySelector('.ri-del').addEventListener('click', ()=>{ regions = regions.filter(r=>r.id!==reg.id); item.remove(); refreshOverlays(); });
-  regionListEl.appendChild(item);
-}
-
-function runAutoDetect(){
-  if(!$('#preview img')){ alert('Bitte zuerst ein Bild laden.'); return; }
-  pm.show();
-  setTimeout(()=>{
-    clearRegions();
-    const candidates = [
-      {cat:'top', box:[0.32,0.25,0.68,0.52], conf:.93},
-      {cat:'bottom', box:[0.34,0.52,0.66,0.88], conf:.90},
-      {cat:'bra', box:[0.42,0.33,0.60,0.47], conf:.81},
-      {cat:'panties', box:[0.43,0.62,0.57,0.74], conf:.78},
-      {cat:'jacket', box:[0.28,0.20,0.72,0.58], conf:.64},
-      {cat:'accessory', box:[0.20,0.18,0.28,0.28], conf:.71},
-      {cat:'shoes', box:[0.36,0.86,0.46,0.97], conf:.74},
-      {cat:'shoes', box:[0.54,0.86,0.64,0.97], conf:.73}
-    ];
-    const pick = candidates.filter(x=>{
-      if(look==='nackt') return ['top','bottom','bra','panties','jacket'].includes(x.cat);
-      if(look==='dessous'||look==='bikini') return ['top','bottom','jacket','bra','panties'].includes(x.cat);
-      return ['top','bottom','dress','jacket','accessory','shoes','bra','panties'].includes(x.cat);
-    }).slice(0,5);
-
-    pick.forEach(p=>{
-      const id = ++regionCounter;
-      const reg = { id, category:p.cat, bbox:p.box, confidence:p.conf, include:true, coverage:(look==='nackt'?90:70), priority:1, to_mask:false };
-      regions.push(reg); addRegionItem(reg);
+    // Inhalt / NSFW
+    const nsfw = $('#nsfwConsent');
+    $('#contentSelect').addEventListener('change', e=>{
+      state.content = e.target.value;
+      nsfw.style.display = state.content==='nsfw' ? 'block' : 'none';
     });
-    refreshOverlays();
-    pm.hide();
-  }, 600);
-}
-$('#btn-detect').addEventListener('click', runAutoDetect);
-$('#btn-clearRegions').addEventListener('click', clearRegions);
+    const consentOk = ()=> state.content!=='nsfw' || ($('#ageOk').checked && $('#rightsOk').checked && $('#lawOk').checked);
 
-/* ===== Payload ===== */
-function assemblePayload(){
-  const auto_detect = {
-    enabled: regions.length>0,
-    regions: regions.map(r=>({
-      id: r.id,
-      category: r.category,
-      bbox: r.bbox.slice(),
-      confidence: r.confidence,
-      include: !!r.include,
-      coverage: +r.coverage,
-      priority: +r.priority,
-      to_mask: !!r.to_mask
-    }))
-  };
-  return {
-    look, // nackt | dessous | bikini | ...
-    model: $('#model').value,
-    steps: +$('#steps').value,
-    guidance: +$('#guidance').value,
-    seed: $('#seed').value ? +$('#seed').value : Math.floor(Math.random()*1e9),
-    segmentation:{ cloth: !!$('#segCloth').checked, person: !!$('#segPerson').checked },
-    auto_detect,
-    remove:{ strength:+$('#removeStrength').value, edgeClean:!!$('#edgeClean').checked },
-    skin:{ realism:+$('#skinRealism').value, protectTone:!!$('#protectSkinTone').checked },
-    clothes: (look==='nackt') ? null : {
-      color: $('#colorText').value || $('#colorPick').value,
-      material: $('#material').value,
-      fit: $('#fit').value,
-      details: $('#details').value
-    },
-    image: lastImageURL || null,
-    prompt: ($('#prompt').value||'').trim(),
-    negPrompt: ($('#negPrompt').value||'').trim(),
-    keepComposition: !!$('#keepComposition').checked,
-    colorLock: !!$('#colorLock').checked,
-    // Hints:
-    hints: {
-      active: hints.active,
-      detail: { ...hints.selected },     // {bust:1|2|3|null, waist:..., hips:..., butt:...}
-      images: { ...hints.images }        // tatsächliche Pfade (falls geladen) oder null
-    },
-    mask: (mask ? mask.toDataURL() : null)
-  };
-}
+    // Random – ergänzt sinnvolle Beispiele
+    $('#btnRandom').addEventListener('click', ()=>{
+      const kind = $('#contentSelect').value;
+      const idea = Andio.randomPrompt('wardrobe', kind) || '';
+      const cur = $('#freePrompt').value.trim();
+      $('#freePrompt').value = cur ? (cur+'\n'+idea) : idea;
 
-/* ===== Demo-Renderer ===== */
-async function demoRender(payload){
-  pm.show(); await new Promise(r=>setTimeout(r,700));
-  const c=document.createElement('canvas'); c.width=960; c.height=540; const ctx=c.getContext('2d');
-  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,c.width,c.height);
-  ctx.fillStyle='rgba(255,255,255,.92)'; ctx.font='bold 22px ui-monospace,monospace';
-  ctx.fillText(`WARDROBE · ${payload.look.toUpperCase()}`,24,44);
-  ctx.font='14px ui-monospace,monospace';
-  ctx.fillText(`model=${payload.model} · seed=${payload.seed}`,24,72);
-  const lines=(payload.prompt||'').match(/.{1,68}(\s|$)/g)||[];
-  ctx.fillText(`prompt:`,24,98); lines.forEach((ln,i)=>ctx.fillText(ln.trim(),24,118+i*18));
-  let y=118+lines.length*18+16; ctx.fillText('— Einstellungen —',24,y); y+=20;
-  ctx.fillText(`remove=${payload.remove.strength} edgeClean=${payload.remove.edgeClean}`,24,y); y+=18;
-  ctx.fillText(`skinRealism=${payload.skin.realism} protectTone=${payload.skin.protectTone}`,24,y); y+=18;
-  if(payload.clothes){ ctx.fillText(`color=${payload.clothes.color} material=${payload.clothes.material} fit=${payload.clothes.fit} details=${payload.clothes.details}`,24,y); y+=18; }
-  y+=6; ctx.fillText(`auto_detect=${payload.auto_detect.enabled} regions=${payload.auto_detect.regions.length}`,24,y); y+=18;
-  // hints summary
-  const h = payload.hints.detail;
-  ctx.fillText(`hints: bust=${h.bust||'-'} waist=${h.waist||'-'} hips=${h.hips||'-'} butt=${h.butt||'-'}`,24,y); y+=18;
-  const url=c.toDataURL('image/png');
-  let img=$('#preview img'); if(!img){img=document.createElement('img'); $('#preview').appendChild(img);} img.src=url; pm.hide(); return url;
-}
+      // Falls noch keine Auswahl, lege eine zentrale an
+      if (!state.selections.length){
+        annot.state.selections.push({id:1,type:'rect',x:256,y:256,w:512,h:512,final:true});
+        state.selections = annot.state.selections;
+        ensureFormsForSelections();
+        renderAreas(); annot.draw();
+      }
+    });
 
-/* ===== Aktionen ===== */
-$('#btn-apply').addEventListener('click', async ()=>{
-  const payload=assemblePayload();
-  // if (window.Andio?.API?.createJob) await Andio.API.createJob(payload);
-  await demoRender(payload);
-});
+    // Auto-Erkennung (Hook)
+    $('#btnDetect').addEventListener('click', async ()=>{
+      if(!state.img){ alert('Bitte Bild laden.'); return; }
+      const {hud} = await Andio.startJobWithHUD('Wardrobe: Erkennung', async ()=>{
+        if (Andio.api?.wardrobeDetectStart) return await Andio.api.wardrobeDetectStart();
+        return {jobId:'demo_'+Date.now()};
+      });
+      setTimeout(async ()=>{
+        if (Andio.api?.wardrobeDetectFinish){
+          const res = await Andio.api.wardrobeDetectFinish();
+          alert('Erkennung: '+JSON.stringify(res));
+        } else {
+          alert('Demo-Erkennung: Oberteil=Bluse, Unterteil=Jeans, Körperform=Mittel');
+        }
+      }, 200);
+    });
 
-$('#btn-save').addEventListener('click', ()=>{
-  const img=$('#preview img'); if(!img) return alert('Nichts zu speichern.');
-  const a=document.createElement('a'); a.href=img.src; a.download=`wardrobe_${look}.png`; a.click();
-});
+    // Bereiche-Formulare sicherstellen
+    function ensureFormsForSelections(){
+      state.selections.forEach(sel=>{
+        sel.form = sel.form || {
+          piece: 'oberteil',
+          action: 'replace',
+          what: '',
+          material: '',
+          color: '',
+          style: ''
+        };
+      });
+    }
 
-$('#btn-reset').addEventListener('click', ()=>{
-  $('#segCloth').checked=true; $('#segPerson').checked=false;
-  setLook('nackt');
-  $('#colorText').value=''; $('#colorPick').value='#111111';
-  $('#material').value='Baumwolle'; $('#fit').value='Regulär'; $('#details').value='Neutral';
-  $('#removeStrength').value=85; $('#skinRealism').value=8; $('#steps').value=28; $('#guidance').value=7.5; $('#seed').value='';
-  $('#useMask').checked=false; updateMaskTools();
-  $('#protectSkinTone').checked=true; $('#edgeClean').checked=true;
-  $('#prompt').value=''; $('#negPrompt').value=''; updateCount();
-  $$('.hintbtn').forEach(b=>b.classList.remove('active'));
-  hints.active=null; hints.selected={bust:null,waist:null,hips:null,butt:null}; hints.images={bust:null,waist:null,hips:null,butt:null};
-  $('#hintCats').innerHTML='';
-  const img=$('#preview img'); if(img) img.remove(); if(lastImageURL) URL.revokeObjectURL(lastImageURL); lastImageURL=null;
-  clearRegions();
-});
+    // Bereiche rendern (+ Kategorie/Was/Wie)
+    function renderAreas(){
+      const host = $('#areas'); host.innerHTML='';
+      state.selections.forEach(sel=>{
+        const d = document.createElement('div');
+        d.className = 'prompt-item';
+        d.innerHTML = `
+          <h4>Bereich #${sel.id} <span class="badge">${sel.type}</span></h4>
+          <div class="grid grid-2">
+            <label>Kleidung
+              <select data-k="piece">
+                <option value="oberteil">Oberteil</option>
+                <option value="unterteil">Unterteil</option>
+                <option value="kleid">Kleid</option>
+                <option value="schuhe">Schuhe</option>
+                <option value="accessoires">Accessoires</option>
+                <option value="schmuck">Schmuck</option>
+                <option value="nude">Nackt (18+)</option>
+              </select>
+            </label>
+            <label>Aktion
+              <select data-k="action">
+                <option value="keep">Behalten</option>
+                <option value="replace">Ersetzen</option>
+                <option value="remove">Entfernen</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid">
+            <label>Was / Wie (Beschreibung)
+              <input data-k="what" placeholder="z. B. Lederjacke, schwarz, tailliert; oder ‚Träger entfernen‘"/>
+            </label>
+          </div>
+          <div class="grid grid-3">
+            <label>Material
+              <input data-k="material" placeholder="z. B. Leder, Seide, Baumwolle"/>
+            </label>
+            <label>Farbe
+              <input data-k="color" placeholder="z. B. schwarz, cremeweiß"/>
+            </label>
+            <label>Stil
+              <input data-k="style" placeholder="z. B. elegant, street, glamour"/>
+            </label>
+          </div>
+        `;
+        // Werte zuweisen
+        d.querySelector('[data-k="piece"]').value = sel.form.piece;
+        d.querySelector('[data-k="action"]').value = sel.form.action;
+        d.querySelector('[data-k="what"]').value = sel.form.what;
+        d.querySelector('[data-k="material"]').value = sel.form.material;
+        d.querySelector('[data-k="color"]').value = sel.form.color;
+        d.querySelector('[data-k="style"]').value = sel.form.style;
 
-/* Tastenkürzel */
-window.addEventListener('keydown',(e)=>{
-  if(e.target.matches('input, textarea')) return;
-  if(e.key.toLowerCase()==='g'){ e.preventDefault(); $('#btn-apply').click(); }
-  if(e.key.toLowerCase()==='s'){ e.preventDefault(); $('#btn-save').click(); }
-  if(e.key.toLowerCase()==='b'){ e.preventDefault(); $('#mt-draw').click(); }
-  if(e.key.toLowerCase()==='e'){ e.preventDefault(); $('#mt-erase').click(); }
-  if(e.key.toLowerCase()==='h'){ e.preventDefault(); $('#mt-toggle').click(); }
-});
+        // Änderungen zurück in State
+        d.querySelectorAll('[data-k]').forEach(inp=>{
+          inp.addEventListener('input', ()=>{
+            const k = inp.dataset.k, v = inp.value;
+            sel.form[k] = v;
 
-/* Init */
-updateMaskTools();
-if (window.Andio?.polish) Andio.polish();
-</script>
+            // Wenn „Nackt“ gewählt wird → NSFW erzwingen
+            if (k==='piece' && v==='nude'){
+              $('#contentSelect').value = 'nsfw';
+              state.content = 'nsfw';
+              $('#nsfwConsent').style.display = 'block';
+            }
+          });
+        });
+
+        host.appendChild(d);
+      });
+
+      if (!state.selections.length){
+        const empty = document.createElement('div');
+        empty.className='prompt-item';
+        empty.innerHTML = `<i>Noch keine markierten Bereiche. Markiere mit <b>Rechteck / Ellipse / Lasso / Pinsel</b> die Kleidung, die du ändern willst.</i>`;
+        host.appendChild(empty);
+      }
+    }
+
+    // Schnellbereich aus Kategorie (ohne Zeichnen)
+    $('#btnAddAreaFromCategory').addEventListener('click', ()=>{
+      const id = (state.selections?.length||0)+1;
+      // mittig platzieren
+      const sel = {id, type:'rect', x:256, y:256, w:512, h:512, final:true};
+      annot.state.selections.push(sel);
+      state.selections = annot.state.selections;
+      ensureFormsForSelections();
+      renderAreas(); annot.draw();
+    });
+
+    // Ausführen (mit Job-HUD & optionalem Backend)
+    $('#btnApply').addEventListener('click', async ()=>{
+      if(!state.img){ alert('Bitte Bild laden.'); return; }
+      if(!consentOk()){ alert('Bitte NSFW-Bestätigungen setzen.'); return; }
+
+      const payload = {
+        content: state.content,
+        style: $('#stylePreset').value,
+        tweaks: $('#tweaks').value,
+        autoMask: $('#autoMask').checked,
+        keepPose: $('#keepPose').checked,
+        clothPhys: $('#clothPhys').checked,
+        prompt: $('#freePrompt').value,
+        selections: state.selections.map(s=>({
+          id:s.id, type:s.type,
+          // Geometrie mit
+          x:s.x, y:s.y, w:s.w, h:s.h, points:s.points,
+          form: s.form
+        }))
+      };
+
+      const {hud} = await Andio.startJobWithHUD('Wardrobe: Anwenden', async ()=>{
+        if (Andio.api?.wardrobeApplyStart){
+          return await Andio.api.wardrobeApplyStart(payload); // -> {jobId}
+        }
+        return {jobId:'demo_'+Date.now()};
+      });
+
+      // Ergebnis holen (Demo oder echter Finish-Call)
+      setTimeout(async ()=>{
+        try{
+          let out=null;
+          if (Andio.api?.wardrobeApplyFinish){
+            out = await Andio.api.wardrobeApplyFinish(); // -> {files:[{url,type,name,generated:true}]}
+          } else {
+            out = {files:[{url:'assets/placeholders/wardrobe_result.jpg', type:'image', name:'wardrobe.jpg', generated:true}]};
+          }
+          addResults(out.files||[]);
+        }catch(e){ console.error(e); }
+      }, 250);
+    });
+
+    function addResults(files){
+      const list = $('#results');
+      files.forEach(f=>{
+        const card = document.createElement('div');
+        card.className='prompt-item';
+        card.innerHTML = `
+          <div class="row" style="justify-content:space-between">
+            <b>${f.name||'Output'}</b>
+            <span class="badge">${(f.type||'image').toUpperCase()}</span>
+          </div>
+          ${f.type==='video'
+            ? `<video src="${f.url}" data-generated="${!!f.generated}" controls muted playsinline style="max-width:100%"></video>`
+            : `<img src="${f.url}" data-generated="${!!f.generated}" alt="Ergebnis" style="max-width:100%"/>`
+          }
+        `;
+        list.prepend(card);
+      });
+    }
+
+    // Init
+    drawImage(); renderAreas();
+  })();
+  </script>
+
+  <script>window.Andio?.polish?.();</script>
 </body>
 </html>

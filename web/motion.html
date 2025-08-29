@@ -1,50 +1,4 @@
 <!doctype html>
-<!-- === Brand / Navbar (standardisiert) === -->
-<header class="header" role="banner">
-  <nav role="navigation" aria-label="Hauptnavigation">
-    <div class="brand">
-      <a href="index.html" class="brand-link" aria-label="Zur Startseite">
-        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
-        <span class="wordmark">Andio Media Studio</span>
-      </a>
-    </div>
-    <div class="spacer"></div>
-    <div class="links" role="menubar">
-      <a role="menuitem" href="index.html" data-link="index">Übersicht</a>
-      <a role="menuitem" href="images.html" data-link="images">Image Studio</a>
-      <a role="menuitem" href="video-gen.html" data-link="video-gen">Video Studio</a>
-      <a role="menuitem" href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
-      <a role="menuitem" href="motion.html" data-link="motion">Motion</a>
-      <a role="menuitem" href="gallery.html" data-link="gallery">Gallery</a>
-      <a role="menuitem" href="catalog.html" data-link="catalog">Store</a>
-      <a role="menuitem" href="editor.html" data-link="editor">Editor</a>
-    </div>
-  </nav>
-</header>
-<script>
-  // Set active nav item based on data-page or current path; add aria-current for a11y
-  (function(){
-    try {
-      var dataPage = document.body && document.body.getAttribute('data-page');
-      if(!dataPage){
-        var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-        var map = {
-          'index.html':'index','images.html':'images','video-gen.html':'video-gen',
-          'wandrobe.html':'wardrobe','motion.html':'motion','gallery.html':'gallery',
-          'catalog.html':'catalog','editor.html':'editor'
-        };
-        dataPage = map[path] || 'index';
-        document.body && document.body.setAttribute('data-page', dataPage);
-      }
-      var sel = '.links a[data-link="' + dataPage + '"]';
-      var a = document.querySelector(sel);
-      if(a){
-        a.classList.add('active');
-        a.setAttribute('aria-current','page');
-      }
-    } catch(e){ console && console.warn('navbar init failed', e); }
-  })();
-</script>
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
@@ -52,730 +6,488 @@
   <title>Motion – AndioMediaStudio</title>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    /* Minimal add-on styles für Layout/Timeline/Skeleton */
-    .page { display:grid; grid-template-columns: 360px 1fr; gap:16px; }
-    .controls .group { margin-bottom:14px; }
-    .controls .group h4 { margin:0 0 6px; }
-    .controls .muted { opacity:.8; font-size:13px; }
-    .row { display:flex; align-items:center; gap:8px; }
-    .split { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .badge { display:inline-block; padding:2px 8px; border:1px solid #333; border-radius:999px; font-size:12px; }
-
-    .preview-wrap { position:relative; background:#0b0b0b; border:1px solid #2a2a2a; border-radius:12px; min-height:420px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-    #motionRef { max-width:100%; max-height:68vh; display:none; }
-    #motionCanvas { position:absolute; inset:0; pointer-events:none; }
-    .preview-toolbar { position:absolute; top:10px; left:10px; display:flex; gap:8px; z-index:2; }
-    .tool-btn { border:1px solid #374151; background:#111; color:#e5e7eb; border-radius:10px; padding:6px 10px; cursor:pointer; }
-    .tool-btn.active { background:#1a1a1a; }
-
-    /* Pose-Joints */
-    .joint { position:absolute; width:12px; height:12px; border-radius:50%; background:#8ab4f8; transform:translate(-50%,-50%); cursor:grab; }
-    .joint:active { cursor:grabbing; }
-    .joint-label { position:absolute; background:#111; color:#e5e7eb; border:1px solid #333; border-radius:6px; font-size:11px; padding:1px 6px; transform:translate(-50%,-150%); }
-
+    .page-grid{display:grid;grid-template-columns:320px 1fr 380px;gap:12px}
+    .card{background:#1112;border:1px solid #333;border-radius:12px;padding:12px}
+    .grid{display:grid;gap:8px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    .grid-3{grid-template-columns:1fr 1fr 1fr}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .badge{padding:2px 6px;border-radius:8px;background:#222;border:1px solid #444;font-size:12px}
+    .canvas-wrap{position:relative;aspect-ratio:1/1;background:#000;border-radius:12px;overflow:hidden}
+    .canvas-wrap canvas{width:100%;height:100%;display:block}
+    .kp{position:absolute;width:12px;height:12px;border-radius:50%;border:2px solid #fff;background:#00aaff;cursor:grab;transform:translate(-6px,-6px)}
+    .kp.drag{cursor:grabbing}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .toolbar button.active{outline:2px solid #66f}
+    .list{display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow:auto}
     /* Timeline */
-    .timeline { position:relative; height:140px; background:#0d0d0d; border:1px solid #2a2a2a; border-radius:12px; overflow:hidden; }
-    .timeline .ruler { position:absolute; top:0; left:0; right:0; height:24px; background:#0f0f0f; border-bottom:1px solid #262626; color:#bbb; font-size:12px; display:flex; align-items:center; padding:0 8px; gap:12px; }
-    .timeline .scrub { position:absolute; top:0; bottom:0; width:2px; background:#8ab4f8; transform:translateX(-1px); }
-    .timeline .lanes { position:absolute; top:24px; left:0; right:0; bottom:0; overflow:auto; }
-    .lane { position:relative; height:28px; border-bottom:1px dashed #2a2a2a; display:flex; align-items:center; padding:0 8px; color:#ddd; font-size:12px; }
-    .kf { position:absolute; top:8px; width:10px; height:10px; background:#eab308; border-radius:2px; transform:translateX(-5px); cursor:pointer; }
-
-    /* Spurenliste */
-    .track { border:1px solid #2a2a2a; border-radius:10px; padding:8px; margin-bottom:10px; }
-    .track h4 { margin:0 0 6px; font-size:14px; }
-    .track textarea { width:100%; min-height:60px; }
-
-    .suggest { display:flex; gap:8px; flex-wrap:wrap; }
-    .suggest .pill { border:1px solid #333; border-radius:999px; padding:4px 8px; font-size:12px; cursor:pointer; }
-    .suggest .pill:hover { background:#1a1a1a; }
+    .timeline{margin-top:8px;background:#0a0a0a;border:1px solid #222;border-radius:10px;padding:8px}
+    .tl-row{display:grid;grid-template-columns:80px 1fr;gap:8px;align-items:center;margin:6px 0}
+    .track{position:relative;height:36px;background:#141414;border:1px solid #2a2a2a;border-radius:8px}
+    .kf{position:absolute;top:4px;width:12px;height:24px;border-radius:4px;background:#55aaff;border:1px solid #cfe9ff;cursor:pointer;transform:translateX(-6px)}
+    .playbar{position:relative;height:8px;background:#222;border-radius:999px;margin-top:6px}
+    .needle{position:absolute;top:-4px;width:2px;height:16px;background:#fff}
+    .mini{font-size:12px;opacity:.85}
+    .preview-panel{display:grid;grid-template-columns:1fr;gap:8px}
+    video.preview, canvas.preview{max-width:100%;border:1px solid #222;border-radius:8px;background:#000}
   </style>
 </head>
-<body data-page="motion">
+<body>
   <script src="assets/app.js"></script>
-  
+  <script>window.Andio?.navbar?.('motion');</script>
 
   <div class="container">
     <h1>Motion</h1>
-    <p class="muted">
-      Standbild animieren – <b>Aktion</b>, <b>Pose</b>, <b>Transfer</b>, <b>Lip-Sync</b>, <b>Kamera</b>.<br/>
-      Player/Overlay öffnet sich <b>nur</b> für generierte Clips, nicht für das reine Referenzbild.
-    </p>
+    <div class="page-grid">
+      <!-- LINKS: Quelle, Modus, Presets -->
+      <aside class="card">
+        <h3>Quelle & Modus</h3>
+        <div class="grid">
+          <label class="row">
+            <span class="badge">Bild laden</span>
+            <input id="fileInput" type="file" accept="image/*"/>
+          </label>
 
-    <div class="page">
-      <!-- Linke Spalte -->
-      <aside class="controls">
-        <div class="card">
-          <h3>Dateien</h3>
-          <div class="group">
-            <label class="row">
-              <span>Bild hochladen</span>
-              <input id="imgInput" type="file" accept="image/*"/>
-            </label>
-            <label class="row">
-              <span>Audio (Lip-Sync)</span>
-              <input id="audInput" type="file" accept="audio/*"/>
-            </label>
-            <p class="muted">Audio ist optional (nur für Lip-Sync). Vorschau ohne Audio; Audio-Mux erfolgt später im Backend.</p>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Modus</h3>
-          <div class="group split">
-            <label class="row"><input type="radio" name="mode" value="action" checked/> <span>Aktion</span></label>
-            <label class="row"><input type="radio" name="mode" value="pose"/> <span>Pose</span></label>
-            <label class="row"><input type="radio" name="mode" value="transfer"/> <span>Transfer</span></label>
-            <label class="row"><input type="radio" name="mode" value="lipsync"/> <span>Lip-Sync</span></label>
-            <label class="row"><input type="radio" name="mode" value="camera"/> <span>Kamera</span></label>
-          </div>
-
-          <div class="group row">
-            <label class="row andio-nsfw-toggle">
-              <input id="nsfw-toggle" type="checkbox"/>
-              <span>NSFW aktivieren</span>
-            </label>
-            <button id="btnSuggest" class="tool-btn" type="button">Vorschlag</button>
-          </div>
-          <div id="suggestBar" class="suggest"></div>
-        </div>
-
-        <div class="card" id="actionControls">
-          <h3>Aktion</h3>
-          <div class="group">
-            <label class="row">
-              <span>Preset</span>
-              <select id="actPreset">
-                <option>Idle</option>
-                <option>Winken</option>
-                <option>Walk</option>
-                <option>Dance</option>
-                <option>Twerken</option>
-                <option>Blinzeln</option>
+          <div class="grid grid-2">
+            <label>Modus
+              <select id="modeSelect">
+                <option value="action">Aktion</option>
+                <option value="pose">Pose</option>
+                <option value="lipsync">Lip-Sync</option>
+                <option value="camera">Kamera</option>
               </select>
             </label>
-            <div class="split">
-              <label class="row"><span>Speed</span><input id="actSpeed" type="range" min="0.2" max="3" step="0.1" value="1"/></label>
-              <label class="row"><span>Intensität</span><input id="actIntensity" type="range" min="0" max="1" step="0.05" value="0.5"/></label>
+            <label>Preview
+              <select id="previewMode">
+                <option value="off">Aus</option>
+                <option value="low">Low-Res</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="grid">
+            <label>Genre
+              <select id="genreSelect"></select>
+            </label>
+            <label>Stellung/Posen-Preset
+              <select id="poseSelect"></select>
+            </label>
+            <label>Aktion/Bewegung
+              <select id="actionSelect"></select>
+            </label>
+          </div>
+
+          <div class="row">
+            <button id="btnImportPresets" title="assets/motion_presets.json laden">Presets importieren</button>
+            <button id="btnRandom">Random</button>
+            <button id="btnRun" class="primary">Ausführen</button>
+          </div>
+
+          <details class="card">
+            <summary>Globale Optionen</summary>
+            <div class="grid grid-3">
+              <span class="badge">Weiche IK <input type="checkbox" id="softIk" checked></span>
+              <span class="badge">Geschw. <input type="range" id="speed" min="0.2" max="2" step="0.1" value="1"></span>
+              <span class="badge">Loop <input type="checkbox" id="loop" checked></span>
             </div>
-            <label class="row">
-              <input id="drawPathToggle" type="checkbox"/> <span>Pfad zeichnen</span>
-            </label>
-            <label class="row">
-              <span>Physik-Weichheit</span><input id="actSoft" type="range" min="0" max="1" step="0.05" value="0.3"/>
-            </label>
-          </div>
-        </div>
-
-        <div class="card" id="poseControls" style="display:none;">
-          <h3>Pose</h3>
-          <div class="group">
-            <p class="muted">Keypoints sind im Bild sichtbar und können gezogen werden (Soft-IK). Oder Gesamt-Prompt eingeben.</p>
-            <label>Gesamt-Pose (Prompt)
-              <textarea id="posePrompt" rows="3" placeholder="lässige Haltung, Gewicht rechts, Hand an Hüfte"></textarea>
-            </label>
-            <div class="row">
-              <button id="poseReset" class="tool-btn" type="button">Pose zurücksetzen</button>
-              <button id="poseSym" class="tool-btn" type="button">Spiegeln</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Spuren</h3>
-          <div id="tracks"></div>
-          <div class="group">
-            <button id="addTrack" class="tool-btn" type="button">Spur hinzufügen</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Aktion</h3>
-          <div class="group row">
-            <button id="btnPreview" class="tool-btn" type="button">Vorschau</button>
-            <button id="btnExport" class="tool-btn" type="button">Generieren</button>
-            <button id="btnOpenPlayer" class="tool-btn" type="button">Im Player öffnen</button>
-          </div>
-          <p class="muted">„Generieren“ erzeugt einen kurzen Demo-Clip (WebM) aus der Vorschau. Player öffnet sich nur für generierte Clips.</p>
+          </details>
         </div>
       </aside>
 
-      <!-- Rechte Spalte -->
-      <main class="view">
-        <div class="card">
-          <h3>Vorschau/Player</h3>
-          <div class="preview-wrap" id="previewWrap">
-            <div class="preview-toolbar">
-              <button id="btnPlay" class="tool-btn" type="button" title="Play/Pause">Play</button>
-              <button id="btnStop" class="tool-btn" type="button">Stop</button>
-              <button id="btnZoomFit" class="tool-btn" type="button">Zoom-Fit</button>
-              <button id="btnZoom100" class="tool-btn" type="button">100%</button>
-            </div>
-            <img id="motionRef" alt="Referenz"/>
-            <canvas id="motionCanvas"></canvas>
-            <!-- Pose joints werden dynamisch eingefügt -->
-          </div>
-
-          <div class="split" style="margin-top:12px;">
-            <div>
-              <h4>Quelle</h4>
-              <p class="muted">Hochgeladenes Standbild</p>
-              <span class="badge" id="srcInfo">—</span>
-            </div>
-            <div>
-              <h4>Ergebnis</h4>
-              <p class="muted">Generierter Clip (nur nach „Generieren“)</p>
-              <span class="badge" id="genInfo">—</span>
-            </div>
-          </div>
+      <!-- MITTE: Canvas, Tools, Timeline -->
+      <main class="card">
+        <div class="toolbar">
+          <button data-tool="rect" class="active">Rechteck</button>
+          <button data-tool="ellipse">Ellipse</button>
+          <button data-tool="lasso">Lasso</button>
+          <button data-tool="brush">Pinsel</button>
+          <button id="btnClearRegions">Regionen löschen</button>
+          <span class="badge">Keypoints anzeigen <input type="checkbox" id="showKp" checked></span>
         </div>
 
-        <div class="card">
-          <h3>Timeline</h3>
-          <div class="timeline" id="timeline">
-            <div class="ruler" id="ruler"></div>
-            <div class="lanes" id="lanes"></div>
-            <div class="scrub" id="scrub" style="left:0px;"></div>
+        <div class="canvas-wrap" id="stage">
+          <canvas id="motionCanvas" width="1024" height="1024" aria-label="Vorschau"></canvas>
+          <canvas id="maskCanvas" width="1024" height="1024" style="position:absolute;inset:0;pointer-events:none"></canvas>
+          <!-- Keypoints kommen als .kp Elemente -->
+        </div>
+
+        <div class="timeline">
+          <div class="tl-row">
+            <div class="mini">Körper</div>
+            <div class="track" data-track="body"></div>
           </div>
-          <div class="row" style="margin-top:8px;">
-            <label class="row"><span>Dauer (s)</span><input id="durSec" type="number" min="1" max="20" step="1" value="5"/></label>
-            <label class="row"><span>FPS</span><input id="fps" type="number" min="10" max="60" step="1" value="30"/></label>
+          <div class="tl-row">
+            <div class="mini">Kopf</div>
+            <div class="track" data-track="head"></div>
+          </div>
+          <div class="tl-row">
+            <div class="mini">Arme</div>
+            <div class="track" data-track="arms"></div>
+          </div>
+          <div class="tl-row">
+            <div class="mini">Kamera</div>
+            <div class="track" data-track="cam"></div>
+          </div>
+
+          <div class="playbar">
+            <div class="needle" id="needle" style="left:0%"></div>
+          </div>
+          <div class="row mini">
+            <span>Keyframe: Klick in Spur • Ziehen = Zeit</span>
+            <span class="badge">Dauer (s): <input type="number" id="duration" min="1" max="30" step="1" value="6" style="width:64px"></span>
           </div>
         </div>
       </main>
+
+      <!-- RECHTS: Spuren/Prompts + Live-Vorschau -->
+      <aside class="card">
+        <h3>Spuren & Prompts</h3>
+        <div class="list" id="tracks"></div>
+
+        <details open class="card" style="margin-top:10px">
+          <summary>Globaler Prompt</summary>
+          <textarea id="globalPrompt" rows="4" placeholder="z. B. 'Idle subtle sway, Atembewegung weich'"></textarea>
+        </details>
+
+        <div class="card" style="margin-top:10px">
+          <h3>Live-Vorschau</h3>
+          <div class="preview-panel">
+            <canvas class="preview" id="liveCanvas" width="512" height="512"></canvas>
+            <video class="preview" id="liveVideo" controls playsinline muted style="display:none"></video>
+          </div>
+          <div class="row mini">
+            <button id="btnPreviewOnce">Preview aktualisieren</button>
+            <span>Client-Preview: Skelett/Regionen. Server-Preview (wenn verfügbar) rendert Low-Res-Clip.</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:10px">
+          <h3>Ergebnisse</h3>
+          <div id="results" class="list"></div>
+        </div>
+      </aside>
     </div>
   </div>
 
   <footer>© AndioMediaStudio</footer>
 
   <script>
-    // --- Page Script (nur für motion.html) ---
-    (function(){
-      const imgEl = document.getElementById('motionRef');
-      const canvas = document.getElementById('motionCanvas');
-      const wrap = document.getElementById('previewWrap');
-      const ctx = canvas.getContext('2d');
+  (()=>{
+    const $ = s=>document.querySelector(s);
+    const $$ = s=>Array.from(document.querySelectorAll(s));
 
-      const imgInput = document.getElementById('imgInput');
-      const audInput = document.getElementById('audInput');
+    // ---------- State ----------
+    const state = {
+      img:null,
+      showKp:true,
+      selections:[], // regionen (rect/ellipse/lasso/brush)
+      kp:[
+        {id:'head', x:512, y:220},
+        {id:'l_shoulder', x:420, y:320},
+        {id:'r_shoulder', x:604, y:320},
+        {id:'l_elbow', x:370, y:420},
+        {id:'r_elbow', x:654, y:420},
+        {id:'hip', x:512, y:520},
+        {id:'l_knee', x:470, y:680},
+        {id:'r_knee', x:554, y:680},
+        {id:'l_ankle', x:450, y:820},
+        {id:'r_ankle', x:574, y:820},
+      ],
+      duration:6,
+      tracks:{
+        body:[], head:[], arms:[], cam:[]
+      },
+      presets:null, // aus JSON importiert
+      mode:'action'
+    };
 
-      const btnZoomFit = document.getElementById('btnZoomFit');
-      const btnZoom100 = document.getElementById('btnZoom100');
-      const btnPlay = document.getElementById('btnPlay');
-      const btnStop = document.getElementById('btnStop');
-      const btnPreview = document.getElementById('btnPreview');
-      const btnExport = document.getElementById('btnExport');
-      const btnOpenPlayer = document.getElementById('btnOpenPlayer');
-
-      const srcInfo = document.getElementById('srcInfo');
-      const genInfo = document.getElementById('genInfo');
-
-      const tracksHost = document.getElementById('tracks');
-      const addTrackBtn = document.getElementById('addTrack');
-
-      const drawPathToggle = document.getElementById('drawPathToggle');
-      const actPreset = document.getElementById('actPreset');
-      const actSpeed = document.getElementById('actSpeed');
-      const actIntensity = document.getElementById('actIntensity');
-      const actSoft = document.getElementById('actSoft');
-
-      const poseControls = document.getElementById('poseControls');
-      const actionControls = document.getElementById('actionControls');
-      const posePrompt = document.getElementById('posePrompt');
-      const poseReset = document.getElementById('poseReset');
-      const poseSym = document.getElementById('poseSym');
-
-      const suggestBar = document.getElementById('suggestBar');
-      const btnSuggest = document.getElementById('btnSuggest');
-
-      const ruler = document.getElementById('ruler');
-      const lanes = document.getElementById('lanes');
-      const scrub = document.getElementById('scrub');
-      const durSecEl = document.getElementById('durSec');
-      const fpsEl = document.getElementById('fps');
-
-      let mode = 'action';
-      let resultVideoURL = null;
-      let resultIsGenerated = false;
-
-      // Timeline state
-      let duration = +durSecEl.value; // seconds
-      let fps = +fpsEl.value;
-      let time = 0; // seconds
-      let playing = false;
-      let raf = null;
-
-      // Path drawing
-      let pathPoints = []; // [{x,y}, ...] in image coords
-      let drawingPath = false;
-
-      // Tracks
-      let tracks = []; // {id, name, prompt}
-      let nextTrackId = 1;
-
-      // Pose skeleton (simple stickman)
-      // joint order & default layout (normalized to [0..1])
-      const jointNames = ["head","neck","l_shoulder","r_shoulder","l_elbow","r_elbow","l_hand","r_hand","hip","l_knee","r_knee","l_foot","r_foot"];
-      let joints = {};
-      let draggingJoint = null;
-      let dragOffset = {x:0,y:0};
-
-      function defaultPose(){
-        joints = {};
-        jointNames.forEach(n => joints[n] = { x:0.5, y:0.5, el:null, label:null });
-        // simple proportions
-        joints.head.y = 0.28; joints.neck.y = 0.35; joints.hip.y = 0.58;
-        joints.l_shoulder.y = joints.r_shoulder.y = 0.36;
-        joints.l_elbow.y = joints.r_elbow.y = 0.44;
-        joints.l_hand.y = joints.r_hand.y = 0.52;
-        joints.l_knee.y = joints.r_knee.y = 0.70;
-        joints.l_foot.y = joints.r_foot.y = 0.86;
-
-        const spreadX = 0.08;
-        joints.l_shoulder.x = 0.5 - spreadX; joints.r_shoulder.x = 0.5 + spreadX;
-        joints.l_elbow.x = 0.5 - spreadX*1.2; joints.r_elbow.x = 0.5 + spreadX*1.2;
-        joints.l_hand.x = 0.5 - spreadX*1.4; joints.r_hand.x = 0.5 + spreadX*1.4;
-        joints.l_knee.x = 0.5 - spreadX*0.6; joints.r_knee.x = 0.5 + spreadX*0.6;
-        joints.l_foot.x = 0.5 - spreadX*0.7; joints.r_foot.x = 0.5 + spreadX*0.7;
-        joints.hip.x = 0.5; joints.neck.x = 0.5; joints.head.x = 0.5;
+    // ---------- Canvas & Tools ----------
+    const canvas = $('#motionCanvas'), maskCanvas = $('#maskCanvas'), stage = $('#stage');
+    const ctx = canvas.getContext('2d');
+    const annot = Andio.tools.attachAnnotator(canvas, maskCanvas, (sels)=>{ state.selections = sels; });
+    function draw(){
+      ctx.clearRect(0,0,1024,1024);
+      if (state.img) ctx.drawImage(state.img,0,0,1024,1024);
+      // Skelett
+      if (state.showKp){
+        ctx.strokeStyle='#0ff'; ctx.lineWidth=2;
+        const J = id=> state.kp.find(k=>k.id===id);
+        const links = [['head','l_shoulder'],['head','r_shoulder'],['l_shoulder','l_elbow'],['r_shoulder','r_elbow'],['l_shoulder','hip'],['r_shoulder','hip'],['hip','l_knee'],['hip','r_knee'],['l_knee','l_ankle'],['r_knee','r_ankle']];
+        links.forEach(([a,b])=>{ const A=J(a),B=J(b); if(A&&B){ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();} });
       }
-
-      function ensurePoseHandles(){
-        // remove old
-        wrap.querySelectorAll('.joint, .joint-label').forEach(n=>n.remove());
-        const {ox, oy, scale} = imageMetrics();
-        for(const name of jointNames){
-          const j = joints[name];
-          const px = ox + j.x * imgEl.clientWidth;
-          const py = oy + j.y * imgEl.clientHeight;
-          const dot = document.createElement('div');
-          dot.className = 'joint';
-          Object.assign(dot.style, { left: px+'px', top: py+'px' });
-          const lab = document.createElement('div');
-          lab.className = 'joint-label';
-          lab.textContent = name;
-          Object.assign(lab.style, { left: px+'px', top: (py-8)+'px' });
-          wrap.appendChild(dot); wrap.appendChild(lab);
-          j.el = dot; j.label = lab;
-
-          dot.addEventListener('mousedown', (e)=>{
-            draggingJoint = name;
-            const rect = wrap.getBoundingClientRect();
-            dragOffset.x = e.clientX - px;
-            dragOffset.y = e.clientY - py;
-            e.preventDefault();
-          });
-        }
-      }
-
-      window.addEventListener('mousemove', (e)=>{
-        if(!draggingJoint) return;
-        const rect = wrap.getBoundingClientRect();
-        const {ox, oy} = imageMetrics();
-        const dx = e.clientX - rect.left - dragOffset.x;
-        const dy = e.clientY - rect.top - dragOffset.y;
-        // convert to normalized image coords
-        const nx = (dx - ox) / imgEl.clientWidth;
-        const ny = (dy - oy) / imgEl.clientHeight;
-        const j = joints[draggingJoint];
-        j.x = Math.max(0, Math.min(1, nx));
-        j.y = Math.max(0, Math.min(1, ny));
-        positionJoint(draggingJoint);
-        draw(); // update skeleton lines
-      });
-
-      window.addEventListener('mouseup', ()=> draggingJoint = null);
-
-      function positionJoint(name){
-        const j = joints[name];
-        if(!j || !j.el) return;
-        const {ox, oy} = imageMetrics();
-        const px = ox + j.x * imgEl.clientWidth;
-        const py = oy + j.y * imgEl.clientHeight;
-        j.el.style.left = px+'px';
-        j.el.style.top = py+'px';
-        j.label.style.left = px+'px';
-        j.label.style.top = (py-8)+'px';
-      }
-
-      function drawSkeleton(){
-        // lines between joints
-        const lines = [
-          ["head","neck"], ["neck","l_shoulder"], ["neck","r_shoulder"],
-          ["l_shoulder","l_elbow"], ["l_elbow","l_hand"],
-          ["r_shoulder","r_elbow"], ["r_elbow","r_hand"],
-          ["neck","hip"], ["hip","l_knee"], ["l_knee","l_foot"],
-          ["hip","r_knee"], ["r_knee","r_foot"]
-        ];
-        const {ox, oy, scale} = imageMetrics();
-        ctx.save();
-        ctx.translate(ox, oy);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#8ab4f8";
-        ctx.globalAlpha = 0.9;
-        ctx.beginPath();
-        for(const [a,b] of lines){
-          const ja = joints[a], jb = joints[b];
-          const ax = ja.x * imgEl.clientWidth, ay = ja.y * imgEl.clientHeight;
-          const bx = jb.x * imgEl.clientWidth, by = jb.y * imgEl.clientHeight;
-          ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
-        }
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // File handling
-      imgInput.addEventListener('change', ()=>{
-        const f = imgInput.files?.[0];
-        if(!f) return;
-        const url = URL.createObjectURL(f);
-        imgEl.src = url;
-        imgEl.style.display = 'block';
-        imgEl.onload = ()=>{
-          fitCanvas();
-          defaultPose();
-          ensurePoseHandles();
-          togglePoseHandlesVisibility();
+    }
+    function placeKeypoints(){
+      $$('.kp', stage).forEach(el=>el.remove());
+      if (!state.showKp) return;
+      state.kp.forEach(k=>{
+        const dot = document.createElement('div');
+        dot.className='kp'; dot.style.left=k.x+'px'; dot.style.top=k.y+'px';
+        let drag=false;
+        dot.addEventListener('mousedown', e=>{drag=true;dot.classList.add('drag');e.preventDefault();});
+        window.addEventListener('mousemove', e=>{
+          if(!drag) return;
+          const r = canvas.getBoundingClientRect();
+          const x = (e.clientX - r.left) * 1024 / r.width;
+          const y = (e.clientY - r.top) * 1024 / r.height;
+          k.x=Math.max(0,Math.min(1024,x)); k.y=Math.max(0,Math.min(1024,y));
+          dot.style.left=k.x+'px'; dot.style.top=k.y+'px';
           draw();
-          srcInfo.textContent = `${f.name} • ${Andio.utils.human.bytes(f.size)}`;
-          resultIsGenerated = false; resultVideoURL = null; genInfo.textContent = '—';
+        });
+        window.addEventListener('mouseup', ()=>{ if(drag){drag=false;dot.classList.remove('drag');} });
+        stage.appendChild(dot);
+      });
+    }
+
+    // Datei laden
+    $('#fileInput').addEventListener('change', ()=>{
+      const f = $('#fileInput').files?.[0]; if(!f) return;
+      const img = new Image(); img.onload=()=>{ state.img=img; draw(); placeKeypoints(); annot.markImageLoaded(); };
+      img.src = URL.createObjectURL(f);
+    });
+
+    // Tools
+    $$('.toolbar button[data-tool]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        $$('.toolbar button[data-tool]').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active'); annot.setTool(b.dataset.tool);
+      });
+    });
+    $('#btnClearRegions').addEventListener('click', ()=>{ annot.reset(); draw(); });
+
+    // KP togglen
+    $('#showKp').addEventListener('change', e=>{ state.showKp = e.target.checked; draw(); placeKeypoints(); });
+
+    // Modus
+    $('#modeSelect').addEventListener('change', e=>{ state.mode = e.target.value; renderTracksPanel(); });
+
+    // Dauer
+    $('#duration').addEventListener('input', e=>{ state.duration = Math.max(1, parseInt(e.target.value||6,10)); });
+
+    // ---------- Presets laden (extern) ----------
+    async function loadPresets(){
+      try{
+        const res = await fetch('assets/motion_presets.json', {cache:'no-store'});
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        state.presets = await res.json();
+      }catch(e){
+        // Fallback-Defaults
+        state.presets = {
+          genres:["Neutral","Fashion","Fitness","Business","Glamour"],
+          poses:["Neutral Stand","Power Pose","Hand in Hüfte","Sitzpose locker","Dynamisch diagonal"],
+          actions:["Idle Sway","Winken leicht","Walk-in-place","Dance Groove minimal"],
         };
-      });
-
-      audInput.addEventListener('change', ()=>{
-        const f = audInput.files?.[0];
-        if(!f) return;
-        Andio.toast(`Audio geladen: ${f.name}`);
-      });
-
-      // Mode switching
-      document.querySelectorAll('input[name="mode"]').forEach(r=>{
-        r.addEventListener('change', ()=>{
-          mode = document.querySelector('input[name="mode"]:checked').value;
-          actionControls.style.display = (mode==='action' || mode==='camera') ? '' : 'none';
-          poseControls.style.display = (mode==='pose') ? '' : 'none';
-          togglePoseHandlesVisibility();
-          Andio.toast('Modus: '+mode);
-        });
-      });
-
-      // Suggest prompts
-      btnSuggest.addEventListener('click', ()=>{
-        const s = Andio.suggest.prompt('motion');
-        if(!s || s==='—') return;
-        const pill = document.createElement('span');
-        pill.className = 'pill';
-        pill.textContent = s;
-        pill.addEventListener('click', ()=>{
-          // in aktive Spur schreiben
-          const ta = tracksHost.querySelector('.track textarea');
-          if(ta){ ta.value = (ta.value ? ta.value+'\n' : '') + s; }
-        });
-        suggestBar.prepend(pill);
-      });
-
-      // Tracks
-      addTrackBtn.addEventListener('click', addTrack);
-      function addTrack(){
-        const id = nextTrackId++;
-        tracks.push({id, name:`Spur #${id}`, prompt:''});
-        renderTracks();
-        renderTimeline();
       }
-      function renderTracks(){
-        tracksHost.innerHTML = '';
-        tracks.forEach(t=>{
-          const div = document.createElement('div');
-          div.className = 'track';
-          div.innerHTML = `
-            <h4>${t.name}</h4>
-            <textarea placeholder="Prompt/Anweisung für diese Spur..."></textarea>
-          `;
-          const ta = div.querySelector('textarea');
-          ta.value = t.prompt || '';
-          ta.addEventListener('input', ()=> t.prompt = ta.value);
-          tracksHost.appendChild(div);
-        });
-      }
+      fillPresetSelects();
+    }
+    function fillPresetSelects(){
+      const genres = state.presets.genres||[], poses=state.presets.poses||[], actions=state.presets.actions||[];
+      const mapFill = (sel, arr)=>{ sel.innerHTML=''; arr.forEach(x=>{ const o=document.createElement('option'); o.value=o.textContent=x; sel.appendChild(o); }); };
+      mapFill($('#genreSelect'), genres); mapFill($('#poseSelect'), poses); mapFill($('#actionSelect'), actions);
+    }
+    $('#btnImportPresets').addEventListener('click', loadPresets);
+    // beim Start einmal versuchen
+    loadPresets();
 
-      // Timeline
-      function renderRuler(){
-        ruler.innerHTML = '';
-        const marks = Math.min(20, duration);
-        for(let s=0; s<=marks; s++){
-          const span = document.createElement('span');
-          span.textContent = s+'s';
-          ruler.appendChild(span);
-        }
-      }
-      function pxPerSec(){
-        const w = document.getElementById('timeline').clientWidth;
-        return (w - 8) / duration;
-      }
-      function renderTimeline(){
-        renderRuler();
-        lanes.innerHTML = '';
-        tracks.forEach((t, i)=>{
-          const lane = document.createElement('div');
-          lane.className = 'lane';
-          lane.textContent = t.name;
-          // Add a sample keyframe in the middle
-          const kf = document.createElement('div');
-          kf.className = 'kf';
-          kf.style.left = (pxPerSec() * (duration/2)) + 'px';
-          kf.title = 'Keyframe';
-          kf.addEventListener('mousedown', (e)=>{
-            const startX = e.clientX, startLeft = parseFloat(kf.style.left||'0');
-            const onMove = (ev)=>{
-              const dx = ev.clientX - startX;
-              kf.style.left = (startLeft + dx) + 'px';
-            };
-            const onUp = ()=>{
-              window.removeEventListener('mousemove', onMove);
-              window.removeEventListener('mouseup', onUp);
-            };
-            window.addEventListener('mousemove', onMove);
-            window.addEventListener('mouseup', onUp);
-          });
-          lane.appendChild(kf);
-          lanes.appendChild(lane);
-        });
-        updateScrub();
-      }
-      function updateScrub(){
-        scrub.style.left = (pxPerSec() * time) + 'px';
-      }
-
-      durSecEl.addEventListener('change', ()=>{
-        duration = Math.max(1, Math.min(20, +durSecEl.value||5));
-        renderTimeline();
+    // ---------- Timeline / Keyframes ----------
+    const tracksEls = {
+      body: document.querySelector('.track[data-track="body"]'),
+      head: document.querySelector('.track[data-track="head"]'),
+      arms: document.querySelector('.track[data-track="arms"]'),
+      cam:  document.querySelector('.track[data-track="cam"]'),
+    };
+    Object.entries(tracksEls).forEach(([name, el])=>{
+      el.addEventListener('click', e=>{
+        const rect = el.getBoundingClientRect();
+        const t = Math.max(0, Math.min(1, (e.clientX - rect.left)/rect.width));
+        const kf = {t, val:1};
+        state.tracks[name].push(kf);
+        paintTrack(name);
       });
-      fpsEl.addEventListener('change', ()=> {
-        fps = Math.max(10, Math.min(60, +fpsEl.value||30));
-      });
-
-      // Scrubbing
-      (function enableScrubDrag(){
-        let dragging=false, startX=0, startLeft=0;
-        const tl = document.getElementById('timeline');
-        scrub.addEventListener('mousedown', (e)=>{
-          dragging = true; startX = e.clientX; startLeft = parseFloat(scrub.style.left||'0');
-          e.preventDefault();
-        });
-        window.addEventListener('mousemove', (e)=>{
+    });
+    function paintTrack(name){
+      const el = tracksEls[name];
+      el.innerHTML='';
+      state.tracks[name].forEach((kf,i)=>{
+        const d = document.createElement('div');
+        d.className='kf'; d.style.left = (kf.t*100)+'%';
+        let dragging=false;
+        d.addEventListener('mousedown', ev=>{dragging=true; ev.preventDefault();});
+        window.addEventListener('mousemove', ev=>{
           if(!dragging) return;
-          const dx = e.clientX - startX;
-          const left = Math.max(0, Math.min(tl.clientWidth, startLeft + dx));
-          scrub.style.left = left + 'px';
-          time = left / pxPerSec();
-          draw();
+          const r = el.getBoundingClientRect();
+          const t = Math.max(0, Math.min(1, (ev.clientX - r.left)/r.width));
+          kf.t = t; d.style.left=(t*100)+'%';
+          updateNeedleFromT(t);
         });
-        window.addEventListener('mouseup', ()=> dragging=false);
-        tl.addEventListener('click', (e)=>{
-          const rect = tl.getBoundingClientRect();
-          const left = e.clientX - rect.left;
-          scrub.style.left = left + 'px';
-          time = Math.max(0, Math.min(duration, left / pxPerSec()));
-          draw();
-        });
-      })();
+        window.addEventListener('mouseup', ()=>{ dragging=false; });
+        el.appendChild(d);
+      });
+    }
+    function updateNeedleFromT(t){ $('#needle').style.left = (t*100)+'%'; }
 
-      // Preview & Export
-      btnPlay.addEventListener('click', ()=>{ playing = !playing; if(playing) loop(); });
-      btnStop.addEventListener('click', ()=>{ playing = false; time = 0; updateScrub(); draw(); });
-      btnPreview.addEventListener('click', ()=> { playing = true; loop(); });
+    // ---------- Tracks/Prompts Panel ----------
+    function renderTracksPanel(){
+      const host = $('#tracks'); host.innerHTML='';
+      const mode = $('#modeSelect').value;
+      const buckets = {
+        action: ['Körper','Kopf','Arme','Kamera'],
+        pose:   ['Pose-Prompt','Feinanpassung','Arme/Schultern','Kamera'],
+        lipsync:['Audio-Pfad','Mimik-Prompt','Kopfbewegung','Kamera'],
+        camera: ['Bewegung','Fokus','Parallax','Timing']
+      }[mode] || [];
+      buckets.forEach((name,i)=>{
+        const div = document.createElement('div'); div.className='card';
+        div.innerHTML = `<b>Spur #${i+1}: ${name}</b><textarea rows="2" placeholder="Prompt / Parameter"></textarea>`;
+        host.appendChild(div);
+      });
+    }
+    renderTracksPanel();
 
-      btnExport.addEventListener('click', async ()=>{
-        if(!imgEl.src){ Andio.toast('Bitte zuerst ein Bild hochladen'); return; }
-        // Render to offscreen canvas and record short WebM
-        const off = document.createElement('canvas');
-        const w = imgEl.naturalWidth, h = imgEl.naturalHeight;
-        off.width = w; off.height = h;
-        const octx = off.getContext('2d');
+    // ---------- Random ----------
+    $('#btnRandom').addEventListener('click', ()=>{
+      const mode = $('#modeSelect').value;
+      const idea = Andio.randomPrompt('motion', mode) || '';
+      const cur = $('#globalPrompt').value.trim();
+      $('#globalPrompt').value = cur ? (cur+'\n'+idea) : idea;
+      // Schnell-KF: start & end
+      ['body','head','arms','cam'].forEach(n=>{
+        if (state.tracks[n].length===0){
+          state.tracks[n].push({t:0, val:0});
+          state.tracks[n].push({t:1, val:1});
+          paintTrack(n);
+        }
+      });
+    });
 
-        const stream = off.captureStream(fps);
-        const chunks = [];
-        const rec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
-        rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
-        const seconds = Math.max(2, Math.min(8, duration)); // kurze Demo
-        const totalFrames = Math.floor(fps * seconds);
-        let frame = 0;
+    // ---------- Live-Preview ----------
+    const liveCanvas = $('#liveCanvas'), lctx = liveCanvas.getContext('2d');
+    const liveVideo = $('#liveVideo');
+    function clientPreview(){
+      // Einfache Skelett-Tween-Vorschau basierend auf Keyframes & Speed
+      lctx.clearRect(0,0,liveCanvas.width, liveCanvas.height);
+      // Bild-Vorschau (wenn vorhanden) als Hintergrund
+      if (state.img){
+        // downscale draw
+        lctx.drawImage(state.img, 0,0, liveCanvas.width, liveCanvas.height);
+      }
+      // einfache animierte Linie (needle pos)
+      const t = parseFloat($('#needle').style.left)/100 || 0;
+      lctx.strokeStyle = '#0ff'; lctx.lineWidth=2;
+      const scale = (v)=> (0.9 + 0.1*v); // mini amplitude
+      // zeichne KP minimal versetzt
+      state.kp.forEach(k=>{
+        const x = (k.x/1024)*liveCanvas.width  * scale(t);
+        const y = (k.y/1024)*liveCanvas.height * scale(1-t);
+        lctx.beginPath(); lctx.arc(x,y,3,0,Math.PI*2); lctx.stroke();
+      });
+    }
 
-        rec.start();
-        function drawFrame(){
-          // clear
-          octx.fillStyle = "#000"; octx.fillRect(0,0,w,h);
-          // draw image
-          octx.drawImage(imgEl, 0, 0, w, h);
-
-          // simple action along path or idle sway
-          const t = frame / totalFrames; // 0..1
-          const swing = Math.sin(t * Math.PI*2 * (actSpeed.value)) * (20 * +actIntensity.value);
-          // draw pose skeleton lines (rough)
-          octx.save();
-          octx.globalAlpha = 0.6;
-          octx.strokeStyle = "#8ab4f8"; octx.lineWidth = 4;
-          const P = (name)=>({ x: joints[name].x*w, y: joints[name].y*h });
-          function L(a,b){ octx.beginPath(); octx.moveTo(a.x, a.y); octx.lineTo(b.x, b.y); octx.stroke(); }
-          const seq = [["head","neck"], ["neck","l_shoulder"], ["neck","r_shoulder"],
-                       ["l_shoulder","l_elbow"], ["l_elbow","l_hand"],
-                       ["r_shoulder","r_elbow"], ["r_elbow","r_hand"],
-                       ["neck","hip"], ["hip","l_knee"], ["l_knee","l_foot"],
-                       ["hip","r_knee"], ["r_knee","r_foot"]];
-          for(const [a,b] of seq){ L(P(a), P(b)); }
-          octx.restore();
-
-          // path-driven camera pan (if path exists or camera mode)
-          let tx = 0, ty = 0;
-          if(pathPoints.length >= 2 && (mode==='action' || mode==='camera')){
-            const idx = Math.floor(t * (pathPoints.length-1));
-            const frac = t * (pathPoints.length-1) - idx;
-            const p0 = pathPoints[idx], p1 = pathPoints[idx+1];
-            tx = (p1.x - p0.x) * frac * 10; // small camera motion
-            ty = (p1.y - p0.y) * frac * 10;
-          } else if (mode==='action'){
-            tx = swing; // idle sway
+    async function serverPreview(){
+      if (Andio.api?.motionPreview){
+        const payload = collectPayload(true);
+        try{
+          const clip = await Andio.api.motionPreview(payload); // -> {url}
+          if (clip?.url){
+            liveVideo.src = clip.url; liveVideo.style.display='block'; liveCanvas.style.display='none';
+            liveVideo.play().catch(()=>{});
+            return;
           }
+        }catch(e){ console.warn('motionPreview fehlgeschlagen', e); }
+      }
+      // fallback: client-preview
+      liveVideo.style.display='none'; liveCanvas.style.display='block';
+      clientPreview();
+    }
 
-          // overlay motion hint
-          octx.save();
-          octx.translate(tx, ty);
-          octx.globalAlpha = 0.15;
-          octx.fillStyle = "#fff"; octx.fillRect(0,0,w,h);
-          octx.restore();
+    $('#btnPreviewOnce').addEventListener('click', ()=>{
+      if ($('#previewMode').value==='low') serverPreview();
+      else { liveVideo.style.display='none'; liveCanvas.style.display='block'; clientPreview(); }
+    });
 
-          frame++;
-          if(frame <= totalFrames){
-            requestAnimationFrame(drawFrame);
-          } else {
-            rec.stop();
+    // Needle Animation (einfaches Loop-Play)
+    let playTimer=null; 
+    function playPreview(){
+      clearInterval(playTimer);
+      const start = performance.now();
+      const durMs = state.duration*1000;
+      const loop = $('#loop').checked;
+      playTimer = setInterval(()=>{
+        const elapsed = (performance.now()-start) % (loop?durMs:Math.min(durMs, performance.now()-start));
+        const t = Math.max(0, Math.min(1, elapsed/durMs));
+        updateNeedleFromT(t);
+        if ($('#previewMode').value==='off') clientPreview(); else serverPreview();
+        if (!loop && elapsed>=durMs-20){ clearInterval(playTimer); }
+      }, 100);
+    }
+
+    // ---------- Generate / Job-HUD ----------
+    function collectPayload(forPreview=false){
+      return {
+        mode: $('#modeSelect').value,
+        preview: $('#previewMode').value,
+        softIk: $('#softIk').checked,
+        speed: parseFloat($('#speed').value),
+        loop: $('#loop').checked,
+        duration: state.duration,
+        keypoints: state.kp,
+        regions: state.selections, // gezeichnete Bereiche (rect/ellipse/lasso/brush)
+        tracks: state.tracks,
+        genre: $('#genreSelect').value,
+        pose: $('#poseSelect').value,
+        action: $('#actionSelect').value,
+        globalPrompt: $('#globalPrompt').value,
+        forPreview
+      };
+    }
+
+    $('#btnRun').addEventListener('click', async ()=>{
+      if(!state.img){ alert('Bitte zuerst ein Bild laden.'); return; }
+      const payload = collectPayload(false);
+
+      const {hud} = await Andio.startJobWithHUD('Motion: '+payload.mode, async ()=>{
+        if (Andio.api?.motionStart){ return await Andio.api.motionStart(payload); } 
+        return {jobId:'demo_'+Date.now()};
+      });
+
+      // Demo-Finish
+      setTimeout(async ()=>{
+        try{
+          let out=null;
+          if (Andio.api?.motionFinish){
+            out = await Andio.api.motionFinish(); // -> {files:[{url,type:'video'|'image',name,generated:true}]}
+          }else{
+            out = {files:[{url:'assets/placeholders/motion_preview.webm', type:'video', name:'motion.webm', generated:true}]};
           }
-        }
-        rec.onstop = ()=>{
-          const blob = new Blob(chunks, { type: 'video/webm' });
-          const url = URL.createObjectURL(blob);
-          resultVideoURL = url;
-          resultIsGenerated = true;
-          genInfo.textContent = 'Generiert (WebM Demo)';
-          Andio.toast('Clip generiert (Demo)');
-        };
+          addResults(out.files||[]);
+        }catch(e){ console.error(e); }
+      }, 250);
 
-        drawFrame();
+      // Auto-Preview spielen
+      playPreview();
+    });
+
+    function addResults(files){
+      const list = $('#results');
+      files.forEach(f=>{
+        const card = document.createElement('div');
+        card.className='card';
+        card.innerHTML = `
+          <div class="row" style="justify-content:space-between">
+            <b>${f.name||'Output'}</b>
+            <span class="badge">${(f.type||'video').toUpperCase()}</span>
+          </div>
+          ${f.type==='image' ? `<img src="${f.url}" data-generated="${!!f.generated}" style="max-width:100%"/>`
+                              : `<video src="${f.url}" data-generated="${!!f.generated}" controls muted playsinline style="max-width:100%"></video>`}
+        `;
+        list.prepend(card);
       });
+    }
 
-      btnOpenPlayer.addEventListener('click', ()=>{
-        if(!resultIsGenerated || !resultVideoURL){
-          Andio.toast('Kein generierter Clip vorhanden');
-          return;
-        }
-        Andio.openPlayer({ type:'video', src: resultVideoURL, meta:{ from:'Motion', mode, duration }});
-      });
-
-      // Zoom
-      btnZoomFit.addEventListener('click', fitCanvas);
-      btnZoom100.addEventListener('click', ()=>{
-        imgEl.style.maxWidth = 'none';
-        imgEl.style.maxHeight = 'none';
-        imgEl.style.width = 'auto';
-        imgEl.style.height = 'auto';
-        draw();
-      });
-
-      // Play loop
-      function loop(){
-        if(!playing) return;
-        const dt = 1 / fps;
-        time += dt;
-        if(time > duration) time = 0;
-        updateScrub();
-        draw();
-        raf = requestAnimationFrame(loop);
-      }
-
-      // Drawing path on canvas
-      wrap.addEventListener('click', (e)=>{
-        if(!imgEl.src) return;
-        if(!drawPathToggle.checked) return;
-        const {ox, oy, scale} = imageMetrics();
-        const rect = wrap.getBoundingClientRect();
-        const x = (e.clientX - rect.left - ox) / scale;
-        const y = (e.clientY - rect.top - oy) / scale;
-        pathPoints.push({x,y});
-        draw();
-      });
-
-      // Pose controls
-      poseReset.addEventListener('click', ()=>{ defaultPose(); ensurePoseHandles(); draw(); });
-      poseSym.addEventListener('click', ()=>{
-        // Spiegeln entlang Bildmitte
-        for(const name of jointNames){
-          joints[name].x = 1 - joints[name].x;
-        }
-        ensurePoseHandles(); draw();
-      });
-
-      function togglePoseHandlesVisibility(){
-        const show = (mode==='pose' || mode==='transfer' || mode==='lipsync');
-        wrap.querySelectorAll('.joint, .joint-label').forEach(el=> el.style.display = show ? '' : 'none');
-      }
-
-      // Render
-      function fitCanvas(){
-        canvas.width = wrap.clientWidth;
-        canvas.height = wrap.clientHeight;
-        imgEl.style.maxWidth = '100%';
-        imgEl.style.maxHeight = '68vh';
-        ensurePoseHandles();
-        draw();
-      }
-      function imageMetrics(){
-        const rect = wrap.getBoundingClientRect();
-        const dispW = imgEl.clientWidth || 1;
-        const dispH = imgEl.clientHeight || 1;
-        const ox = (rect.width - dispW) / 2;
-        const oy = (rect.height - dispH) / 2;
-        const scale = dispW / (imgEl.naturalWidth || dispW);
-        return {ox, oy, scale};
-      }
-      function draw(){
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        if(!imgEl.src) return;
-
-        const {ox, oy, scale} = imageMetrics();
-
-        // Path points
-        if(pathPoints.length){
-          ctx.save();
-          ctx.translate(ox, oy);
-          ctx.scale(scale, scale);
-          ctx.strokeStyle = '#34d399';
-          ctx.lineWidth = 2/scale;
-          ctx.setLineDash([8,6]);
-          ctx.beginPath();
-          ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
-          for(let i=1;i<pathPoints.length;i++){ ctx.lineTo(pathPoints[i].x, pathPoints[i].y); }
-          ctx.stroke();
-          ctx.setLineDash([]);
-          // points
-          ctx.fillStyle = '#34d399';
-          pathPoints.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x, p.y, 4/scale, 0, Math.PI*2); ctx.fill(); });
-          ctx.restore();
-        }
-
-        // Pose skeleton (if visible)
-        if(poseControls.style.display !== 'none'){
-          drawSkeleton();
-        }
-      }
-
-      window.addEventListener('resize', fitCanvas);
-
-      // Init
-      Andio.polish();
-      defaultPose();
-      renderTracks(); renderTimeline();
-    })();
+    // Init
+    draw(); placeKeypoints(); renderTracksPanel();
+  })();
   </script>
-  <script>Andio.polish();</script>
+
+  <script>window.Andio?.polish?.();</script>
 </body>
 </html>

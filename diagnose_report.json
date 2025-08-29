@@ -1,0 +1,99 @@
+{
+  "env": {
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTORCH_CUDA_ALLOC_CONF": "",
+    "root": "X:\\pypygennew"
+  },
+  "torch": {
+    "version": "2.4.0+cu118",
+    "cuda_available": true,
+    "device": "NVIDIA GeForce RTX 3070",
+    "xformers_ok": true,
+    "triton_ok": false
+  },
+  "diffusers": {
+    "ok": true
+  },
+  "models": {
+    "registry_present": true,
+    "registry": {
+      "image": {
+        "stable-diffusion-xl-base-1.0": {
+          "path": "X:\\pypygennew\\models\\image\\stable-diffusion-xl-base-1.0",
+          "type": "diffusers",
+          "available": true,
+          "components": [
+            ".git",
+            "01.png",
+            "model_index.json",
+            "scheduler",
+            "sd_xl_base_1.0.safetensors",
+            "sd_xl_base_1.0_0.9vae.safetensors",
+            "sd_xl_offset_example-lora_1.0.safetensors",
+            "text_encoder",
+            "text_encoder_2",
+            "tokenizer",
+            "tokenizer_2",
+            "unet",
+            "vae",
+            "vae_1_0",
+            "vae_decoder",
+            "vae_encoder"
+          ]
+        },
+        "stable-diffusion-xl-refiner-1.0": {
+          "path": "X:\\pypygennew\\models\\image\\stable-diffusion-xl-refiner-1.0",
+          "type": "diffusers",
+          "available": true,
+          "components": [
+            "model_index.json",
+            "scheduler",
+            "sd_xl_refiner_1.0.safetensors",
+            "sd_xl_refiner_1.0_0.9vae.safetensors",
+            "text_encoder_2",
+            "tokenizer_2",
+            "unet",
+            "vae",
+            "vae_1_0"
+          ]
+        }
+      },
+      "video": {
+        "stable-video-diffusion-img2vid-xt": {
+          "path": "X:\\pypygennew\\models\\video\\stable-video-diffusion-img2vid-xt",
+          "type": "diffusers",
+          "available": true,
+          "components": [
+            ".cache",
+            "feature_extractor",
+            "image_encoder",
+            "model_index.json",
+            "scheduler",
+            "svd_xt.safetensors",
+            "unet",
+            "vae"
+          ]
+        }
+      }
+    },
+    "image_subdirs": [
+      "checkpoints",
+      "components",
+      "loras",
+      "Realistic_Vision_V6.0_B1_noVAE",
+      "stable-diffusion-xl-base-1.0",
+      "stable-diffusion-xl-refiner-1.0"
+    ]
+  },
+  "sdxl_smoketest": {
+    "ok": true,
+    "load_seconds": 35.6,
+    "gen_seconds": 56.1,
+    "output": "X:\\pypygennew\\outputs\\diagnose_sdxl.png"
+  },
+  "web": {
+    "app_js_bytes": 24087
+  },
+  "summary": []
+}

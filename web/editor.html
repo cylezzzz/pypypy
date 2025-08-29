@@ -1,601 +1,235 @@
 <!doctype html>
-<!-- === Brand / Navbar (standardisiert) === -->
-<header class="header" role="banner">
-  <nav role="navigation" aria-label="Hauptnavigation">
-    <div class="brand">
-      <a href="index.html" class="brand-link" aria-label="Zur Startseite">
-        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
-        <span class="wordmark">Andio Media Studio</span>
-      </a>
-    </div>
-    <div class="spacer"></div>
-    <div class="links" role="menubar">
-      <a role="menuitem" href="index.html" data-link="index">Übersicht</a>
-      <a role="menuitem" href="images.html" data-link="images">Image Studio</a>
-      <a role="menuitem" href="video-gen.html" data-link="video-gen">Video Studio</a>
-      <a role="menuitem" href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
-      <a role="menuitem" href="motion.html" data-link="motion">Motion</a>
-      <a role="menuitem" href="gallery.html" data-link="gallery">Gallery</a>
-      <a role="menuitem" href="catalog.html" data-link="catalog">Store</a>
-      <a role="menuitem" href="editor.html" data-link="editor">Editor</a>
-    </div>
-  </nav>
-</header>
-<script>
-  // Set active nav item based on data-page or current path; add aria-current for a11y
-  (function(){
-    try {
-      var dataPage = document.body && document.body.getAttribute('data-page');
-      if(!dataPage){
-        var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-        var map = {
-          'index.html':'index','images.html':'images','video-gen.html':'video-gen',
-          'wandrobe.html':'wardrobe','motion.html':'motion','gallery.html':'gallery',
-          'catalog.html':'catalog','editor.html':'editor'
-        };
-        dataPage = map[path] || 'index';
-        document.body && document.body.setAttribute('data-page', dataPage);
-      }
-      var sel = '.links a[data-link="' + dataPage + '"]';
-      var a = document.querySelector(sel);
-      if(a){
-        a.classList.add('active');
-        a.setAttribute('aria-current','page');
-      }
-    } catch(e){ console && console.warn('navbar init failed', e); }
-  })();
-</script>
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Editor – AndioMediaStudio</title>
-  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" href="/favicon.ico"/>
+  <link rel="stylesheet" href="/assets/styles.css"/>
   <style>
-    /* Minimal add-on styles nur für Auswahl & Layout-Details */
-    .page { display: grid; grid-template-columns: 360px 1fr; gap: 16px; }
-    .controls .group { margin-bottom: 14px; }
-    .controls .group h4 { margin: 0 0 6px; }
-    .controls .muted { opacity: .8; font-size: 13px; }
-    .row { display:flex; align-items:center; gap:8px; }
-    .row > * { flex: 1; }
-    .split { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    .badge { display:inline-block; padding:2px 8px; border:1px solid #333; border-radius:999px; font-size:12px; }
-
-    /* Canvas/Preview */
-    .preview-wrap { position: relative; background:#0b0b0b; border:1px solid #2a2a2a; border-radius:12px; min-height:420px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-    #refImage { max-width: 100%; max-height: 72vh; display:none; }
-    #drawCanvas { position:absolute; inset:0; pointer-events:none; }
-    .preview-toolbar { position:absolute; top:10px; left:10px; display:flex; gap:8px; }
-    .tool-btn { border:1px solid #374151; background:#111; color:#e5e7eb; border-radius:10px; padding:6px 10px; cursor:pointer; }
-    .tool-btn.active { background:#1a1a1a; }
-
-    /* Auswahl-Handles (nur visuell, Interaktion per JS) */
-    .handles { position:absolute; border:1px dashed #8ab4f8; pointer-events:none; }
-    .handle { position:absolute; width:10px; height:10px; background:#8ab4f8; border-radius:50%; transform:translate(-50%, -50%); pointer-events:auto; }
-    .handle.nw { top:0; left:0; }
-    .handle.ne { top:0; right:0; }
-    .handle.sw { bottom:0; left:0; }
-    .handle.se { bottom:0; right:0; }
-
-    /* Nummern-Markierungen */
-    .mark { position:absolute; background:#111; color:#e5e7eb; border:1px solid #333; border-radius:8px; padding:2px 6px; font-size:12px; transform:translate(-50%, -100%); }
-
-    /* Vorschlagsleiste */
-    .suggest { display:flex; gap:8px; flex-wrap:wrap; }
-    .suggest .pill { border:1px solid #333; border-radius:999px; padding:4px 8px; font-size:12px; cursor:pointer; }
-    .suggest .pill:hover { background:#1a1a1a; }
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .canvas-wrap{position:relative;background:#111;border-radius:8px;overflow:hidden;min-height:420px;display:flex;align-items:center;justify-content:center}
+    canvas{max-width:100%;max-height:65vh}
+    .badge{position:absolute;background:#2b5fd9;color:#fff;border-radius:999px;padding:2px 8px;font-size:12px;transform:translate(-50%,-50%);pointer-events:none;border:1px solid rgba(255,255,255,.3)}
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000}
+    .overlay.show{display:flex}
+    .modal{background:#111;color:#fff;max-width:90vw;max-height:90vh;width:960px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
+    .modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #222}
+    .modal .body{padding:12px 16px;overflow:auto}
+    .modal .body img{max-width:100%;max-height:70vh;border-radius:8px}
+    .modal footer{padding:10px 16px;border-top:1px solid #222;display:flex;gap:8px;justify-content:flex-end}
+    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
+    .row>label{min-width:120px;color:#888}
+    .note{color:#888;font-size:.9em}
+    .inputs{display:flex;flex-direction:column;gap:8px}
+    .inputs .card{padding:8px}
   </style>
 </head>
-<body data-page="editor">
-  <script src="assets/app.js"></script>
-  
+<body>
+  <script src="/assets/app.js"></script>
+  <script>window.Andio && Andio.navbar && Andio.navbar('editor');</script>
 
   <div class="container">
     <h1>Editor</h1>
-    <p class="muted">Photoshop-ähnlich: Bereiche markieren & gezielt generieren/entfernen; global filtern/variieren; Pose mit Keypoints anpassen.</p>
+    <p class="note">Photoshop-ähnlich: Bereich(e) markieren → für jeden #n Prompt eingeben → generieren. Player öffnet nur für generierte Resultate.</p>
 
-    <div class="page">
-      <!-- Linke Spalte: Steuerung -->
-      <aside class="controls">
+    <div class="grid">
+      <!-- Linke Seite: Bild & Markierung -->
+      <div>
+        <div class="toolbar card">
+          <input id="ed-file" type="file" accept="image/*"/>
+          <select id="ed-mode" title="Modus">
+            <option value="inpaint">Generieren (Inpainting)</option>
+            <option value="remove">Entfernen</option>
+            <option value="filter">Filter/Variante</option>
+            <option value="pose">Pose</option>
+          </select>
+          <button id="ed-clear" class="secondary">Markierungen löschen</button>
+          <button id="ed-generate">Generieren</button>
+        </div>
+
+        <div class="canvas-wrap card" id="ed-canvas-wrap">
+          <canvas id="ed-canvas"></canvas>
+          <!-- Badges (#1,#2,...) werden dynamisch eingesetzt -->
+        </div>
+
+        <p class="note">Tipp: Mit gedrückter Maustaste ziehen, um einen Bereich aufzuziehen. Mehrere Bereiche sind möglich; sie werden nummeriert (#1, #2 ...).</p>
+      </div>
+
+      <!-- Rechte Seite: Eingaben pro Bereich -->
+      <div class="inputs">
         <div class="card">
-          <h3>Datei</h3>
-          <div class="group">
-            <label class="row">
-              <span>Bild hochladen</span>
-              <input id="fileInput" type="file" accept="image/*"/>
-            </label>
-            <p class="muted">Referenzbild wird rechts angezeigt. Der Player öffnet sich <b>nur</b> für generierte Ergebnisse, nicht für das Referenzbild.</p>
+          <h3>Globale Einstellungen</h3>
+          <div class="row">
+            <label>Negativ</label>
+            <input id="ed-neg" type="text" placeholder="z.B. Unschärfe, Verzerrungen"/>
+          </div>
+          <div class="row">
+            <label>Guidance</label>
+            <input id="ed-cfg" type="number" min="0" max="20" step="0.5" value="7.5" style="max-width:120px"/>
+            <label>Steps</label>
+            <input id="ed-steps" type="number" min="1" max="150" value="30" style="max-width:120px"/>
           </div>
         </div>
 
-        <div class="card">
-          <h3>Modus</h3>
-          <div class="group split">
-            <label class="row"> <input type="radio" name="mode" value="generate" checked/> <span>Generieren (Inpainting)</span> </label>
-            <label class="row"> <input type="radio" name="mode" value="remove"/> <span>Entfernen</span> </label>
-            <label class="row"> <input type="radio" name="mode" value="filter"/> <span>Filter/Varianten</span> </label>
-            <label class="row"> <input type="radio" name="mode" value="pose"/> <span>Pose</span> </label>
-          </div>
-          <div class="group">
-            <div class="row">
-              <button class="tool-btn" data-tool="rect">Rechteck</button>
-              <button class="tool-btn" data-tool="lasso">Lasso</button>
-              <button class="tool-btn" data-tool="smart">Smart Select</button>
-            </div>
-            <p class="muted">Markierte Bereiche werden nummeriert (#1, #2, …). Zu jedem Bereich unten passende Eingabefelder.</p>
-          </div>
-          <div class="group row">
-            <label class="row andio-nsfw-toggle">
-              <input id="nsfw-toggle" type="checkbox"/>
-              <span>NSFW aktivieren</span>
-            </label>
-            <button id="btnSuggest" class="tool-btn" type="button">Vorschlag</button>
-          </div>
-          <div id="suggestBar" class="suggest"></div>
+        <div id="ed-regions" class="card">
+          <h3>Bereiche (#)</h3>
+          <p class="note">Zu jedem markierten Bereich erscheint hier ein Eingabefeld.</p>
+          <div id="ed-fields"></div>
         </div>
 
-        <div class="card">
-          <h3>Ausgewählter Bereich</h3>
-          <div id="regionForm">
-            <p class="muted">Markiere im Bild einen Bereich. Danach erscheinen hier die Eingabefelder (#n) abhängig vom Modus.</p>
-          </div>
-          <div class="group">
-            <button id="btnResetRegions" class="tool-btn" type="button">Auswahl zurücksetzen</button>
-          </div>
+        <div id="ed-history" class="card">
+          <h3>Historie</h3>
+          <div id="ed-preview"></div>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <div class="card">
-          <h3>Aktion</h3>
-          <div class="group row">
-            <button id="btnGenerate" class="tool-btn" type="button">Generieren</button>
-            <button id="btnVariants" class="tool-btn" type="button">Varianten</button>
-          </div>
-          <p class="muted">„Generieren“ erzeugt das Zielbild; „Varianten“ erzeugt Mini-Previews (bei Filter/Varianten).</p>
-        </div>
-
-      </aside>
-
-      <!-- Rechte Spalte: Vorschau -->
-      <main class="view">
-        <div class="card">
-          <h3>Vorschau</h3>
-          <div class="preview-wrap" id="previewWrap">
-            <div class="preview-toolbar">
-              <button id="btnOpenPlayer" class="tool-btn" type="button" title="Im Player öffnen">Play</button>
-              <button id="btnZoomFit" class="tool-btn" type="button">Zoom-Fit</button>
-              <button id="btnZoom100" class="tool-btn" type="button">100%</button>
-            </div>
-            <img id="refImage" alt="Referenz"/>
-            <canvas id="drawCanvas"></canvas>
-            <!-- Dynamische Auswahl-Rahmen & #Marken werden hier per JS eingefügt -->
-          </div>
-
-          <div class="split" style="margin-top:12px;">
-            <div>
-              <h4>Quelle</h4>
-              <p class="muted">Hochgeladenes Bild (nur Anzeige)</p>
-              <div class="row">
-                <span class="badge" id="srcInfo">—</span>
-              </div>
-            </div>
-            <div>
-              <h4>Ergebnis</h4>
-              <p class="muted">Zuletzt generiertes Bild (klickbar/Player)</p>
-              <div class="row">
-                <span class="badge" id="genInfo">—</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="variantsRow" class="card" style="display:none;">
-          <h3>Varianten</h3>
-          <div id="variantsGrid" class="grid" style="grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap:10px;"></div>
-        </div>
-      </main>
+  <!-- Overlay Player (nur generierte Bilder) -->
+  <div id="ed-overlay" class="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Player">
+      <header>
+        <strong id="ed-ov-title">Player</strong>
+        <button id="ed-ov-close" aria-label="Schließen">✕</button>
+      </header>
+      <div class="body">
+        <img id="ed-ov-img" alt="Bild"/>
+      </div>
+      <footer>
+        <a id="ed-ov-download" class="secondary" download>Download</a>
+        <button id="ed-ov-close2">Schließen</button>
+      </footer>
     </div>
   </div>
 
   <footer>© AndioMediaStudio</footer>
+
   <script>
-    // --- Page Script (nur für editor.html) ---
-    (function(){
-      const img = document.getElementById('refImage');
-      const canvas = document.getElementById('drawCanvas');
-      const wrap = document.getElementById('previewWrap');
-      const fileInput = document.getElementById('fileInput');
-      const btnOpenPlayer = document.getElementById('btnOpenPlayer');
-      const btnSuggest = document.getElementById('btnSuggest');
-      const suggestBar = document.getElementById('suggestBar');
-      const srcInfo = document.getElementById('srcInfo');
-      const genInfo = document.getElementById('genInfo');
-      const regionForm = document.getElementById('regionForm');
-      const btnResetRegions = document.getElementById('btnResetRegions');
-      const btnGenerate = document.getElementById('btnGenerate');
-      const btnVariants = document.getElementById('btnVariants');
-      const variantsRow = document.getElementById('variantsRow');
-      const variantsGrid = document.getElementById('variantsGrid');
+    // Canvas & Markierungen
+    const fileInput = document.getElementById('ed-file');
+    const wrap = document.getElementById('ed-canvas-wrap');
+    const canvas = document.getElementById('ed-canvas');
+    const ctx = canvas.getContext('2d');
+    const fields = document.getElementById('ed-fields');
+    const preview = document.getElementById('ed-preview');
 
-      let tool = 'rect';
-      let mode = 'generate';
-      let regions = []; // {id, x, y, w, h, type:'rect'|'lasso'|'smart'}
-      let activeRegionId = null;
-      let resultURL = null; // Blob URL vom generierten Ergebnis
-      let resultIsGenerated = false; // wichtig: Player nur für generiert
+    let img = new Image();
+    let regions = []; // {id, x,y,w,h}
+    let dragging=false, start=null;
 
-      // Tool-Buttons
-      document.querySelectorAll('[data-tool]').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          document.querySelectorAll('[data-tool]').forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active');
-          tool = btn.getAttribute('data-tool');
-          Andio.toast('Tool: '+tool);
-        });
-      });
-      document.querySelector('[data-tool="rect"]').classList.add('active');
+    function resizeCanvasToImage(){
+      const maxW = wrap.clientWidth - 16;
+      const maxH = 520;
+      let w = img.width, h = img.height;
+      const ratio = Math.min(maxW / w, maxH / h, 1);
+      canvas.width = Math.floor(w * ratio);
+      canvas.height = Math.floor(h * ratio);
+    }
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if (img.src) ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      ctx.strokeStyle = '#2b5fd9'; ctx.lineWidth = 2; ctx.setLineDash([6,4]);
+      regions.forEach(r => { ctx.strokeRect(r.x,r.y,r.w,r.h); });
+    }
+    function addBadge(r){
+      const b=document.createElement('div');
+      b.className='badge';
+      b.textContent='#'+r.id;
+      b.style.left=(r.x + r.w/2)+'px';
+      b.style.top=(r.y + r.h/2)+'px';
+      wrap.appendChild(b);
+      r._badge=b;
+    }
+    function clearBadges(){ [...wrap.querySelectorAll('.badge')].forEach(b=>b.remove()); }
+    function rebuildBadges(){ clearBadges(); regions.forEach(addBadge); }
 
-      // Modus
-      document.querySelectorAll('input[name="mode"]').forEach(r=>{
-        r.addEventListener('change', ()=>{
-          mode = document.querySelector('input[name="mode"]:checked').value;
-          renderRegionForm();
-          Andio.toast('Modus: '+mode);
-        });
-      });
+    canvas.addEventListener('mousedown', (e)=>{
+      if (!img.src) return;
+      dragging=true;
+      const rect=canvas.getBoundingClientRect();
+      start={ x:e.clientX-rect.left, y:e.clientY-rect.top };
+    });
+    canvas.addEventListener('mousemove', (e)=>{
+      if (!dragging) return;
+      const rect=canvas.getBoundingClientRect();
+      const cur={ x:e.clientX-rect.left, y:e.clientY-rect.top };
+      const x=Math.min(start.x,cur.x), y=Math.min(start.y,cur.y);
+      const w=Math.abs(cur.x-start.x), h=Math.abs(cur.y-start.y);
+      draw();
+      ctx.setLineDash([6,4]); ctx.strokeStyle='#2b5fd9'; ctx.strokeRect(x,y,w,h);
+    });
+    canvas.addEventListener('mouseup', (e)=>{
+      if (!dragging) return; dragging=false;
+      const rect=canvas.getBoundingClientRect();
+      const end={ x:e.clientX-rect.left, y:e.clientY-rect.top };
+      const x=Math.min(start.x,end.x), y=Math.min(start.y,end.y);
+      const w=Math.abs(end.x-start.x), h=Math.abs(end.y-start.y);
+      if (w<8 || h<8) { draw(); return; }
+      const id = regions.length+1;
+      const r={id,x,y,w,h}; regions.push(r); addBadge(r); draw(); addField(r);
+    });
 
-      // Datei laden
-      fileInput.addEventListener('change', ()=>{
-        const f = fileInput.files?.[0];
-        if(!f) return;
-        const url = URL.createObjectURL(f);
-        img.src = url;
-        img.style.display = 'block';
-        img.onload = ()=>{
-          fitCanvas();
-          draw();
-          srcInfo.textContent = `${f.name} • ${Andio.utils.human.bytes(f.size)}`;
-          resultIsGenerated = false;
-          resultURL = null;
-          genInfo.textContent = '—';
-          variantsRow.style.display = 'none';
-          variantsGrid.innerHTML = '';
-        };
-      });
+    function addField(r){
+      const wrap=document.createElement('div');
+      wrap.className='card';
+      wrap.innerHTML=`
+        <div class="row"><strong>Bereich #${r.id}</strong></div>
+        <div class="row"><label>Was?</label><input data-k="what" type="text" placeholder="z.B. 'rotes Kleid'"/></div>
+        <div class="row"><label>Wo?</label><input data-k="where" type="text" placeholder="optional"/></div>
+        <div class="row"><label>Stil/Material</label><input data-k="style" type="text" placeholder="z.B. Seide, realistisch"/></div>
+      `;
+      fields.appendChild(wrap);
+    }
 
-      // Zoom
-      document.getElementById('btnZoomFit').addEventListener('click', fitCanvas);
-      document.getElementById('btnZoom100').addEventListener('click', ()=>{
-        img.style.maxWidth = 'none';
-        img.style.maxHeight = 'none';
-        img.style.width = 'auto';
-        img.style.height = 'auto';
-        draw();
-      });
+    function resetMarks(){ regions=[]; fields.innerHTML=''; clearBadges(); draw(); }
 
-      // Player öffnen – nur für generierte Ergebnisse
-      btnOpenPlayer.addEventListener('click', ()=>{
-        if(!resultIsGenerated || !resultURL){
-          Andio.toast('Kein generiertes Ergebnis vorhanden');
-          return;
-        }
-        Andio.openPlayer({ type:'image', src: resultURL, meta:{ from:'Editor', mode }});
-      });
+    fileInput.addEventListener('change', ()=>{
+      const f=fileInput.files[0];
+      if (!f) return;
+      const url=URL.createObjectURL(f);
+      img = new Image();
+      img.onload = ()=>{ resizeCanvasToImage(); draw(); resetMarks(); };
+      img.src = url;
+    });
+    window.addEventListener('resize', ()=>{ if (img.src){ resizeCanvasToImage(); draw(); rebuildBadges(); } });
 
-      // Vorschlagsbutton
-      btnSuggest.addEventListener('click', ()=>{
-        const k = mode === 'filter' ? 'editor' : (mode === 'generate' ? 'image' : (mode === 'remove' ? 'editor' : 'motion'));
-        const s = Andio.suggest.prompt(k);
-        if(!s || s==='—') return;
-        // Pill hinzufügen
-        const pill = document.createElement('span');
-        pill.className = 'pill';
-        pill.textContent = s;
-        pill.addEventListener('click', ()=>{
-          // in das aktuelle Feld schreiben
-          const ta = regionForm.querySelector('textarea');
-          if(ta){ ta.value = (ta.value ? ta.value + '\n' : '') + s; ta.dispatchEvent(new Event('input')); }
-        });
-        suggestBar.prepend(pill);
-      });
-
-      // Reset
-      btnResetRegions.addEventListener('click', ()=>{
-        regions = [];
-        activeRegionId = null;
-        renderSelections();
-        renderRegionForm();
-        draw();
-      });
-
-      // Generieren (Stub – hier später Backend anbinden)
-      btnGenerate.addEventListener('click', async ()=>{
-        if(!img.src){
-          Andio.toast('Bitte zuerst ein Bild hochladen');
-          return;
-        }
-        // Simuliertes Ergebnis: wir rendern Canvas-Snapshot der Quelle + Markern
-        const out = await snapshotCurrent();
-        resultURL = out;
-        resultIsGenerated = true;
-        genInfo.textContent = 'Generiert (lokal, Vorschau)';
-        Andio.toast('Ergebnis generiert (Demo)');
-      });
-
-      // Varianten (Stub)
-      btnVariants.addEventListener('click', async ()=>{
-        if(!img.src){
-          Andio.toast('Bitte zuerst ein Bild hochladen');
-          return;
-        }
-        variantsGrid.innerHTML = '';
-        variantsRow.style.display = 'block';
-        for(let i=0;i<6;i++){
-          const u = await snapshotCurrent({variant:i});
-          const fig = document.createElement('div');
-          fig.className = 'card';
-          fig.style.padding = '6px';
-          const im = document.createElement('img');
-          im.src = u;
-          im.style.width = '100%';
-          im.style.display = 'block';
-          im.setAttribute('data-open-player','');
-          im.addEventListener('click', ()=> {
-            // Varianten zählen als generiert → Player öffnen
-            Andio.openPlayer({type:'image', src:u, meta:{variant:i}});
-          });
-          fig.appendChild(im);
-          variantsGrid.appendChild(fig);
-        }
-        Andio.toast('Varianten erzeugt (Demo)');
-      });
-
-      // Auswahl: rechteckiges Ziehen
-      let dragStart = null;
-      wrap.addEventListener('mousedown', (e)=>{
-        if(!img.src) return;
-        // Lasso/Smart könnten anders reagieren (hier Demo: nur Rect)
-        if(tool !== 'rect') return;
-
-        const {ox, oy, scale} = imageMetrics();
-        const rx = (e.offsetX - ox) / scale;
-        const ry = (e.offsetY - oy) / scale;
-        dragStart = {x:rx, y:ry};
-      });
-      window.addEventListener('mousemove', (e)=>{
-        if(!dragStart) return;
-        const {ox, oy, scale} = imageMetrics();
-        const rect = wrap.getBoundingClientRect();
-        const mx = (e.clientX - rect.left - ox) / scale;
-        const my = (e.clientY - rect.top - oy) / scale;
-        const x = Math.min(dragStart.x, mx);
-        const y = Math.min(dragStart.y, my);
-        const w = Math.abs(mx - dragStart.x);
-        const h = Math.abs(my - dragStart.y);
-        renderTempSelection(x,y,w,h);
-      });
-      window.addEventListener('mouseup', (e)=>{
-        if(!dragStart) return;
-        const {ox, oy, scale} = imageMetrics();
-        const rect = wrap.getBoundingClientRect();
-        const mx = (e.clientX - rect.left - ox) / scale;
-        const my = (e.clientY - rect.top - oy) / scale;
-        const x = Math.min(dragStart.x, mx);
-        const y = Math.min(dragStart.y, my);
-        const w = Math.abs(mx - dragStart.x);
-        const h = Math.abs(my - dragStart.y);
-        dragStart = null;
-        clearTempSelection();
-        if(w<10 || h<10) return;
-        const id = regions.length + 1;
-        regions.push({id, x, y, w, h, type:'rect'});
-        activeRegionId = id;
-        renderSelections();
-        renderRegionForm();
-        draw();
-      });
-
-      // --- Helpers ---
-      function fitCanvas(){
-        // auf Container anpassen
-        canvas.width = wrap.clientWidth;
-        canvas.height = wrap.clientHeight;
-        // Bild beschränken
-        img.style.maxWidth = '100%';
-        img.style.maxHeight = '72vh';
-        draw();
-      }
-
-      function imageMetrics(){
-        // Berechne Offset (ox, oy) und scale, um Bildkoordinaten <-> Canvas zu mappen
-        const rect = wrap.getBoundingClientRect();
-        const iw = img.naturalWidth;
-        const ih = img.naturalHeight;
-        const dispW = img.clientWidth;
-        const dispH = img.clientHeight;
-        // Bild ist in der Mitte zentriert
-        const ox = (rect.width - dispW) / 2;
-        const oy = (rect.height - dispH) / 2;
-        const scale = dispW / iw;
-        return {ox, oy, scale};
-      }
-
-      function draw(){
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        if(!img.src) return;
-        // Visualisierung der Regionen
-        const {ox, oy, scale} = imageMetrics();
-        ctx.save();
-        ctx.translate(ox, oy);
-        ctx.scale(scale, scale);
-        regions.forEach(r=>{
-          ctx.strokeStyle = '#8ab4f8';
-          ctx.setLineDash([6,6]);
-          ctx.lineWidth = 2/scale;
-          ctx.strokeRect(r.x, r.y, r.w, r.h);
-          // Nummernmarker
-          const mx = r.x + 4, my = r.y;
-          ctx.setLineDash([]);
-          ctx.fillStyle = 'rgba(17,17,17,.9)';
-          const label = `#${r.id}`;
-          ctx.font = `${12/scale}px sans-serif`;
-          const tw = ctx.measureText(label).width + 10/scale;
-          const th = 18/scale;
-          ctx.fillRect(mx, my - th, tw, th);
-          ctx.strokeStyle = '#333';
-          ctx.lineWidth = 1/scale;
-          ctx.strokeRect(mx, my - th, tw, th);
-          ctx.fillStyle = '#e5e7eb';
-          ctx.fillText(label, mx + 5/scale, my - 5/scale);
-        });
-        ctx.restore();
-      }
-
-      let tempEl = null;
-      function renderTempSelection(x,y,w,h){
-        clearTempSelection();
-        const {ox, oy, scale} = imageMetrics();
-        const div = document.createElement('div');
-        div.className = 'handles';
-        div.style.left = (ox + x*scale) + 'px';
-        div.style.top = (oy + y*scale) + 'px';
-        div.style.width = (w*scale) + 'px';
-        div.style.height = (h*scale) + 'px';
-        wrap.appendChild(div);
-        tempEl = div;
-      }
-      function clearTempSelection(){
-        if(tempEl){ tempEl.remove(); tempEl=null; }
-      }
-
-      function renderSelections(){
-        // entferne alte DOM-Marker
-        wrap.querySelectorAll('.handles, .mark').forEach(n=>n.remove());
-        const {ox, oy, scale} = imageMetrics();
-        regions.forEach(r=>{
-          const div = document.createElement('div');
-          div.className = 'handles';
-          Object.assign(div.style, {
-            left: (ox + r.x*scale) + 'px',
-            top: (oy + r.y*scale) + 'px',
-            width: (r.w*scale) + 'px',
-            height: (r.h*scale) + 'px'
-          });
-          // Ecken
-          ['nw','ne','sw','se'].forEach(pos=>{
-            const h = document.createElement('div');
-            h.className = 'handle '+pos;
-            div.appendChild(h);
-          });
-          // Nummer
-          const label = document.createElement('div');
-          label.className = 'mark';
-          label.textContent = '#'+r.id;
-          label.style.left = (ox + r.x*scale + 6) + 'px';
-          label.style.top = (oy + r.y*scale) + 'px';
-          wrap.appendChild(div);
-          wrap.appendChild(label);
-
-          // Auswahl klickbar machen
-          div.style.pointerEvents = 'auto';
-          div.addEventListener('click', ()=>{
-            activeRegionId = r.id;
-            renderRegionForm();
-          });
-        });
-      }
-
-      function renderRegionForm(){
-        const r = regions.find(x=>x.id===activeRegionId);
-        regionForm.innerHTML = '';
-        if(!r){
-          regionForm.innerHTML = '<p class="muted">Kein Bereich aktiv. Markiere im Bild einen Bereich.</p>';
-          return;
-        }
-        const box = document.createElement('div');
-        box.innerHTML = `<p><span class="badge">#${r.id}</span> – ${mode.toUpperCase()}</p>`;
-        if(mode==='generate'){
-          box.innerHTML += `
-            <label>Was/Objekt?<textarea data-key="what" rows="3" placeholder="z. B. roter Schal, weiche Wolle, realistisch"></textarea></label>
-            <label>Stil/Material<textarea data-key="style" rows="2" placeholder="Stil/Material/Beleuchtung"></textarea></label>
-            <label>Wo (optional)<input data-key="where" type="text" placeholder="rechts oben / Schulter / etc."></label>
-            <div class="row">
-              <label class="row"><input type="checkbox" data-key="keepEdges"/> Kanten bewahren</label>
-              <label class="row"><input type="checkbox" data-key="matchLight"/> Licht anpassen</label>
-              <label class="row"><input type="checkbox" data-key="shadow"/> Schatten einblenden</label>
-            </div>
-          `;
-        } else if(mode==='remove'){
-          box.innerHTML += `
-            <label>Was entfernen?<textarea data-key="remove" rows="3" placeholder='z. B. "BH-Träger rechts", "Fleck unten"'></textarea></label>
-            <div class="row">
-              <label class="row"><input type="checkbox" data-key="skinUnify"/> Hautton-Angleichung</label>
-              <label class="row"><input type="checkbox" data-key="edgeClean"/> Kanten-Clean</label>
-            </div>
-          `;
-        } else if(mode==='filter'){
-          box.innerHTML += `
-            <label>Global-Filter (wirkt auf gesamtes Bild)<div class="row"><input type="range" min="-100" max="100" value="0" data-key="temp"/><span>Temperatur</span></div>
-            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="tint"/><span>Tönung</span></div>
-            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="contrast"/><span>Kontrast</span></div>
-            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="grain"/><span>Körnung</span></div>
-            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="vignette"/><span>Vignette</span></div>
-            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="sharpen"/><span>Schärfen</span></div>
-            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="denoise"/><span>DeNoise</span></div>
-            </label>
-            <p class="muted">Nutze „Varianten“, um Mini-Previews zu generieren.</p>
-          `;
-        } else if(mode==='pose'){
-          box.innerHTML += `
-            <p class="muted">Pose: Keypoints werden im Bild erkannt. Ziehe Punkte (Soft-IK) oder gib eine Prompt-Beschreibung für die gesamte Pose ein.</p>
-            <label>Gesamt-Pose (Prompt)<textarea data-key="posePrompt" rows="3" placeholder="lässige Haltung, Gewicht auf rechtem Bein, Hand an Hüfte"></textarea></label>
-          `;
-        }
-        regionForm.appendChild(box);
-      }
-
-      async function snapshotCurrent(opts={}){
-        // Render das IMG + Regionen in ein Offscreen-Canvas (Demo)
-        const iw = img.naturalWidth, ih = img.naturalHeight;
-        const off = document.createElement('canvas');
-        off.width = iw; off.height = ih;
-        const ctx = off.getContext('2d');
-        // Quelle
-        ctx.drawImage(img, 0, 0, iw, ih);
-        // Markierungen (als sichtbarer Effekt)
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255,255,255,.6)';
-        ctx.lineWidth = 3;
-        regions.forEach(r=>{
-          ctx.setLineDash([12,10]);
-          ctx.strokeRect(r.x, r.y, r.w, r.h);
-          ctx.setLineDash([]);
-          ctx.fillStyle = 'rgba(0,0,0,.55)';
-          ctx.fillRect(r.x, r.y-22, 40, 20);
-          ctx.fillStyle = '#fff';
-          ctx.font = '16px sans-serif';
-          ctx.fillText('#'+r.id, r.x+6, r.y-7);
-        });
-        ctx.restore();
-        // Einfache „Variante“
-        if(Number.isFinite(opts.variant)){
-          ctx.save();
-          const v = opts.variant % 3;
-          if(v===0){ ctx.globalCompositeOperation='color-burn'; ctx.fillStyle='rgba(0,80,255,.08)'; ctx.fillRect(0,0,iw,ih); }
-          if(v===1){ ctx.globalCompositeOperation='overlay'; ctx.fillStyle='rgba(255,140,0,.08)'; ctx.fillRect(0,0,iw,ih); }
-          if(v===2){ ctx.globalCompositeOperation='soft-light'; ctx.fillStyle='rgba(0,0,0,.12)'; ctx.fillRect(0,0,iw,ih); }
-          ctx.restore();
-        }
-        return off.toDataURL('image/png');
-      }
-
-      // Init
-      Andio.polish();
-      renderRegionForm();
-      window.addEventListener('resize', fitCanvas);
+    // Overlay Player (nur generierte Bilder)
+    const edOverlay = (() => {
+      const el=document.getElementById('ed-overlay');
+      const im=document.getElementById('ed-ov-img');
+      const dl=document.getElementById('ed-ov-download');
+      const title=document.getElementById('ed-ov-title');
+      const close=()=>{el.classList.remove('show'); el.setAttribute('aria-hidden','true');};
+      document.getElementById('ed-ov-close').onclick=close;
+      document.getElementById('ed-ov-close2').onclick=close;
+      el.addEventListener('click',(e)=>{ if(e.target===el) close(); });
+      return { open:(item)=>{ if(!item||!item.generated) return; im.src=item.url; dl.href=item.url; dl.download=item.name||'edit.png'; title.textContent=item.name||'Player'; el.classList.add('show'); el.setAttribute('aria-hidden','false'); } };
     })();
+
+    // Generierung (Stub, bindet später echte API an)
+    document.getElementById('ed-generate').addEventListener('click', async ()=>{
+      if (!img.src){ alert('Bitte zuerst ein Bild laden.'); return; }
+      // Hier später: Masken/Prompts an Backend senden.
+      // UI-Dummy: füge generiertes Ergebnis (Platzhalter) zur Historie hinzu.
+      const url = '/assets/placeholders/demo.jpg';
+      const ts=new Date().toISOString().replaceAll(':','').slice(0,15);
+      const name=`edit_${ts}.png`;
+      const card=document.createElement('div'); card.className='card';
+      card.innerHTML=`<div class="row" style="justify-content:space-between">
+          <div class="note">${name}</div>
+          <button class="secondary btn-open">Im Player öffnen</button>
+        </div>
+        <img style="max-width:100%"/>`;
+      card.querySelector('img').src=url;
+      card.querySelector('.btn-open').addEventListener('click', ()=>edOverlay.open({name, url, type:'image', generated:true}));
+      preview.prepend(card);
+    });
+
+    document.getElementById('ed-clear').addEventListener('click', resetMarks);
+
+    window.Andio && Andio.polish && Andio.polish();
   </script>
-  <script>Andio.polish();</script>
 </body>
 </html>

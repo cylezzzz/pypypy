@@ -1,0 +1,32 @@
+{
+  "genres": [
+    "Neutral",
+    "Fashion",
+    "Fitness",
+    "Business",
+    "Glamour",
+    "Street",
+    "Editorial",
+    "Cinematic"
+  ],
+  "poses": [
+    "Neutral Stand",
+    "Power Pose",
+    "Hand in Hüfte",
+    "Sitzpose locker",
+    "Gewicht auf rechtes Bein",
+    "Dynamisch diagonal",
+    "Überkreuzte Arme",
+    "Blick über Schulter"
+  ],
+  "actions": [
+    "Idle Sway",
+    "Winken leicht",
+    "Walk-in-place",
+    "Dance Groove minimal",
+    "Head Tilt subtil",
+    "Shoulder Roll",
+    "Kopf-Nicken im Takt",
+    "Parallax Slow"
+  ]
+}
