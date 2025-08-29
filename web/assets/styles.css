@@ -263,3 +263,62 @@ canvas.mask{ position:absolute; inset:0; cursor:crosshair; z-index:2 }
   .status-dock .sd-info{ min-width:140px }
   .status-dock .sd-bar{ width:140px }
 }
+
+/* ===== Overlay Player Modal ===== */
+.andio-modal-open { overflow: hidden; }
+
+.andio-modal.is-hidden { display: none; }
+.andio-modal {
+  position: fixed; inset: 0; z-index: 1000;
+  display: grid; place-items: center;
+}
+
+.andio-modal__backdrop {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(6px) saturate(130%);
+  -webkit-backdrop-filter: blur(6px) saturate(130%);
+  background: rgba(5, 10, 20, 0.55);
+}
+
+.andio-modal__dialog {
+  position: relative; width: min(1100px, 96vw); max-height: 90vh;
+  background: linear-gradient(180deg, rgba(16,22,36,.95), rgba(14,20,36,.92));
+  border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: var(--shadow-xl);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+.andio-modal__header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+}
+.andio-modal__title { font-weight: 700; }
+.andio-modal__spacer { flex: 1; }
+
+.andio-modal__body {
+  display: grid; grid-template-columns: 1fr 320px; gap: 12px;
+  padding: 12px; overflow: auto;
+}
+@media (max-width: 900px) {
+  .andio-modal__body { grid-template-columns: 1fr; }
+}
+
+.andio-player__media {
+  display: grid; place-items: center;
+  background: rgba(10,16,28,.6);
+  border: 1px solid var(--border); border-radius: 12px;
+  min-height: 360px; max-height: 70vh; overflow: hidden;
+}
+.andio-player__media img, .andio-player__media video {
+  max-width: 100%; max-height: 70vh; display: block;
+}
+
+.andio-player__meta {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px;
+}
+.andio-player__pre {
+  margin: 8px 0 0 0; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #cfe2ff; white-space: pre-wrap; word-break: break-word;
+}

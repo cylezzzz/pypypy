@@ -1,1 +1,534 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Gallery</title><link rel="stylesheet" href="assets/styles.css"/></head><body><script src="assets/app.js"></script><script>Andio.navbar('gallery');</script><div class="container"><h1>Gallery</h1><div class='card'><h3>Grid</h3><p>Zeigt generierte Ergebnisse (Demo).</p></div></div><footer>© AndioMediaStudio</footer><script></script><script>Andio.polish();</script></body></html>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Gallery</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    /* --- Minimal ergänzende Styles für Layout --- */
+    :root { --gap: 12px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      gap: var(--gap);
+      align-items: start;
+    }
+    .sidebar, .details { position: sticky; top: 72px; max-height: calc(100vh - 96px); overflow: auto; }
+    .toolbar { display:flex; gap: var(--gap); flex-wrap: wrap; align-items: center; }
+    .toolbar .grow { flex: 1 1 280px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: var(--gap);
+      align-items: stretch;
+    }
+    .media-card {
+      border: 1px solid #2b2b2b55; border-radius: 12px; overflow: hidden; background: #11111166;
+      display: flex; flex-direction: column; cursor: pointer;
+    }
+    .media-card .thumb { aspect-ratio: 16/10; object-fit: cover; width: 100%; background: #222; }
+    .media-card .meta { padding: 10px; display:flex; flex-direction:column; gap:6px; }
+    .badge { display:inline-block; font-size: 11px; padding:2px 8px; border-radius:999px; border:1px solid #ffffff22; }
+    .row { display:flex; gap:8px; align-items: center; flex-wrap: wrap; }
+    .muted { opacity:.75; font-size: 12px; }
+    .right { margin-left:auto; }
+    .checkbox { display:flex; gap:8px; align-items:center; }
+    .list { display:flex; flex-direction:column; gap:8px; }
+    .spacer { height: 8px; }
+    .btn { padding:8px 12px; border:1px solid #ffffff22; border-radius:8px; background:#1b1b1b; cursor:pointer; }
+    .btn.primary { background:#2b57ff; border-color:#2b57ff; color:white; }
+    .btn.ghost { background:transparent; }
+    .btn.block { width:100%; text-align:center; }
+    .btn[disabled] { opacity: .5; cursor: not-allowed; }
+    .chips { display:flex; gap:6px; flex-wrap: wrap; }
+    .chip { border:1px solid #ffffff22; padding:2px 8px; border-radius:999px; font-size:12px; }
+    .select { padding:8px; background:#121212; color:inherit; border:1px solid #ffffff22; border-radius:8px; }
+    .input { padding:8px 10px; background:#121212; color:inherit; border:1px solid #ffffff22; border-radius:8px; width:100%; }
+    .range { width:100%; }
+    .divider { border-top:1px solid #ffffff18; margin:10px 0; }
+    .topnote { font-size:12px; opacity:.75; }
+
+    /* Overlay Player (nur für generierte Inhalte) */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.8);
+      display:none; align-items:center; justify-content:center; z-index: 9999;
+    }
+    .overlay.active { display:flex; }
+    .overlay .frame {
+      width: min(92vw, 1200px); max-height: 88vh; background:#0c0c0c; border-radius:14px; overflow:hidden; border:1px solid #ffffff22;
+      display:flex; flex-direction:column;
+    }
+    .overlay header, .overlay footer {
+      padding:10px 12px; background:#0f0f0f; border-bottom:1px solid #ffffff16;
+      display:flex; align-items:center; gap:10px;
+    }
+    .overlay footer { border-top:1px solid #ffffff16; border-bottom:none; justify-content:space-between; }
+    .overlay .content { padding:0; display:flex; align-items:center; justify-content:center; background:#000; }
+    .overlay video, .overlay img { max-width:100%; max-height:74vh; display:block; }
+  </style>
+</head>
+<body>
+  <script src="assets/app.js"></script>
+  <script>Andio?.navbar?.('gallery');</script>
+
+  <div class="container">
+    <h1>Gallery</h1>
+
+    <!-- Werkzeugleiste -->
+    <div class="card">
+      <div class="toolbar">
+        <input id="q" class="input grow" placeholder="Suchen (Titel, Prompt, Tags)"/>
+        <select id="sort" class="select">
+          <option value="date_desc">Neueste zuerst</option>
+          <option value="date_asc">Älteste zuerst</option>
+          <option value="name_asc">Name A–Z</option>
+          <option value="name_desc">Name Z–A</option>
+        </select>
+        <button id="btnCompare" class="btn" disabled>Vergleichen</button>
+        <button id="btnOpen" class="btn" disabled>Im Player öffnen</button>
+        <button id="btnExport" class="btn" disabled>Exportieren</button>
+        <button id="btnDelete" class="btn" disabled>Löschen</button>
+      </div>
+      <div class="topnote">Tipp: Mehrfachauswahl mit Strg/⌘ oder durch „Auswahlmodus“ unten links aktivieren.</div>
+    </div>
+
+    <div class="layout">
+      <!-- Sidebar Filter -->
+      <aside class="sidebar card">
+        <h3>Filter</h3>
+
+        <div class="list">
+          <div class="checkbox">
+            <input type="checkbox" id="f_img" checked>
+            <label for="f_img">Bilder</label>
+          </div>
+          <div class="checkbox">
+            <input type="checkbox" id="f_vid" checked>
+            <label for="f_vid">Videos</label>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="checkbox">
+            <input type="checkbox" id="f_sfw" checked>
+            <label for="f_sfw">SFW</label>
+          </div>
+          <div class="checkbox">
+            <input type="checkbox" id="f_nsfw" checked>
+            <label for="f_nsfw">NSFW</label>
+          </div>
+
+          <div class="divider"></div>
+
+          <label>Datum von</label>
+          <input type="date" id="f_from" class="input">
+          <label>Datum bis</label>
+          <input type="date" id="f_to" class="input">
+
+          <div class="divider"></div>
+
+          <label for="f_tags">Tags (Komma):</label>
+          <input id="f_tags" class="input" placeholder="portrait, product, anime">
+
+          <div class="divider"></div>
+
+          <button id="btnClear" class="btn ghost block">Filter zurücksetzen</button>
+        </div>
+      </aside>
+
+      <!-- Grid -->
+      <main>
+        <div class="card row" style="justify-content: space-between;">
+          <div class="row">
+            <div class="checkbox"><input type="checkbox" id="selectMode"><label for="selectMode">Auswahlmodus</label></div>
+            <div class="checkbox"><input type="checkbox" id="showMeta"><label for="showMeta">Mini-Meta</label></div>
+          </div>
+          <div class="row">
+            <button class="btn" id="toEditor" title="Auswahl in den Editor">→ Editor</button>
+            <button class="btn" id="toMotion" title="Auswahl in Motion">→ Motion</button>
+          </div>
+        </div>
+
+        <section id="grid" class="grid"></section>
+      </main>
+
+      <!-- Details Panel -->
+      <aside class="details card">
+        <h3>Details</h3>
+        <div id="detailsEmpty" class="muted">Wähle ein Element aus, um Metadaten zu sehen.</div>
+        <div id="detailsBox" style="display:none;">
+          <div class="row">
+            <div id="dTitle" style="font-weight:600;">—</div>
+            <span id="dType" class="badge right">—</span>
+          </div>
+          <div class="muted" id="dDate">—</div>
+          <div class="chips" id="dTags"></div>
+          <div class="divider"></div>
+          <div class="list">
+            <div><strong>Model:</strong> <span id="dModel">—</span></div>
+            <div><strong>Seed:</strong> <span id="dSeed">—</span></div>
+            <div><strong>Steps:</strong> <span id="dSteps">—</span></div>
+            <div><strong>Guidance:</strong> <span id="dGuidance">—</span></div>
+          </div>
+          <div class="divider"></div>
+          <div><strong>Prompt</strong><div id="dPrompt" class="muted"></div></div>
+          <div class="spacer"></div>
+          <div><strong>Negativ-Prompt</strong><div id="dNPrompt" class="muted"></div></div>
+          <div class="divider"></div>
+          <div class="row">
+            <button id="openPlayer" class="btn primary">Im Player öffnen</button>
+            <button id="openEditor" class="btn">Im Editor öffnen</button>
+            <button id="openMotion" class="btn">In Motion öffnen</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Overlay Player: öffnet NUR für generierte Inhalte -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Player">
+    <div class="frame">
+      <header>
+        <strong id="ovTitle">Player</strong>
+        <span id="ovBadges" class="chips"></span>
+        <span class="right muted" id="ovInfo"></span>
+        <button id="ovClose" class="btn">Schließen</button>
+      </header>
+      <div class="content" id="ovContent"></div>
+      <footer>
+        <div class="row">
+          <button id="ovPrev" class="btn">◀</button>
+          <button id="ovNext" class="btn">▶</button>
+        </div>
+        <div class="row">
+          <button id="ovExport" class="btn">Export</button>
+          <button id="ovOpenEditor" class="btn">→ Editor</button>
+          <button id="ovOpenMotion" class="btn">→ Motion</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <footer>© AndioMediaStudio</footer>
+
+  <script>
+    Andio?.polish?.();
+
+    // --- Demo-Daten (ersetzt später deinen Backend-Fetch) ---
+    /**  Schema:
+     *  id, name, type: 'image'|'video', sfw: boolean, generated: boolean,
+     *  date: ISO, tags:[], thumb, src, model, seed, steps, guidance, prompt, negative
+     */
+    const demo = [
+      { id: 'img_001', name: 'Portrait A', type:'image', sfw:true, generated:true,  date:'2025-08-27T10:21:00Z', tags:['portrait','bw'], thumb:'assets/demo/portrait_a.jpg', src:'assets/demo/portrait_a.jpg', model:'SDXL-1.0', seed:12345, steps:28, guidance:5.5, prompt:'ultrarealistisches Portrait, 35mm, 4:3', negative:'low quality, artifacts' },
+      { id: 'vid_002', name: 'Cinematic Clip', type:'video', sfw:true, generated:true,  date:'2025-08-28T08:02:00Z', tags:['cinematic','product'], thumb:'assets/demo/clip_thumb.jpg', src:'assets/demo/clip.mp4',         model:'VideoGenX',  seed:9876, steps:0,  guidance:0,   prompt:'sleek product shot, slow pan', negative:'' },
+      { id: 'img_003', name: 'Referenz Stoff', type:'image', sfw:true, generated:false, date:'2025-08-20T12:00:00Z', tags:['fabric','reference'], thumb:'assets/demo/fabric.jpg',     src:'assets/demo/fabric.jpg',     model:'—',         seed:'—', steps:'—', guidance:'—', prompt:'', negative:'' },
+      { id: 'img_004', name: 'NSFW Test',     type:'image', sfw:false,generated:true,  date:'2025-08-25T17:44:00Z', tags:['nsfw','edit'],       thumb:'assets/demo/nsfw.jpg',       src:'assets/demo/nsfw.jpg',       model:'SDXL-NS',   seed:43210, steps:30, guidance:6.0, prompt:'studio lighting, soft skin', negative:'blur' },
+    ];
+
+    // --- State ---
+    const state = {
+      items: demo,
+      filtered: [],
+      selected: new Set(),
+      cursor: null, // index im filtered für Overlay
+    };
+
+    // --- DOM ---
+    const el = {
+      q: $('#q'), sort: $('#sort'),
+      f_img: $('#f_img'), f_vid: $('#f_vid'),
+      f_sfw: $('#f_sfw'), f_nsfw: $('#f_nsfw'),
+      f_from: $('#f_from'), f_to: $('#f_to'),
+      f_tags: $('#f_tags'),
+      btnClear: $('#btnClear'),
+      grid: $('#grid'),
+      selectMode: $('#selectMode'),
+      showMeta: $('#showMeta'),
+      btnCompare: $('#btnCompare'),
+      btnOpen: $('#btnOpen'),
+      btnExport: $('#btnExport'),
+      btnDelete: $('#btnDelete'),
+      toEditor: $('#toEditor'),
+      toMotion: $('#toMotion'),
+
+      // Details
+      detailsEmpty: $('#detailsEmpty'),
+      detailsBox: $('#detailsBox'),
+      dTitle: $('#dTitle'), dType: $('#dType'), dDate: $('#dDate'),
+      dTags: $('#dTags'), dModel: $('#dModel'), dSeed: $('#dSeed'),
+      dSteps: $('#dSteps'), dGuidance: $('#dGuidance'),
+      dPrompt: $('#dPrompt'), dNPrompt: $('#dNPrompt'),
+      openPlayer: $('#openPlayer'), openEditor: $('#openEditor'), openMotion: $('#openMotion'),
+
+      // Overlay
+      overlay: $('#overlay'), ovTitle: $('#ovTitle'), ovBadges: $('#ovBadges'),
+      ovInfo: $('#ovInfo'), ovContent: $('#ovContent'),
+      ovClose: $('#ovClose'), ovPrev: $('#ovPrev'), ovNext: $('#ovNext'),
+      ovExport: $('#ovExport'), ovOpenEditor: $('#ovOpenEditor'), ovOpenMotion: $('#ovOpenMotion'),
+    };
+
+    // --- Utils ---
+    function $(q, root=document){ return root.querySelector(q); }
+    function elNew(tag, attrs={}, ...children){
+      const n = document.createElement(tag);
+      Object.entries(attrs).forEach(([k,v])=>{
+        if(k==='class') n.className = v;
+        else if(k==='dataset') Object.entries(v).forEach(([dk,dv])=> n.dataset[dk]=dv);
+        else if(k.startsWith('on') && typeof v==='function') n.addEventListener(k.slice(2), v);
+        else if(v!==undefined && v!==null) n.setAttribute(k, v);
+      });
+      children.forEach(c=> n.append(c instanceof Node ? c : document.createTextNode(c)));
+      return n;
+    }
+    const fmtDate = (iso)=> new Date(iso).toLocaleString();
+
+    // --- Filter/Sort ---
+    function applyFilters(){
+      const q = el.q.value.trim().toLowerCase();
+      const wantImg = el.f_img.checked;
+      const wantVid = el.f_vid.checked;
+      const wantSFW = el.f_sfw.checked;
+      const wantNSFW= el.f_nsfw.checked;
+
+      const tags = el.f_tags.value.toLowerCase().split(',').map(s=>s.trim()).filter(Boolean);
+      const from = el.f_from.value ? new Date(el.f_from.value) : null;
+      const to   = el.f_to.value ? new Date(el.f_to.value) : null;
+
+      let arr = state.items.filter(it=>{
+        if(it.type==='image' && !wantImg) return false;
+        if(it.type==='video' && !wantVid) return false;
+        if(it.sfw && !wantSFW) return false;
+        if(!it.sfw && !wantNSFW) return false;
+
+        const d = new Date(it.date);
+        if(from && d < from) return false;
+        if(to   && d > new Date(to.getTime()+24*3600*1000-1)) return false;
+
+        if(q){
+          const hay = (it.name + ' ' + (it.prompt||'') + ' ' + it.tags.join(' ')).toLowerCase();
+          if(!hay.includes(q)) return false;
+        }
+        if(tags.length){
+          const lowerTags = it.tags.map(t=>t.toLowerCase());
+          const match = tags.every(t => lowerTags.includes(t));
+          if(!match) return false;
+        }
+        return true;
+      });
+
+      const s = el.sort.value;
+      arr.sort((a,b)=>{
+        if(s==='date_desc') return new Date(b.date)-new Date(a.date);
+        if(s==='date_asc')  return new Date(a.date)-new Date(b.date);
+        if(s==='name_asc')  return a.name.localeCompare(b.name);
+        if(s==='name_desc') return b.name.localeCompare(a.name);
+        return 0;
+      });
+
+      state.filtered = arr;
+      renderGrid();
+      syncSelectionUI();
+    }
+
+    // --- Render Grid ---
+    function renderGrid(){
+      el.grid.innerHTML = '';
+      state.filtered.forEach((it, idx)=>{
+        const card = elNew('div', {class:'media-card', tabindex:0, dataset:{id: it.id}});
+        const img  = elNew('img', {class:'thumb', src: it.thumb, alt: it.name});
+        const meta = elNew('div', {class:'meta'});
+
+        const row1 = elNew('div', {class:'row'},
+          elNew('div', {style:'font-weight:600;'}, it.name),
+          elNew('span', {class:'badge right'}, it.type==='image'?'IMG':'VID')
+        );
+
+        const row2 = elNew('div', {class:'row muted'},
+          elNew('span', {}, fmtDate(it.date)),
+          elNew('span', {class:'badge'}, it.sfw?'SFW':'NSFW'),
+          elNew('span', {class:'badge'}, it.generated?'GENERATED':'REFERENCE')
+        );
+
+        const row3 = elNew('div', {class: el.showMeta.checked ? 'chips' : 'chips', style: el.showMeta.checked ? '' : 'display:none;'});
+        it.tags.forEach(t=> row3.append(elNew('span',{class:'chip'}, t)));
+
+        meta.append(row1, row2, row3);
+        card.append(img, meta);
+
+        // Auswahl/Öffnen
+        card.addEventListener('click', (ev)=>{
+          if(el.selectMode.checked || ev.ctrlKey || ev.metaKey){
+            toggleSelect(it.id, card);
+          } else {
+            selectSingle(it.id, card);
+            openDetails(it);
+          }
+        });
+        card.addEventListener('dblclick', ()=>{
+          selectSingle(it.id, card);
+          openMedia(it); // öffnet nur, wenn generated === true
+        });
+
+        // Vorselektion
+        if(state.selected.has(it.id)) card.style.outline = '2px solid #2b57ff';
+
+        el.grid.append(card);
+      });
+    }
+
+    function toggleSelect(id, card){
+      if(state.selected.has(id)) state.selected.delete(id);
+      else state.selected.add(id);
+      card.style.outline = state.selected.has(id) ? '2px solid #2b57ff' : '';
+      syncSelectionUI();
+    }
+    function selectSingle(id, card){
+      state.selected.clear();
+      state.selected.add(id);
+      document.querySelectorAll('.media-card').forEach(c=> c.style.outline='');
+      if(card) card.style.outline = '2px solid #2b57ff';
+      syncSelectionUI();
+    }
+
+    function syncSelectionUI(){
+      const n = state.selected.size;
+      el.btnCompare.disabled = (n!==2);
+      el.btnOpen.disabled = (n<1);
+      el.btnExport.disabled = (n<1);
+      el.btnDelete.disabled = (n<1);
+    }
+
+    // --- Details ---
+    function openDetails(it){
+      el.detailsEmpty.style.display = 'none';
+      el.detailsBox.style.display = '';
+      el.dTitle.textContent = it.name;
+      el.dType.textContent = it.type==='image'?'IMG':'VID';
+      el.dDate.textContent = fmtDate(it.date);
+      el.dTags.innerHTML = '';
+      it.tags.forEach(t=> el.dTags.append(elNew('span',{class:'chip'}, t)));
+      el.dModel.textContent = it.model;
+      el.dSeed.textContent = it.seed;
+      el.dSteps.textContent = it.steps;
+      el.dGuidance.textContent = it.guidance;
+      el.dPrompt.textContent = it.prompt || '—';
+      el.dNPrompt.textContent = it.negative || '—';
+
+      // Buttons
+      el.openPlayer.onclick = ()=> openMedia(it);
+      el.openEditor.onclick = ()=> openInEditor([it]);
+      el.openMotion.onclick = ()=> openInMotion([it]);
+    }
+
+    // --- Player Overlay (nur generated) ---
+    function openMedia(it){
+      if(!it.generated){
+        alert('Der Player öffnet sich nur für generierte Inhalte.');
+        return;
+      }
+      state.cursor = state.filtered.findIndex(x=> x.id===it.id);
+      showOverlay(it);
+    }
+    function showOverlay(it){
+      el.ovTitle.textContent = it.name;
+      el.ovBadges.innerHTML = '';
+      el.ovBadges.append(elNew('span',{class:'chip'}, it.sfw?'SFW':'NSFW'));
+      el.ovBadges.append(elNew('span',{class:'chip'}, it.type==='image'?'IMG':'VID'));
+      el.ovInfo.textContent = `${fmtDate(it.date)} • ${it.model}`;
+
+      el.ovContent.innerHTML = '';
+      if(it.type==='video'){
+        const v = elNew('video', {controls:true});
+        v.src = it.src;
+        v.autoplay = true;
+        el.ovContent.append(v);
+      } else {
+        const i = elNew('img', {src: it.src, alt: it.name});
+        el.ovContent.append(i);
+      }
+      el.overlay.classList.add('active');
+
+      // Overlay Navigation
+      el.ovPrev.onclick = ()=> navOverlay(-1);
+      el.ovNext.onclick = ()=> navOverlay(1);
+      el.ovExport.onclick = ()=> exportItems([it]);
+      el.ovOpenEditor.onclick = ()=> openInEditor([it]);
+      el.ovOpenMotion.onclick = ()=> openInMotion([it]);
+    }
+    function navOverlay(dir){
+      if(state.cursor==null) return;
+      let i = state.cursor + dir;
+      // skip non-generated
+      while(i>=0 && i<state.filtered.length && !state.filtered[i].generated){ i += dir; }
+      if(i<0 || i>=state.filtered.length) return;
+      state.cursor = i;
+      showOverlay(state.filtered[i]);
+    }
+    el.ovClose.addEventListener('click', ()=> el.overlay.classList.remove('active'));
+    el.overlay.addEventListener('click', (e)=> { if(e.target===el.overlay) el.overlay.classList.remove('active'); });
+
+    // --- Aktionen ---
+    el.btnOpen.addEventListener('click', ()=>{
+      const items = getSelectedItems();
+      // Player nur wenn ALLE selected generated sind, sonst Hinweis
+      const firstGen = items.find(it=> it.generated);
+      if(firstGen) openMedia(firstGen);
+      else alert('Bitte mindestens ein generiertes Element auswählen.');
+    });
+    el.btnCompare.addEventListener('click', ()=>{
+      const items = getSelectedItems();
+      if(items.length!==2) return;
+      // Für jetzt: öffne erstes im Player (wenn generated), sonst Hinweis
+      if(items[0].generated) openMedia(items[0]);
+      else if(items[1].generated) openMedia(items[1]);
+      else alert('Vergleich öffnet den Player nur für generierte Elemente.');
+    });
+    el.btnExport.addEventListener('click', ()=> exportItems(getSelectedItems()));
+    el.btnDelete.addEventListener('click', ()=> deleteItems(getSelectedItems()));
+    el.toEditor.addEventListener('click', ()=> openInEditor(getSelectedItems()));
+    el.toMotion.addEventListener('click', ()=> openInMotion(getSelectedItems()));
+
+    function getSelectedItems(){ return state.filtered.filter(it=> state.selected.has(it.id)); }
+    function exportItems(items){
+      if(!items.length) return;
+      alert('Export (Demo): ' + items.map(i=>i.name).join(', '));
+    }
+    function deleteItems(items){
+      if(!items.length) return;
+      if(!confirm(`Wirklich löschen (${items.length})?`)) return;
+      const ids = new Set(items.map(i=>i.id));
+      state.items = state.items.filter(i=> !ids.has(i.id));
+      state.selected.clear();
+      applyFilters();
+    }
+    function openInEditor(items){
+      if(!items.length) return;
+      const ids = items.map(i=>i.id).join(',');
+      location.href = `editor.html?open=${encodeURIComponent(ids)}`;
+    }
+    function openInMotion(items){
+      if(!items.length) return;
+      const ids = items.map(i=>i.id).join(',');
+      location.href = `motion.html?open=${encodeURIComponent(ids)}`;
+    }
+
+    // --- Events ---
+    [el.q, el.sort, el.f_img, el.f_vid, el.f_sfw, el.f_nsfw, el.f_from, el.f_to, el.f_tags, el.showMeta]
+      .forEach(inp => inp.addEventListener('input', applyFilters));
+    el.btnClear.addEventListener('click', ()=>{
+      el.q.value = '';
+      el.f_img.checked = true; el.f_vid.checked = true;
+      el.f_sfw.checked = true; el.f_nsfw.checked = true;
+      el.f_from.value = ''; el.f_to.value='';
+      el.f_tags.value = '';
+      el.sort.value = 'date_desc';
+      applyFilters();
+    });
+
+    // --- Init ---
+    applyFilters();
+  </script>
+</body>
+</html>

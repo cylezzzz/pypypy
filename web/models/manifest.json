@@ -1,1 +1,446 @@
-{}
+{
+  "version": "1.0",
+  "updated": "2025-01-01T00:00:00Z",
+  "description": "AndioMediaStudio Model Registry",
+  "models": [
+    {
+      "id": "sd15-realistic",
+      "name": "Stable Diffusion 1.5 Realistic",
+      "type": "image",
+      "genres": ["portrait", "landscape", "photography", "realistic"],
+      "tags": ["txt2img", "img2img", "inpaint"],
+      "nsfw": false,
+      "hint": "Klassisches SD 1.5 - gut für realistische Bilder und Portraits",
+      "path": "",
+      "size_mb": 4000,
+      "architecture": "sd15",
+      "requirements": {
+        "vram_mb": 4000,
+        "ram_mb": 8000
+      },
+      "metadata": {
+        "author": "RunwayML",
+        "license": "creativeml-openrail-m",
+        "source": "https://huggingface.co/runwayml/stable-diffusion-v1-5"
+      }
+    },
+    {
+      "id": "sdxl-base",
+      "name": "Stable Diffusion XL Base",
+      "type": "image",
+      "genres": ["portrait", "art", "photography", "creative"],
+      "tags": ["txt2img", "img2img"],
+      "nsfw": false,
+      "hint": "SDXL für hochauflösende, detaillierte Bilder bis 1024×1024",
+      "path": "",
+      "size_mb": 6600,
+      "architecture": "sdxl",
+      "requirements": {
+        "vram_mb": 6000,
+        "ram_mb": 16000
+      },
+      "metadata": {
+        "author": "Stability AI",
+        "license": "openrail++",
+        "source": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0"
+      }
+    },
+    {
+      "id": "sdxl-inpaint",
+      "name": "SDXL Inpainting Model",
+      "type": "image",
+      "genres": ["editing", "inpainting", "creative"],
+      "tags": ["inpaint", "img2img"],
+      "nsfw": false,
+      "hint": "Spezialisiert für präzises Inpainting und Bildbearbeitung",
+      "path": "",
+      "size_mb": 6600,
+      "architecture": "sdxl",
+      "requirements": {
+        "vram_mb": 6000,
+        "ram_mb": 16000
+      },
+      "metadata": {
+        "author": "Diffusers",
+        "license": "openrail++",
+        "source": "https://huggingface.co/diffusers/stable-diffusion-xl-1.0-inpainting-0.1"
+      }
+    },
+    {
+      "id": "flux-dev",
+      "name": "FLUX.1 [dev]",
+      "type": "image",
+      "genres": ["creative", "art", "abstract", "experimental"],
+      "tags": ["txt2img", "creative"],
+      "nsfw": false,
+      "hint": "FLUX für kreative und künstlerische Inhalte mit einzigartigem Stil",
+      "path": "",
+      "size_mb": 12000,
+      "architecture": "flux",
+      "requirements": {
+        "vram_mb": 12000,
+        "ram_mb": 24000
+      },
+      "metadata": {
+        "author": "Black Forest Labs",
+        "license": "apache-2.0",
+        "source": "https://huggingface.co/black-forest-labs/FLUX.1-dev"
+      }
+    },
+    {
+      "id": "svd-xt",
+      "name": "Stable Video Diffusion XT",
+      "type": "video",
+      "genres": ["cinematic", "nature", "abstract", "motion"],
+      "tags": ["img2video", "txt2video", "motion"],
+      "nsfw": false,
+      "hint": "Video-Generierung aus Bildern oder Text, bis 1024×576",
+      "path": "",
+      "size_mb": 9800,
+      "architecture": "svd",
+      "requirements": {
+        "vram_mb": 10000,
+        "ram_mb": 20000
+      },
+      "metadata": {
+        "author": "Stability AI",
+        "license": "stable-video-diffusion-nc",
+        "source": "https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt"
+      }
+    },
+    {
+      "id": "animatediff",
+      "name": "AnimateDiff Motion Module",
+      "type": "video",
+      "genres": ["animation", "character", "motion"],
+      "tags": ["txt2video", "animation"],
+      "nsfw": false,
+      "hint": "Animations-Modul für Stable Diffusion - erstellt bewegte Bilder",
+      "path": "",
+      "size_mb": 4500,
+      "architecture": "animatediff",
+      "requirements": {
+        "vram_mb": 8000,
+        "ram_mb": 16000
+      },
+      "metadata": {
+        "author": "GuoYuWei",
+        "license": "apache-2.0",
+        "source": "https://huggingface.co/guoyww/animatediff"
+      }
+    },
+    {
+      "id": "realistic-vision-v5",
+      "name": "Realistic Vision V5.1",
+      "type": "image", 
+      "genres": ["portrait", "photography", "realistic"],
+      "tags": ["txt2img", "img2img", "inpaint"],
+      "nsfw": false,
+      "hint": "Community-Modell für hochrealistische Bilder und Portraits",
+      "path": "",
+      "size_mb": 4000,
+      "architecture": "sd15",
+      "requirements": {
+        "vram_mb": 4000,
+        "ram_mb": 8000
+      },
+      "metadata": {
+        "author": "SG_161222",
+        "license": "creativeml-openrail-m",
+        "source": "https://huggingface.co/SG161222/Realistic_Vision_V5.1_noVAE"
+      }
+    },
+    {
+      "id": "deliberate-v2",
+      "name": "Deliberate V2",
+      "type": "image",
+      "genres": ["art", "creative", "fantasy", "portrait"],
+      "tags": ["txt2img", "img2img"],
+      "nsfw": false,
+      "hint": "Vielseitiges Modell für künstlerische und kreative Inhalte",
+      "path": "",
+      "size_mb": 4000,
+      "architecture": "sd15",
+      "requirements": {
+        "vram_mb": 4000,
+        "ram_mb": 8000
+      },
+      "metadata": {
+        "author": "XpucT",
+        "license": "creativeml-openrail-m",
+        "source": "https://huggingface.co/XpucT/Deliberate"
+      }
+    },
+    {
+      "id": "anything-v5",
+      "name": "Anything V5/Ink",
+      "type": "image",
+      "genres": ["anime", "manga", "character", "illustration"],
+      "tags": ["txt2img", "img2img", "anime"],
+      "nsfw": false,
+      "hint": "Spezialisiert auf Anime/Manga-Stil und Charaktere",
+      "path": "",
+      "size_mb": 4000,
+      "architecture": "sd15",
+      "requirements": {
+        "vram_mb": 4000,
+        "ram_mb": 8000
+      },
+      "metadata": {
+        "author": "Linaqruf",
+        "license": "creativeml-openrail-m",
+        "source": "https://huggingface.co/Linaqruf/anything-v3.0"
+      }
+    },
+    {
+      "id": "controlnet-openpose",
+      "name": "ControlNet OpenPose",
+      "type": "controlnet",
+      "genres": ["pose", "control", "character"],
+      "tags": ["controlnet", "pose", "character"],
+      "nsfw": false,
+      "hint": "Pose-Kontrolle für präzise Charaktergenerierung",
+      "path": "",
+      "size_mb": 1400,
+      "architecture": "controlnet",
+      "requirements": {
+        "vram_mb": 2000,
+        "ram_mb": 4000
+      },
+      "metadata": {
+        "author": "lllyasviel",
+        "license": "apache-2.0",
+        "source": "https://huggingface.co/lllyasviel/ControlNet"
+      }
+    },
+    {
+      "id": "wav2lip",
+      "name": "Wav2Lip",
+      "type": "voice",
+      "genres": ["lipsync", "talking", "avatar"],
+      "tags": ["lipsync", "audio2video", "face"],
+      "nsfw": false,
+      "hint": "Lip-Sync für realistische sprechende Avatare",
+      "path": "",
+      "size_mb": 600,
+      "architecture": "wav2lip",
+      "requirements": {
+        "vram_mb": 2000,
+        "ram_mb": 4000
+      },
+      "metadata": {
+        "author": "Rudrabha Mukhopadhyay",
+        "license": "mit",
+        "source": "https://github.com/Rudrabha/Wav2Lip"
+      }
+    },
+    {
+      "id": "realistic-nsfw",
+      "name": "Realistic Vision NSFW",
+      "type": "image",
+      "genres": ["portrait", "artistic", "photography"],
+      "tags": ["txt2img", "img2img", "inpaint"],
+      "nsfw": true,
+      "hint": "Realistische Bilder ohne Content-Filter - nur für Erwachsene",
+      "path": "",
+      "size_mb": 4000,
+      "architecture": "sd15",
+      "requirements": {
+        "vram_mb": 4000,
+        "ram_mb": 8000
+      },
+      "metadata": {
+        "author": "Community",
+        "license": "creativeml-openrail-m",
+        "warning": "NSFW content - adults only"
+      }
+    },
+    {
+      "id": "sdxl-nsfw-artistic",
+      "name": "SDXL Artistic Uncensored",
+      "type": "image",
+      "genres": ["artistic", "creative", "portrait"],
+      "tags": ["txt2img", "img2img", "artistic"],
+      "nsfw": true,
+      "hint": "SDXL ohne Content-Filter für künstlerische Darstellungen",
+      "path": "",
+      "size_mb": 6600,
+      "architecture": "sdxl",
+      "requirements": {
+        "vram_mb": 6000,
+        "ram_mb": 16000
+      },
+      "metadata": {
+        "author": "Community",
+        "license": "openrail++",
+        "warning": "NSFW content - adults only"
+      }
+    },
+    {
+      "id": "flux-nsfw",
+      "name": "FLUX.1 Uncensored",
+      "type": "image",
+      "genres": ["creative", "artistic", "experimental"],
+      "tags": ["txt2img", "creative", "artistic"],
+      "nsfw": true,
+      "hint": "FLUX ohne Einschränkungen für kreative Freiheit",
+      "path": "",
+      "size_mb": 12000,
+      "architecture": "flux",
+      "requirements": {
+        "vram_mb": 12000,
+        "ram_mb": 24000
+      },
+      "metadata": {
+        "author": "Community",
+        "license": "apache-2.0",
+        "warning": "NSFW content - adults only"
+      }
+    }
+  ],
+  "categories": {
+    "image": {
+      "name": "Bildgenerierung",
+      "description": "Text-zu-Bild, Bild-zu-Bild und Inpainting-Modelle",
+      "architectures": ["sd15", "sdxl", "flux"],
+      "common_tags": ["txt2img", "img2img", "inpaint"]
+    },
+    "video": {
+      "name": "Video-Generierung",
+      "description": "Video-Generierung aus Text oder Bildern",
+      "architectures": ["svd", "animatediff"],
+      "common_tags": ["txt2video", "img2video", "motion"]
+    },
+    "voice": {
+      "name": "Audio & Lip-Sync",
+      "description": "Sprach- und Audio-basierte Modelle",
+      "architectures": ["wav2lip", "sadtalker"],
+      "common_tags": ["lipsync", "audio2video", "tts"]
+    },
+    "controlnet": {
+      "name": "Control & Guidance",
+      "description": "ControlNet und Guidance-Modelle",
+      "architectures": ["controlnet"],
+      "common_tags": ["controlnet", "pose", "depth", "canny"]
+    }
+  },
+  "genres": {
+    "portrait": {
+      "name": "Portrait",
+      "description": "Menschen, Gesichter, Charaktere",
+      "suitable_architectures": ["sd15", "sdxl", "flux"],
+      "tags": ["face", "person", "character", "beauty"]
+    },
+    "landscape": {
+      "name": "Landschaft",
+      "description": "Natur, Landschaften, Umgebungen",
+      "suitable_architectures": ["sd15", "sdxl", "svd"],
+      "tags": ["nature", "outdoor", "scenery", "environment"]
+    },
+    "art": {
+      "name": "Künstlerisch",
+      "description": "Kreative und künstlerische Inhalte",
+      "suitable_architectures": ["sdxl", "flux"],
+      "tags": ["creative", "abstract", "artistic", "experimental"]
+    },
+    "photography": {
+      "name": "Fotografie",
+      "description": "Fotorealistische Bilder",
+      "suitable_architectures": ["sd15", "sdxl"],
+      "tags": ["realistic", "photo", "professional"]
+    },
+    "anime": {
+      "name": "Anime/Manga",
+      "description": "Anime- und Manga-Stil",
+      "suitable_architectures": ["sd15"],
+      "tags": ["anime", "manga", "illustration", "character"]
+    },
+    "cinematic": {
+      "name": "Kinematisch",
+      "description": "Film- und Video-Inhalte",
+      "suitable_architectures": ["svd", "animatediff"],
+      "tags": ["movie", "film", "cinematic", "motion"]
+    }
+  },
+  "installation_guides": {
+    "sd15": {
+      "title": "Stable Diffusion 1.5",
+      "steps": [
+        "Download .safetensors file",
+        "Place in models/ directory",
+        "Restart server",
+        "Model appears in selection"
+      ],
+      "requirements": "4GB VRAM minimum"
+    },
+    "sdxl": {
+      "title": "Stable Diffusion XL",
+      "steps": [
+        "Download SDXL base model",
+        "Optional: Download refiner",
+        "Place in models/ directory",
+        "Ensure 6GB+ VRAM available"
+      ],
+      "requirements": "6GB VRAM minimum, 16GB RAM recommended"
+    },
+    "flux": {
+      "title": "FLUX.1",
+      "steps": [
+        "Download FLUX model files",
+        "Place in models/ directory",
+        "Ensure sufficient VRAM",
+        "May require CPU offloading"
+      ],
+      "requirements": "12GB VRAM minimum, 24GB RAM recommended"
+    },
+    "svd": {
+      "title": "Stable Video Diffusion",
+      "steps": [
+        "Download SVD model",
+        "Place in models/video/ directory",
+        "Ensure video dependencies installed",
+        "Configure video output settings"
+      ],
+      "requirements": "10GB VRAM minimum"
+    }
+  },
+  "nsfw_policy": {
+    "enabled": true,
+    "description": "AndioMediaStudio unterstützt NSFW-Inhalte für kreative und künstlerische Zwecke",
+    "requirements": [
+      "Nutzer muss über 18 Jahre alt sein",
+      "Explizite Einwilligung erforderlich", 
+      "Keine realen Personen ohne Zustimmung",
+      "Keine Darstellung Minderjähriger",
+      "Nur für private/künstlerische Nutzung"
+    ],
+    "consent_required": true,
+    "age_verification": true
+  },
+  "system_requirements": {
+    "minimum": {
+      "ram": "8GB",
+      "vram": "4GB",
+      "disk": "50GB",
+      "os": "Windows 10/11, Linux, macOS"
+    },
+    "recommended": {
+      "ram": "16GB",
+      "vram": "8GB",
+      "disk": "100GB SSD",
+      "os": "Windows 11, Ubuntu 20.04+"
+    },
+    "optimal": {
+      "ram": "32GB+",
+      "vram": "16GB+", 
+      "disk": "500GB NVMe SSD",
+      "os": "Latest versions"
+    }
+  },
+  "usage_hints": {
+    "smart_model_selection": "Das System wählt automatisch das beste Modell basierend auf Genre, NSFW-Einstellung und verfügbaren Ressourcen",
+    "fallback_behavior": "Bei Modell-Fehlern werden automatisch Fallback-Bilder erstellt",
+    "memory_optimization": "CPU-Offloading und VAE-Slicing werden automatisch bei niedrigem VRAM aktiviert",
+    "nsfw_handling": "NSFW-Modelle sind nur nach expliziter Bestätigung verfügbar"
+  }
+}

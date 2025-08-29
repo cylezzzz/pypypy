@@ -15,7 +15,6 @@
   ["Pro Editor", "editor.html"],
   ["Store", "catalog.html"],
   ["Gallery", "gallery.html"],
-  ["Player", "player.html"],
 ];
 
   function linkHref(file){ return BASE_PATH ? (BASE_PATH + file) : file; }
@@ -224,3 +223,175 @@
   window.Andio = { $, $$, Toast, Progress, injectNavbar, polish, Status };
 
 })();
+
+
+// ===== Global Overlay Player =====
+window.Andio = window.Andio || {};
+(function(NS){
+  let root = null;
+
+  function ensureRoot(){
+    if (root) return root;
+    root = document.createElement('div');
+    root.id = 'andio-player-root';
+    root.innerHTML = `
+      <div class="andio-modal is-hidden" role="dialog" aria-modal="true" aria-label="Player">
+        <div class="andio-modal__backdrop" data-close></div>
+        <div class="andio-modal__dialog">
+          <header class="andio-modal__header">
+            <div class="andio-modal__title">Player</div>
+            <div class="andio-modal__spacer"></div>
+            <a class="btn" id="andio-player-download" download>Download</a>
+            <button class="btn danger" id="andio-player-close" aria-label="Schließen">✕</button>
+          </header>
+          <div class="andio-modal__body">
+            <div class="andio-player__media" id="andio-player-media"></div>
+            <aside class="andio-player__meta">
+              <div class="badge">Metadaten</div>
+              <pre id="andio-player-meta" class="andio-player__pre">Lade Metadaten…</pre>
+            </aside>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(root);
+    root.querySelector('#andio-player-close').addEventListener('click', close);
+    root.querySelector('.andio-modal__backdrop').addEventListener('click', close);
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') close(); });
+    return root;
+  }
+
+  function open(src){
+    ensureRoot();
+    const modal = root.querySelector('.andio-modal');
+    const mediaBox = root.querySelector('#andio-player-media');
+    const metaBox  = root.querySelector('#andio-player-meta');
+    const dlLink   = root.querySelector('#andio-player-download');
+    mediaBox.innerHTML='';
+    metaBox.textContent='Lade Metadaten…';
+    dlLink.href = src;
+    dlLink.download = (src.split('/').pop() || 'download');
+
+    // Render media
+    if (/\.(mp4|webm|mkv)$/i.test(src)) {
+      const v = document.createElement('video');
+      v.src = src; v.controls = true; v.autoplay = true; v.playsInline = true;
+      mediaBox.appendChild(v);
+    } else {
+      const img = new Image();
+      img.src = src; img.alt = 'Media';
+      mediaBox.appendChild(img);
+    }
+
+    // Fetch metadata (skip for data: URLs)
+    if (!/^data:/.test(src)) {
+      fetch(`/api/player/meta?url=${encodeURIComponent(src)}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r))
+        .then(j => {
+          if (j && j.ok) metaBox.textContent = JSON.stringify(j.meta || {}, null, 2);
+          else metaBox.textContent = JSON.stringify({error: j?.message || 'Keine Metadaten'}, null, 2);
+        })
+        .catch(()=> metaBox.textContent = JSON.stringify({error:'Meta-Request fehlgeschlagen'}, null, 2));
+    } else {
+      metaBox.textContent = JSON.stringify({note:'Lokale Vorschau (data URL), keine Server-Metadaten vorhanden.'}, null, 2);
+    }
+
+    modal.classList.remove('is-hidden');
+    document.documentElement.classList.add('andio-modal-open');
+  }
+
+  function close(){
+    if (!root) return;
+    const modal = root.querySelector('.andio-modal');
+    const mediaBox = root.querySelector('#andio-player-media');
+    mediaBox.querySelectorAll('video').forEach(v => { try{ v.pause(); v.src=''; }catch{} });
+    modal.classList.add('is-hidden');
+    document.documentElement.classList.remove('andio-modal-open');
+  }
+
+  // Helper: attach click/dblclick handlers and auto-annotate dynamic previews
+  function bindGlobal(){
+    // Click to open
+    document.addEventListener('click', (e)=>{
+      const el = e.target.closest('[data-player-src], .open-in-player, a[href], .preview img, .thumb img, .thumb video');
+      if (!el) return;
+      let src = el.getAttribute('data-player-src');
+
+      if (!src && (el.matches('.preview img, .thumb img, .thumb video'))) {
+        // Use media src directly
+        src = el.currentSrc || el.src;
+      }
+      if (!src && el.tagName === 'A') {
+        const href = el.getAttribute('href') || '';
+        if (/^\/?outputs\//i.test(href)) src = href;
+      }
+      if (!src) return;
+
+      // Prevent navigation for links
+      if (el.tagName === 'A') e.preventDefault();
+      // If it's a video thumb with a play button in parent, allow opening
+      open(src);
+    });
+
+    // Double-click on any media to open
+    document.addEventListener('dblclick', (e)=>{
+      const el = e.target.closest('[data-player-src], .preview img, .thumb img, .thumb video');
+      if (!el) return;
+      let src = el.getAttribute('data-player-src') || el.currentSrc || el.src;
+      if (!src) return;
+      e.preventDefault();
+      open(src);
+    });
+
+    // Observe dynamic media in .preview/.thumb containers and auto-annotate
+    const obs = new MutationObserver((muts)=>{
+      muts.forEach(m=>{
+        m.addedNodes.forEach(node=>{
+          if (!(node instanceof HTMLElement)) return;
+          node.querySelectorAll?.('.preview img, .thumb img, .thumb video').forEach(media=>{
+            if (!media.getAttribute('data-player-src')) {
+              const s = media.currentSrc || media.src || '';
+              if (s) media.setAttribute('data-player-src', s);
+            }
+          });
+        });
+      });
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  }
+
+  // expose
+  NS.Player = { open, close, bindGlobal };
+
+  // Bind at ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindGlobal);
+  } else {
+    bindGlobal();
+  }
+})(window.Andio);
+
+
+// ===== Andio Helpers Export =====
+(function(NS){
+  try{
+    if (!NS.$)  NS.$  = (sel, el=document) => el.querySelector(sel);
+    if (!NS.$$) NS.$$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+    if (!NS.Progress) {
+      NS.Progress = class {
+        constructor(el){ this.el=el; this.bar=el?.querySelector('.progress > div'); }
+        set(p){ if(this.bar) this.bar.style.width = Math.max(0,Math.min(100,p)) + '%'; }
+        async fake(ms=2000){
+          let p=0, step=Math.max(40, ms/40);
+          while(p<100){
+            await new Promise(r=>setTimeout(r, step));
+            p += 3 + Math.random()*5;
+            this.set(p);
+          }
+          this.set(100);
+          setTimeout(()=> this.set(0), 500);
+        }
+      }
+    }
+  }catch(e){ /* noop */ }
+})(window.Andio = window.Andio || {});
+

@@ -1,1 +1,584 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Store</title><link rel="stylesheet" href="assets/styles.css"/></head><body><script src="assets/app.js"></script><script>Andio.navbar('catalog');</script><div class="container"><h1>Store</h1><div class='card'><h3>Modelle</h3><p>Installieren/Aktivieren (Backend-API erforderlich).</p></div></div><footer>© AndioMediaStudio</footer><script></script><script>Andio.polish();</script></body></html>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Store / Catalog</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    :root { --gap: 12px; }
+    .layout {
+      display:grid; grid-template-columns: 280px 1fr 380px; gap: var(--gap); align-items:start;
+    }
+    .sidebar, .details { position:sticky; top:72px; max-height:calc(100vh - 96px); overflow:auto; }
+    .toolbar { display:flex; gap:var(--gap); flex-wrap:wrap; align-items:center; }
+    .toolbar .grow { flex: 1 1 320px; }
+
+    .grid { display:grid; gap:var(--gap); grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .card-model { border:1px solid #ffffff22; border-radius:12px; overflow:hidden; background:#0f0f0f; display:flex; flex-direction:column; }
+    .cover { aspect-ratio: 16/9; width:100%; object-fit:cover; background:#1b1b1b; }
+    .meta { padding:10px; display:flex; flex-direction:column; gap:8px; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .right { margin-left:auto; }
+    .muted { opacity:.75; font-size:12px; }
+    .badge { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid #ffffff22; }
+    .chip { border:1px solid #ffffff22; padding:2px 8px; border-radius:999px; font-size:12px; }
+    .chips { display:flex; gap:6px; flex-wrap:wrap; }
+    .btn { padding:8px 12px; border:1px solid #ffffff22; border-radius:8px; background:#1b1b1b; cursor:pointer; }
+    .btn.primary { background:#2b57ff; border-color:#2b57ff; color:white; }
+    .btn.warn { background:#ff7b2b; border-color:#ff7b2b; color:#111; }
+    .btn.ghost { background:transparent; }
+    .btn.block { width:100%; text-align:center; }
+    .btn[disabled] { opacity:.5; cursor:not-allowed; }
+    .select, .input { padding:8px 10px; background:#121212; color:inherit; border:1px solid #ffffff22; border-radius:8px; }
+    .select { min-width: 170px; }
+    .divider { border-top:1px solid #ffffff18; margin:10px 0; }
+    .list { display:flex; flex-direction:column; gap:8px; }
+
+    .progress { height:8px; background:#1b1b1b; border:1px solid #ffffff22; border-radius:999px; overflow:hidden; }
+    .progress .bar { height:100%; width:0%; background:#2b57ff; transition: width .25s; }
+
+    /* Overlay Preview */
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.8); display:none; align-items:center; justify-content:center; z-index:9999; }
+    .overlay.active { display:flex; }
+    .overlay .frame { width:min(92vw, 1200px); max-height:88vh; background:#0c0c0c; border-radius:14px; overflow:hidden; border:1px solid #ffffff22; display:flex; flex-direction:column; }
+    .overlay header, .overlay footer { padding:10px 12px; background:#0f0f0f; border-bottom:1px solid #ffffff16; display:flex; align-items:center; gap:10px; }
+    .overlay footer { border-top:1px solid #ffffff16; border-bottom:none; justify-content:space-between; }
+    .overlay .content { padding:0; display:flex; align-items:center; justify-content:center; background:#000; }
+    .overlay video, .overlay img { max-width:100%; max-height:74vh; display:block; }
+  </style>
+</head>
+<body>
+  <script src="assets/app.js"></script>
+  <script>Andio?.navbar?.('catalog');</script>
+
+  <div class="container">
+    <h1>Store / Catalog</h1>
+
+    <!-- Toolbar -->
+    <div class="card">
+      <div class="toolbar">
+        <input id="q" class="input grow" placeholder="Suche nach Name, Tag, Autor …"/>
+        <select id="cat" class="select">
+          <option value="">Alle Kategorien</option>
+          <option>Bild / SD</option>
+          <option>Inpainting</option>
+          <option>Pose / Keypoints</option>
+          <option>Video</option>
+          <option>Wandrobe / Try-On</option>
+          <option>Filter / Retusche</option>
+          <option>Utilities</option>
+        </select>
+        <select id="compat" class="select" title="Kompatibilität">
+          <option value="">Kompatibilität</option>
+          <option value="ok">Nur kompatibel</option>
+          <option value="warn">Zeige auch Warnungen</option>
+        </select>
+        <select id="sort" class="select">
+          <option value="pop_desc">Beliebt</option>
+          <option value="date_desc">Neueste</option>
+          <option value="name_asc">Name A–Z</option>
+          <option value="size_asc">Größe ↑</option>
+          <option value="size_desc">Größe ↓</option>
+        </select>
+        <button id="btnInstalled" class="btn">Nur Installierte</button>
+        <button id="btnNSFW" class="btn">SFW+NSFW</button>
+      </div>
+      <div class="muted">Hinweis: Vorschau-Overlay öffnet nur für **Demo/Beispiel-Medien** (generiert), nicht für reine Referenzbilder.</div>
+    </div>
+
+    <div class="layout">
+      <!-- Sidebar -->
+      <aside class="sidebar card">
+        <h3>Filter</h3>
+        <div class="list">
+          <label>Tags (Komma):</label>
+          <input id="tags" class="input" placeholder="portrait, anime, product">
+
+          <div class="divider"></div>
+          <label>Typen:</label>
+          <div class="list">
+            <label><input type="checkbox" id="t_model" checked/> Model / Checkpoint</label>
+            <label><input type="checkbox" id="t_lora" checked/> LoRA / Adapter</label>
+            <label><input type="checkbox" id="t_vae" checked/> VAE</label>
+            <label><input type="checkbox" id="t_control" checked/> ControlNet / Pose</label>
+            <label><input type="checkbox" id="t_preset" checked/> Preset / Prompt</label>
+            <label><input type="checkbox" id="t_util" checked/> Utility / Tool</label>
+          </div>
+
+          <div class="divider"></div>
+          <label>Lizenz:</label>
+          <select id="license" class="select">
+            <option value="">Alle</option>
+            <option>Open</option>
+            <option>CC-BY</option>
+            <option>Non-Commercial</option>
+            <option>Proprietär</option>
+          </select>
+
+          <div class="divider"></div>
+          <button id="btnReset" class="btn ghost block">Filter zurücksetzen</button>
+        </div>
+      </aside>
+
+      <!-- Grid -->
+      <main>
+        <section id="grid" class="grid"></section>
+      </main>
+
+      <!-- Details -->
+      <aside class="details card">
+        <h3>Details</h3>
+        <div id="empty" class="muted">Wähle einen Eintrag, um Details, Changelog und Abhängigkeiten zu sehen.</div>
+
+        <div id="box" style="display:none;">
+          <div class="row">
+            <div style="font-weight:600;" id="dName">—</div>
+            <span class="badge right" id="dType">—</span>
+          </div>
+          <div class="chips" id="dChips"></div>
+          <div class="muted" id="dMeta">—</div>
+          <div class="divider"></div>
+
+          <div><strong>Beschreibung</strong><div id="dDesc" class="muted"></div></div>
+          <div class="divider"></div>
+
+          <div><strong>Abhängigkeiten</strong>
+            <ul id="dDeps" class="list" style="margin-top:8px;"></ul>
+          </div>
+
+          <div class="divider"></div>
+          <div><strong>Changelog</strong>
+            <div id="dChangelog" class="list"></div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="row">
+            <button id="dPreview" class="btn">Vorschau</button>
+            <button id="dInstall" class="btn primary">Installieren</button>
+            <button id="dEnable" class="btn">Aktivieren</button>
+            <button id="dUpdate" class="btn">Aktualisieren</button>
+            <button id="dUninstall" class="btn warn">Deinstallieren</button>
+          </div>
+
+          <div class="divider"></div>
+          <div class="progress" title="Download/Installationsfortschritt">
+            <div id="dProg" class="bar"></div>
+          </div>
+          <div class="muted" id="dProgTxt">Bereit.</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Overlay Preview: Nur für generierte Demo/Beispiele -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Preview">
+    <div class="frame">
+      <header>
+        <strong id="ovTitle">Preview</strong>
+        <span id="ovBadges" class="chips"></span>
+        <span class="right muted" id="ovInfo"></span>
+        <button id="ovClose" class="btn">Schließen</button>
+      </header>
+      <div class="content" id="ovContent"></div>
+      <footer>
+        <div class="row">
+          <button id="ovPrev" class="btn">◀</button>
+          <button id="ovNext" class="btn">▶</button>
+        </div>
+        <div class="row">
+          <button id="ovInstall" class="btn primary">Installieren</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <footer>© AndioMediaStudio</footer>
+
+  <script>
+    Andio?.polish?.();
+
+    // ---- Demo Daten (werden durch Backend ersetzt, falls /api/catalog verfügbar) ----
+    /** Schema:
+     * id, name, type: 'model'|'lora'|'vae'|'control'|'preset'|'util'
+     * category, tags[], nsfw:boolean, installed:boolean, enabled:boolean, version, sizeMB:number,
+     * compat:'ok'|'warn', license, author, date, cover, demo:[{type:'image'|'video', src, generated:true}],
+     * desc, deps:[{id, name, installed, missing:boolean}], changelog:[{version, date, notes[]} ]
+     */
+    const demo = [
+      {
+        id:'sdxl-base', name:'SDXL Base 1.0', type:'model', category:'Bild / SD',
+        tags:['portrait','realistic'], nsfw:false, installed:false, enabled:false,
+        version:'1.0.0', sizeMB: 6810, compat:'ok', license:'Open', author:'Stability',
+        date:'2025-08-15T09:00:00Z',
+        cover:'assets/demo/sdxl.jpg',
+        demo:[{type:'image', src:'assets/demo/portrait_a.jpg', generated:true}],
+        desc:'Allgemeines SDXL-Basis-Checkpoint für hochwertige Bildgenerierung.',
+        deps:[{id:'sdxl-vae', name:'SDXL VAE', installed:false, missing:true}],
+        changelog:[{version:'1.0.0', date:'2025-08-15', notes:['Initial release']}]
+      },
+      {
+        id:'lora-anime', name:'Anime Face LoRA V2', type:'lora', category:'Inpainting',
+        tags:['anime','stylized'], nsfw:false, installed:true, enabled:true,
+        version:'2.1.0', sizeMB: 240, compat:'ok', license:'CC-BY', author:'Artist-X',
+        date:'2025-08-20T11:00:00Z',
+        cover:'assets/demo/anime.jpg',
+        demo:[{type:'image', src:'assets/demo/fabric.jpg', generated:false}], // Referenzbild -> kein Overlay
+        desc:'Stilisierte Anime-Gesichter, fein für Retusche & Inpainting.',
+        deps:[{id:'sdxl-base', name:'SDXL Base 1.0', installed:false, missing:true}],
+        changelog:[{version:'2.1.0', date:'2025-08-20', notes:['Verbessertes Training','Geringere Artefakte']}]
+      },
+      {
+        id:'cn-openpose', name:'ControlNet OpenPose', type:'control', category:'Pose / Keypoints',
+        tags:['pose','keypoints'], nsfw:true, installed:false, enabled:false,
+        version:'0.9.2', sizeMB: 520, compat:'warn', license:'Open', author:'Community',
+        date:'2025-08-10T08:30:00Z',
+        cover:'assets/demo/pose.jpg',
+        demo:[{type:'video', src:'assets/demo/clip.mp4', generated:true}],
+        desc:'Steuert Haltung/Bewegung über extrahierte Skelettpunkte.',
+        deps:[],
+        changelog:[{version:'0.9.2', date:'2025-08-10', notes:['Kompat-Hinweis mit älterem VAE']}]
+      },
+      {
+        id:'tryon-wardrobe', name:'Wandrobe Try-On Suite', type:'util', category:'Wandrobe / Try-On',
+        tags:['try-on','fabric','swap'], nsfw:true, installed:false, enabled:false,
+        version:'1.4.3', sizeMB: 110, compat:'ok', license:'Proprietär', author:'Andio',
+        date:'2025-08-26T16:00:00Z',
+        cover:'assets/demo/wardrobe.jpg',
+        demo:[{type:'image', src:'assets/demo/nsfw.jpg', generated:true}],
+        desc:'Auto-Erkennung von Kleidungsteilen, Stoffsimulation, Farb-/Musterwechsel, optional Remover.',
+        deps:[{id:'sdxl-base', name:'SDXL Base 1.0', installed:false, missing:true}],
+        changelog:[{version:'1.4.3', date:'2025-08-26', notes:['Bessere Masken','Schnelleres Preview']}]
+      },
+    ];
+
+    // ---- State / DOM ----
+    const state = { items: [], filtered: [], onlyInstalled:false, withNSFW:true, selection:null, previewIndex:null };
+    const $ = (q, root=document)=> root.querySelector(q);
+    const el = {
+      q: $('#q'), cat: $('#cat'), compat: $('#compat'), sort: $('#sort'),
+      btnInstalled: $('#btnInstalled'), btnNSFW: $('#btnNSFW'),
+      tags: $('#tags'), t_model: $('#t_model'), t_lora: $('#t_lora'), t_vae: $('#t_vae'),
+      t_control: $('#t_control'), t_preset: $('#t_preset'), t_util: $('#t_util'),
+      license: $('#license'), btnReset: $('#btnReset'),
+      grid: $('#grid'),
+      empty: $('#empty'), box: $('#box'),
+      dName: $('#dName'), dType: $('#dType'), dChips: $('#dChips'), dMeta: $('#dMeta'),
+      dDesc: $('#dDesc'), dDeps: $('#dDeps'), dChangelog: $('#dChangelog'),
+      dPreview: $('#dPreview'), dInstall: $('#dInstall'), dEnable: $('#dEnable'),
+      dUpdate: $('#dUpdate'), dUninstall: $('#dUninstall'), dProg: $('#dProg'), dProgTxt: $('#dProgTxt'),
+      overlay: $('#overlay'), ovTitle: $('#ovTitle'), ovBadges: $('#ovBadges'),
+      ovInfo: $('#ovInfo'), ovContent: $('#ovContent'), ovClose: $('#ovClose'),
+      ovPrev: $('#ovPrev'), ovNext: $('#ovNext'), ovInstall: $('#ovInstall'),
+    };
+
+    const fmtSize = m => (m>1024? (m/1024).toFixed(2)+' GB' : Math.round(m)+' MB');
+    const fmtDate = iso => new Date(iso).toLocaleDateString();
+
+    // ---- Backend Laden (optional) ----
+    async function loadCatalog() {
+      try {
+        const r = await fetch('/api/catalog');
+        if(!r.ok) throw 0;
+        const data = await r.json();
+        state.items = data.items || demo;
+      } catch {
+        state.items = demo; // Fallback auf Demo
+      }
+      applyFilters();
+    }
+
+    // ---- Filter/Sort ----
+    function applyFilters(){
+      const q = el.q.value.trim().toLowerCase();
+      const cat = el.cat.value;
+      const compat = el.compat.value;
+      const tags = el.tags.value.toLowerCase().split(',').map(s=>s.trim()).filter(Boolean);
+      const types = new Set([
+        el.t_model.checked && 'model',
+        el.t_lora.checked && 'lora',
+        el.t_vae.checked && 'vae',
+        el.t_control.checked && 'control',
+        el.t_preset.checked && 'preset',
+        el.t_util.checked && 'util',
+      ].filter(Boolean));
+
+      const license = el.license.value;
+
+      let arr = state.items.filter(it=>{
+        if(state.onlyInstalled && !it.installed) return false;
+        if(!state.withNSFW && it.nsfw) return false;
+        if(cat && it.category !== cat) return false;
+        if(types.size && !types.has(it.type)) return false;
+        if(license && it.license !== license) return false;
+        if(compat==='ok' && it.compat!=='ok') return false;
+        // Suche
+        if(q){
+          const hay = (it.name+' '+(it.author||'')+' '+(it.tags||[]).join(' ')).toLowerCase();
+          if(!hay.includes(q)) return false;
+        }
+        // Tags
+        if(tags.length){
+          const lowerTags = (it.tags||[]).map(t=> t.toLowerCase());
+          const match = tags.every(t=> lowerTags.includes(t));
+          if(!match) return false;
+        }
+        return true;
+      });
+
+      const s = el.sort.value;
+      arr.sort((a,b)=>{
+        if(s==='pop_desc') return (b.installed?1:0) - (a.installed?1:0);
+        if(s==='date_desc') return new Date(b.date)-new Date(a.date);
+        if(s==='name_asc') return a.name.localeCompare(b.name);
+        if(s==='size_asc') return a.sizeMB - b.sizeMB;
+        if(s==='size_desc') return b.sizeMB - a.sizeMB;
+        return 0;
+      });
+
+      state.filtered = arr;
+      renderGrid();
+      if(state.selection){
+        const sel = state.filtered.find(x=> x.id===state.selection.id) || null;
+        openDetails(sel);
+      }
+    }
+
+    // ---- Render Grid ----
+    function renderGrid(){
+      el.grid.innerHTML = '';
+      state.filtered.forEach(it=>{
+        const card = document.createElement('div');
+        card.className = 'card-model';
+        const img = document.createElement('img');
+        img.className = 'cover';
+        img.src = it.cover;
+        img.alt = it.name;
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+
+        const row1 = elRow(
+          elStrong(it.name),
+          elSpanBadge(typeLabel(it.type), 'right')
+        );
+
+        const row2 = elRow(
+          elSpanBadge(it.category),
+          elSpanBadge(it.nsfw?'NSFW':'SFW'),
+          elSpanBadge(it.compat==='ok'?'Compat OK':'Compat Warn')
+        );
+
+        const row3 = document.createElement('div'); row3.className = 'chips';
+        (it.tags||[]).forEach(t=> row3.append(elChip(t)));
+
+        const row4 = elRow(
+          elSpanMuted(`v${it.version} • ${fmtSize(it.sizeMB)}`),
+          elSpanMuted(`von ${it.author}`),
+          elSpanMuted(fmtDate(it.date)),
+        );
+
+        const actions = elRow(
+          makeActionBtn('Vorschau', ()=> preview(it)),
+          makePrimaryBtn(it.installed?'Neu installieren':'Installieren', ()=> install(it)),
+          makeActionBtn(it.enabled?'Deaktivieren':'Aktivieren', ()=> enableToggle(it)),
+        );
+
+        meta.append(row1, row2, row3, row4, actions);
+        card.append(img, meta);
+
+        card.addEventListener('click', (e)=>{
+          if(['BUTTON'].includes(e.target.tagName)) return;
+          openDetails(it);
+        });
+
+        el.grid.append(card);
+      });
+    }
+
+    // ---- Details Panel ----
+    function openDetails(it){
+      state.selection = it || null;
+      if(!it){ el.empty.style.display=''; el.box.style.display='none'; return; }
+      el.empty.style.display='none';
+      el.box.style.display='';
+      el.dName.textContent = it.name;
+      el.dType.textContent = typeLabel(it.type);
+
+      el.dChips.innerHTML = '';
+      el.dChips.append(elChip(it.category), elChip(it.nsfw?'NSFW':'SFW'), elChip(it.compat==='ok'?'Compat OK':'Compat Warn'));
+      (it.tags||[]).forEach(t=> el.dChips.append(elChip(t)));
+
+      el.dMeta.textContent = `v${it.version} • ${fmtSize(it.sizeMB)} • von ${it.author} • ${fmtDate(it.date)} • Lizenz: ${it.license}`;
+      el.dDesc.textContent = it.desc || '—';
+
+      el.dDeps.innerHTML = '';
+      if((it.deps||[]).length===0){
+        const li = document.createElement('li'); li.className='muted'; li.textContent='Keine';
+        el.dDeps.append(li);
+      } else {
+        it.deps.forEach(d=>{
+          const li = document.createElement('li');
+          li.innerHTML = `${d.name} — ${d.installed?'<span class="badge">installiert</span>': d.missing?'<span class="badge">FEHLT</span>':'—'}`;
+          el.dDeps.append(li);
+        });
+      }
+
+      el.dChangelog.innerHTML = '';
+      (it.changelog||[]).forEach(c=>{
+        const wrap = document.createElement('div'); wrap.className='list';
+        const head = document.createElement('div');
+        head.innerHTML = `<strong>${c.version}</strong> <span class="muted">(${c.date})</span>`;
+        wrap.append(head);
+        (c.notes||[]).forEach(n=>{
+          const li = document.createElement('div'); li.className='muted'; li.textContent = '• ' + n;
+          wrap.append(li);
+        });
+        el.dChangelog.append(wrap);
+      });
+
+      // Buttons binden
+      el.dPreview.onclick = ()=> preview(it);
+      el.dInstall.onclick = ()=> install(it);
+      el.dEnable.textContent = it.enabled?'Deaktivieren':'Aktivieren';
+      el.dEnable.onclick = ()=> enableToggle(it);
+      el.dUpdate.onclick = ()=> update(it);
+      el.dUninstall.onclick = ()=> uninstall(it);
+
+      // Fortschritt zurücksetzen
+      setProgress(0, 'Bereit.');
+    }
+
+    function setProgress(pct, text){
+      el.dProg.style.width = Math.max(0, Math.min(100, pct)) + '%';
+      el.dProgTxt.textContent = text;
+    }
+
+    // ---- Aktionen ----
+    async function install(it){
+      setProgress(3, 'Initialisiere Download …');
+      try {
+        // Abhängigkeiten prüfen
+        const missing = (it.deps||[]).filter(d=> d.missing);
+        if(missing.length){
+          setProgress(5, 'Lade Abhängigkeiten …');
+          // Optionaler Backend-Call
+          await fakeWait(600);
+        }
+        // Download & Install (Demo)
+        for(let i=10; i<=90; i+=10){ await fakeWait(150); setProgress(i, `Installiere … ${i}%`); }
+        await fakeWait(300);
+        setProgress(100, 'Fertig.');
+        it.installed = true;
+        renderGrid(); openDetails(it);
+      } catch(e){
+        setProgress(0, 'Fehler: ' + (e?.message||e||'unbekannt'));
+      }
+    }
+
+    async function update(it){
+      setProgress(5, 'Prüfe Version …');
+      await fakeWait(500);
+      for(let i=10; i<=100; i+=15){ await fakeWait(130); setProgress(i, `Aktualisiere … ${i}%`); }
+      it.installed = true;
+      setProgress(100, 'Aktualisiert.');
+      renderGrid(); openDetails(it);
+    }
+
+    async function uninstall(it){
+      if(!confirm(`„${it.name}“ deinstallieren?`)) return;
+      setProgress(5, 'Entferne Dateien …');
+      await fakeWait(800);
+      it.installed = false; it.enabled = false;
+      setProgress(100, 'Deinstalliert.');
+      renderGrid(); openDetails(it);
+    }
+
+    async function enableToggle(it){
+      if(!it.installed){ alert('Bitte zuerst installieren.'); return; }
+      it.enabled = !it.enabled;
+      renderGrid(); openDetails(it);
+    }
+
+    // ---- Preview Overlay (nur Demo-Medien mit generated:true) ----
+    function preview(it){
+      const demos = (it.demo||[]).filter(d=> d.generated);
+      if(!demos.length){ alert('Keine generierte Vorschau verfügbar.'); return; }
+      state.previewIndex = 0;
+      showOverlay(it, demos[state.previewIndex], demos.length);
+      el.ovPrev.onclick = ()=> navOverlay(it, -1);
+      el.ovNext.onclick = ()=> navOverlay(it, +1);
+      el.ovInstall.onclick = ()=> install(it);
+    }
+
+    function navOverlay(it, dir){
+      const demos = (it.demo||[]).filter(d=> d.generated);
+      if(!demos.length) return;
+      state.previewIndex = (state.previewIndex + dir + demos.length) % demos.length;
+      showOverlay(it, demos[state.previewIndex], demos.length);
+    }
+
+    function showOverlay(it, demo, total){
+      el.ovTitle.textContent = it.name;
+      el.ovBadges.innerHTML = '';
+      el.ovBadges.append(elChip(typeLabel(it.type)), elChip(it.nsfw?'NSFW':'SFW'));
+      el.ovInfo.textContent = `v${it.version} • ${fmtSize(it.sizeMB)} • ${fmtDate(it.date)}`;
+
+      el.ovContent.innerHTML = '';
+      if(demo.type==='video'){
+        const v = document.createElement('video'); v.controls = true; v.autoplay = true; v.src = demo.src;
+        el.ovContent.append(v);
+      } else {
+        const i = document.createElement('img'); i.src = demo.src; i.alt = it.name;
+        el.ovContent.append(i);
+      }
+      el.overlay.classList.add('active');
+    }
+
+    el.ovClose.addEventListener('click', ()=> el.overlay.classList.remove('active'));
+    el.overlay.addEventListener('click', (e)=> { if(e.target===el.overlay) el.overlay.classList.remove('active'); });
+
+    // ---- Toolbar Toggles ----
+    el.btnInstalled.addEventListener('click', ()=>{
+      state.onlyInstalled = !state.onlyInstalled;
+      el.btnInstalled.classList.toggle('primary', state.onlyInstalled);
+      el.btnInstalled.textContent = state.onlyInstalled ? 'Nur Installierte ✓' : 'Nur Installierte';
+      applyFilters();
+    });
+
+    el.btnNSFW.addEventListener('click', ()=>{
+      state.withNSFW = !state.withNSFW;
+      el.btnNSFW.classList.toggle('primary', state.withNSFW);
+      el.btnNSFW.textContent = state.withNSFW ? 'SFW+NSFW ✓' : 'Nur SFW';
+      applyFilters();
+    });
+
+    [el.q, el.cat, el.compat, el.sort, el.tags, el.t_model, el.t_lora, el.t_vae, el.t_control, el.t_preset, el.t_util, el.license]
+      .forEach(x=> x.addEventListener('input', applyFilters));
+    el.btnReset.addEventListener('click', ()=>{
+      el.q.value=''; el.cat.value=''; el.compat.value=''; el.sort.value='pop_desc';
+      el.tags.value=''; el.t_model.checked=el.t_lora.checked=el.t_vae.checked=el.t_control.checked=el.t_preset.checked=el.t_util.checked=true;
+      el.license.value='';
+      state.onlyInstalled=false; state.withNSFW=true;
+      el.btnInstalled.classList.remove('primary'); el.btnInstalled.textContent='Nur Installierte';
+      el.btnNSFW.classList.add('primary'); el.btnNSFW.textContent='SFW+NSFW ✓';
+      applyFilters();
+    });
+
+    // ---- Helpers UI ----
+    function elRow(...children){ const r=document.createElement('div'); r.className='row'; r.append(...children); return r; }
+    function elStrong(t){ const s=document.createElement('div'); s.style.fontWeight='600'; s.textContent=t; return s; }
+    function elSpanBadge(t, cls=''){ const s=document.createElement('span'); s.className='badge'+(cls?' '+cls:''); s.textContent=t; return s; }
+    function elSpanMuted(t){ const s=document.createElement('span'); s.className='muted'; s.textContent=t; return s; }
+    function elChip(t){ const s=document.createElement('span'); s.className='chip'; s.textContent=t; return s; }
+    function makeActionBtn(text, fn){ const b=document.createElement('button'); b.className='btn'; b.textContent=text; b.onclick=fn; return b; }
+    function makePrimaryBtn(text, fn){ const b=document.createElement('button'); b.className='btn primary'; b.textContent=text; b.onclick=fn; return b; }
+    const typeLabel = t => ({model:'Model', lora:'LoRA', vae:'VAE', control:'ControlNet', preset:'Preset', util:'Utility'}[t] || t);
+
+    const fakeWait = (ms)=> new Promise(res=> setTimeout(res, ms));
+
+    // Init
+    loadCatalog();
+  </script>
+</body>
+</html>
