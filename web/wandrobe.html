@@ -1,4 +1,32 @@
 <!doctype html>
+<!-- === Brand / Navbar (standardisiert) === -->
+<header class="header">
+  <nav>
+    <div class="brand">
+      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+      <span class="wordmark">Andio Media Studio</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="links">
+      <a href="index.html" data-link="index">Übersicht</a>
+      <a href="images.html" data-link="images">Image Studio</a>
+      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
+      <a href="motion.html" data-link="motion">Motion</a>
+      <a href="gallery.html" data-link="gallery">Gallery</a>
+      <a href="catalog.html" data-link="catalog">Store</a>
+      <a href="editor.html" data-link="editor">Editor</a>
+    </div>
+  </nav>
+</header>
+<script>
+  (function(){
+    var p=document.body.getAttribute('data-page')||'wardrobe';
+    var a=document.querySelector('.links a[data-link="'+p+'"]');
+    if(a) a.classList.add('active');
+  })();
+</script>
+
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
@@ -46,12 +74,9 @@
     .thumb .badge{position:absolute;right:6px;bottom:6px;padding:2px 6px;border-radius:999px;background:rgba(12,18,32,.75);border:1px solid rgba(140,160,210,.35);font-size:12px}
   </style>
 </head>
-<body>
+<body data-page="wardrobe">
 <script src="assets/app.js"></script>
-<script>
-  if (window.Andio?.injectNavbar) Andio.injectNavbar('wardrobe');
-  else if (window.Andio?.navbar) Andio.navbar('wardrobe');
-</script>
+
 
 <div class="container">
   <h1>Wardrobe</h1>

@@ -1,569 +1,583 @@
 <!doctype html>
+<!-- === Brand / Navbar (standardisiert) === -->
+<header class="header">
+  <nav>
+    <div class="brand">
+      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+      <span class="wordmark">Andio Media Studio</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="links">
+      <a href="index.html" data-link="index">Übersicht</a>
+      <a href="images.html" data-link="images">Image Studio</a>
+      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
+      <a href="motion.html" data-link="motion">Motion</a>
+      <a href="gallery.html" data-link="gallery">Gallery</a>
+      <a href="catalog.html" data-link="catalog">Store</a>
+      <a href="editor.html" data-link="editor">Editor</a>
+    </div>
+  </nav>
+</header>
+<script>
+  (function(){
+    var p=document.body.getAttribute('data-page')||'editor';
+    var a=document.querySelector('.links a[data-link="'+p+'"]');
+    if(a) a.classList.add('active');
+  })();
+</script>
+
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Editor · AndioMediaStudio</title>
+  <title>Editor – AndioMediaStudio</title>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    :root{
-      --bg:#0b1220;--card:#0f172a;--muted:#8ca0d2;--accent:#7aa2ff;--accent2:#9fbaff;
-      --border:rgba(140,160,210,.25);--border-strong:rgba(120,160,255,.7);
-    }
-    .page{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
-    @media(max-width:1080px){.page{grid-template-columns:1fr}}
-    .preview-wrap{position:relative}
-    .preview{position:relative;width:100%;min-height:560px;border:1px solid rgba(140,160,210,.2);
-      border-radius:14px;background:var(--bg);overflow:hidden;user-select:none}
-    .preview img{display:block;max-width:100%;height:auto;margin:auto}
-    .overlay{position:absolute;inset:0;pointer-events:none}
-    .region{position:absolute;border:2px dashed var(--border-strong);background:rgba(120,160,255,.15);pointer-events:auto}
-    .region.ellipse{border-radius:9999px}
-    .region .label{position:absolute;top:-18px;left:0;background:rgba(20,28,48,.8);padding:2px 6px;border-radius:6px;
-      font-size:12px;color:#fff}
-    .handle{position:absolute;width:10px;height:10px;background:#d6e1ff;border:2px solid #3f5bd1;border-radius:50%;
-      cursor:nwse-resize}
-    .handle.br{right:-6px;bottom:-6px}
-    .handle.tr{right:-6px;top:-6px;cursor:nesw-resize}
-    .handle.bl{left:-6px;bottom:-6px;cursor:nesw-resize}
-    .handle.tl{left:-6px;top:-6px}
-    .lasso-path{position:absolute;border:2px dashed var(--border-strong);background:rgba(120,160,255,.12);pointer-events:none}
-    .under-preview{margin-top:12px}
-    textarea.input{min-height:72px;resize:vertical}
-    .prompt-list{display:flex;flex-direction:column;gap:10px}
-    .prompt-item{border:1px solid var(--border);border-radius:10px;padding:8px}
-    .prompt-item h5{margin:0 0 8px;font-size:14px;color:var(--accent2)}
-    .prompt-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-    .prompt-grid .col{display:flex;flex-direction:column;gap:6px}
-    .toolbar .btn{margin:2px}
-    .progress{position:absolute;inset:0;display:none;place-content:center;background:rgba(8,12,22,.45);z-index:5}
-    .progress>div{width:56px;height:56px;border-radius:50%;border:4px solid rgba(120,160,255,.25);
-      border-top-color:rgba(120,160,255,.95);animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .thumbs{display:grid;grid-template-columns:repeat(auto-fill, minmax(88px,1fr));gap:8px}
-    .thumbs .thumb{border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer}
-    .thumb img{display:block;width:100%;height:auto}
-    .layerbar{display:flex;gap:8px;flex-wrap:wrap}
-    .chip{border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:12px}
-    .pose-point{position:absolute;width:10px;height:10px;border:2px solid #fff;border-radius:50%;background:#2b5fd9;
-      box-shadow:0 0 0 2px rgba(43,95,217,.3);cursor:grab}
-    .pose-line{position:absolute;height:2px;background:#8fb0ff;transform-origin:0 0;pointer-events:none}
-    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;border:1px solid var(--border);
-      padding:.1rem .35rem;border-radius:6px;background:#0e1630}
-    .hint{color:#a9b7e6;font-size:12px}
-    .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    /* Minimal add-on styles nur für Auswahl & Layout-Details */
+    .page { display: grid; grid-template-columns: 360px 1fr; gap: 16px; }
+    .controls .group { margin-bottom: 14px; }
+    .controls .group h4 { margin: 0 0 6px; }
+    .controls .muted { opacity: .8; font-size: 13px; }
+    .row { display:flex; align-items:center; gap:8px; }
+    .row > * { flex: 1; }
+    .split { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .badge { display:inline-block; padding:2px 8px; border:1px solid #333; border-radius:999px; font-size:12px; }
+
+    /* Canvas/Preview */
+    .preview-wrap { position: relative; background:#0b0b0b; border:1px solid #2a2a2a; border-radius:12px; min-height:420px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    #refImage { max-width: 100%; max-height: 72vh; display:none; }
+    #drawCanvas { position:absolute; inset:0; pointer-events:none; }
+    .preview-toolbar { position:absolute; top:10px; left:10px; display:flex; gap:8px; }
+    .tool-btn { border:1px solid #374151; background:#111; color:#e5e7eb; border-radius:10px; padding:6px 10px; cursor:pointer; }
+    .tool-btn.active { background:#1a1a1a; }
+
+    /* Auswahl-Handles (nur visuell, Interaktion per JS) */
+    .handles { position:absolute; border:1px dashed #8ab4f8; pointer-events:none; }
+    .handle { position:absolute; width:10px; height:10px; background:#8ab4f8; border-radius:50%; transform:translate(-50%, -50%); pointer-events:auto; }
+    .handle.nw { top:0; left:0; }
+    .handle.ne { top:0; right:0; }
+    .handle.sw { bottom:0; left:0; }
+    .handle.se { bottom:0; right:0; }
+
+    /* Nummern-Markierungen */
+    .mark { position:absolute; background:#111; color:#e5e7eb; border:1px solid #333; border-radius:8px; padding:2px 6px; font-size:12px; transform:translate(-50%, -100%); }
+
+    /* Vorschlagsleiste */
+    .suggest { display:flex; gap:8px; flex-wrap:wrap; }
+    .suggest .pill { border:1px solid #333; border-radius:999px; padding:4px 8px; font-size:12px; cursor:pointer; }
+    .suggest .pill:hover { background:#1a1a1a; }
   </style>
 </head>
-<body>
-<script src="assets/app.js"></script>
-<script>
-  if(window.Andio?.injectNavbar) Andio.injectNavbar('editor');
-  else if(window.Andio?.navbar) Andio.navbar('editor');
-</script>
+<body data-page="editor">
+  <script src="assets/app.js"></script>
+  
 
-<div class="container">
-  <h1>Editor</h1>
-  <div class="page">
-    <!-- LINKS: Werkzeugwahl -->
-    <aside class="card">
-      <h3>Werkzeuge</h3>
+  <div class="container">
+    <h1>Editor</h1>
+    <p class="muted">Photoshop-ähnlich: Bereiche markieren & gezielt generieren/entfernen; global filtern/variieren; Pose mit Keypoints anpassen.</p>
 
-      <div class="toolbar" style="margin-bottom:10px">
-        <button class="btn mode primary" data-mode="generate">🞧 Generieren</button>
-        <button class="btn mode" data-mode="remove">✖ Entfernen</button>
-        <button class="btn mode" data-mode="filter">🎨 Filter</button>
-        <button class="btn mode" data-mode="pose">👤 Pose</button>
-      </div>
-
-      <!-- Auswahlformen -->
-      <div id="selectionBar" class="toolbar" style="margin-bottom:12px">
-        <span class="hint">Auswahl:</span>
-        <button class="btn sel primary" data-sel="rect">▭ Rechteck</button>
-        <button class="btn sel" data-sel="ellipse">⬭ Ellipse</button>
-        <button class="btn sel" data-sel="lasso">🔗 Lasso</button>
-        <button class="btn sel" data-sel="smart">✨ Smart</button>
-      </div>
-
-      <!-- Einstellungen pro Modus -->
-      <section data-pane="generate">
-        <h4>Generierung</h4>
-        <label>Modell<select id="modelGen" class="input">
-          <option>sdxl-real</option><option>realvis</option><option>juggernaut</option>
-        </select></label>
-        <label>Steps<input id="stepsGen" type="number" class="input" value="28"/></label>
-        <label>Guidance<input id="guidanceGen" type="number" step="0.1" class="input" value="7.5"/></label>
-        <label><input type="checkbox" id="edgeKeepGen" checked/> Kanten bewahren</label>
-        <label><input type="checkbox" id="relightGen" /> Licht anpassen</label>
-        <label><input type="checkbox" id="shadowGen" /> Schatten einblenden</label>
-        <small class="help">Bereiche markieren → Eingaben unter dem Bild (Was/Wo/Stil).</small>
-      </section>
-
-      <section data-pane="remove" style="display:none">
-        <h4>Entfernen</h4>
-        <label>Stärke<input id="strengthRem" type="range" min="0" max="100" value="80"/></label>
-        <label><input type="checkbox" id="edgeCleanRem" checked/> Kanten säubern</label>
-        <label><input type="checkbox" id="skinToneRem" checked/> Hautton angleichen</label>
-        <small class="help">Bereiche markieren → Eingaben „Was entfernen?“ unter dem Bild.</small>
-      </section>
-
-      <section data-pane="filter" style="display:none">
-        <h4>Filter (global)</h4>
-        <label>Farbe/Temperatur<select id="colorFilter" class="input">
-          <option value="neutral">Neutral</option><option value="warm">Warm</option><option value="kalt">Kalt</option>
-          <option value="bw">S/W</option><option value="teal">Teal&Orange</option>
-        </select></label>
-        <label>Kontrast<input id="contrastFilter" type="range" min="-50" max="50" value="0"/></label>
-        <label>Kurven (Gamma)<input id="gammaFilter" type="range" min="50" max="200" value="100"/></label>
-        <label>Skin-Unify<input id="skinFilter" type="range" min="0" max="100" value="0"/></label>
-        <label>Glanz reduzieren<input id="shineFilter" type="range" min="0" max="100" value="0"/></label>
-        <label>Körnung<input id="grainFilter" type="range" min="0" max="100" value="20"/></label>
-        <label>Vignette<input id="vignetteFilter" type="range" min="0" max="100" value="0"/></label>
-        <label>Schärfen<input id="sharpFilter" type="range" min="0" max="100" value="0"/></label>
-        <label>DeNoise<input id="denoiseFilter" type="range" min="0" max="100" value="0"/></label>
-        <div style="margin-top:8px">
-          <button id="btn-generateVariants" class="btn">🔁 Varianten erzeugen</button>
+    <div class="page">
+      <!-- Linke Spalte: Steuerung -->
+      <aside class="controls">
+        <div class="card">
+          <h3>Datei</h3>
+          <div class="group">
+            <label class="row">
+              <span>Bild hochladen</span>
+              <input id="fileInput" type="file" accept="image/*"/>
+            </label>
+            <p class="muted">Referenzbild wird rechts angezeigt. Der Player öffnet sich <b>nur</b> für generierte Ergebnisse, nicht für das Referenzbild.</p>
+          </div>
         </div>
-        <div id="variantGrid" class="thumbs" style="margin-top:8px"></div>
-        <small class="help">Klick auf Miniatur = anwenden.</small>
-      </section>
 
-      <section data-pane="pose" style="display:none">
-        <h4>Pose</h4>
-        <button id="btn-detectPose" class="btn">Pose erkennen</button>
-        <label>Steifigkeit (Soft-IK)<input id="stiffPose" type="range" min="0" max="1" step="0.1" value="0.5"/></label>
-        <label>Pose-Prompt<input id="posePrompt" class="input" placeholder="z. B. „Arme hoch“, „doggy“"/></label>
-        <label><input type="checkbox" id="anatomyGuard" checked/> Anatomie-Guard</label>
-        <small class="help">Punkte ziehen, Linien folgen. Demo-Overlay, keine echte KI-Berechnung.</small>
-      </section>
-
-      <hr/>
-      <h4>Layer & Aktionen</h4>
-      <div class="layerbar" id="layerBar"></div>
-      <div class="toolbar" style="margin-top:8px">
-        <button id="btn-open" class="btn">📂 Bild öffnen</button>
-        <button id="btn-apply" class="btn primary">G Anwenden</button>
-        <button id="btn-undo" class="btn">Z Undo</button>
-        <button id="btn-redo" class="btn">Y Redo</button>
-        <button id="btn-save" class="btn ok">S Download</button>
-        <button id="btn-clear" class="btn">Clear</button>
-      </div>
-      <p class="hint" style="margin-top:8px">
-        Shortcuts: <span class="kbd">V</span> Auswahl · <span class="kbd">B</span> Pinsel ·
-        <span class="kbd">E</span> Radierer · <span class="kbd">Z</span>/<span class="kbd">Y</span> Undo/Redo ·
-        <span class="kbd">G</span> Anwenden · <span class="kbd">S</span> Download · <span class="kbd">Ctrl+0</span>/<span class="kbd">Ctrl+1</span> Fit/100% ·
-        <span class="kbd">Strg+V</span> Bild aus Zwischenablage
-      </p>
-      <!-- Versteckter Datei-Input -->
-      <input id="fileOpen" type="file" accept="image/*" style="display:none"/>
-    </aside>
-
-    <!-- RECHTS: Bild-Canvas -->
-    <main class="card">
-      <div class="row" style="justify-content:space-between">
-        <h3>Vorschau</h3>
-        <div class="row">
-          <button id="btn-open-top" class="btn">📂 Bild öffnen</button>
-          <span class="hint">oder per Drag&Drop hierher ziehen</span>
+        <div class="card">
+          <h3>Modus</h3>
+          <div class="group split">
+            <label class="row"> <input type="radio" name="mode" value="generate" checked/> <span>Generieren (Inpainting)</span> </label>
+            <label class="row"> <input type="radio" name="mode" value="remove"/> <span>Entfernen</span> </label>
+            <label class="row"> <input type="radio" name="mode" value="filter"/> <span>Filter/Varianten</span> </label>
+            <label class="row"> <input type="radio" name="mode" value="pose"/> <span>Pose</span> </label>
+          </div>
+          <div class="group">
+            <div class="row">
+              <button class="tool-btn" data-tool="rect">Rechteck</button>
+              <button class="tool-btn" data-tool="lasso">Lasso</button>
+              <button class="tool-btn" data-tool="smart">Smart Select</button>
+            </div>
+            <p class="muted">Markierte Bereiche werden nummeriert (#1, #2, …). Zu jedem Bereich unten passende Eingabefelder.</p>
+          </div>
+          <div class="group row">
+            <label class="row andio-nsfw-toggle">
+              <input id="nsfw-toggle" type="checkbox"/>
+              <span>NSFW aktivieren</span>
+            </label>
+            <button id="btnSuggest" class="tool-btn" type="button">Vorschlag</button>
+          </div>
+          <div id="suggestBar" class="suggest"></div>
         </div>
-      </div>
-      <div class="preview-wrap">
-        <div id="preview" class="preview" tabindex="0">
-          <div class="progress"><div></div></div>
-          <!-- Bild -->
-          <div class="overlay" id="overlay"></div>
-        </div>
-      </div>
 
-      <!-- Dynamische Eingabefelder -->
-      <div class="under-preview">
-        <h4>Eingaben für markierte Bereiche</h4>
-        <div id="promptList" class="prompt-list"></div>
-      </div>
-    </main>
+        <div class="card">
+          <h3>Ausgewählter Bereich</h3>
+          <div id="regionForm">
+            <p class="muted">Markiere im Bild einen Bereich. Danach erscheinen hier die Eingabefelder (#n) abhängig vom Modus.</p>
+          </div>
+          <div class="group">
+            <button id="btnResetRegions" class="tool-btn" type="button">Auswahl zurücksetzen</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Aktion</h3>
+          <div class="group row">
+            <button id="btnGenerate" class="tool-btn" type="button">Generieren</button>
+            <button id="btnVariants" class="tool-btn" type="button">Varianten</button>
+          </div>
+          <p class="muted">„Generieren“ erzeugt das Zielbild; „Varianten“ erzeugt Mini-Previews (bei Filter/Varianten).</p>
+        </div>
+
+      </aside>
+
+      <!-- Rechte Spalte: Vorschau -->
+      <main class="view">
+        <div class="card">
+          <h3>Vorschau</h3>
+          <div class="preview-wrap" id="previewWrap">
+            <div class="preview-toolbar">
+              <button id="btnOpenPlayer" class="tool-btn" type="button" title="Im Player öffnen">Play</button>
+              <button id="btnZoomFit" class="tool-btn" type="button">Zoom-Fit</button>
+              <button id="btnZoom100" class="tool-btn" type="button">100%</button>
+            </div>
+            <img id="refImage" alt="Referenz"/>
+            <canvas id="drawCanvas"></canvas>
+            <!-- Dynamische Auswahl-Rahmen & #Marken werden hier per JS eingefügt -->
+          </div>
+
+          <div class="split" style="margin-top:12px;">
+            <div>
+              <h4>Quelle</h4>
+              <p class="muted">Hochgeladenes Bild (nur Anzeige)</p>
+              <div class="row">
+                <span class="badge" id="srcInfo">—</span>
+              </div>
+            </div>
+            <div>
+              <h4>Ergebnis</h4>
+              <p class="muted">Zuletzt generiertes Bild (klickbar/Player)</p>
+              <div class="row">
+                <span class="badge" id="genInfo">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="variantsRow" class="card" style="display:none;">
+          <h3>Varianten</h3>
+          <div id="variantsGrid" class="grid" style="grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap:10px;"></div>
+        </div>
+      </main>
+    </div>
   </div>
-</div>
 
-<footer>© AndioMediaStudio</footer>
+  <footer>© AndioMediaStudio</footer>
+  <script>
+    // --- Page Script (nur für editor.html) ---
+    (function(){
+      const img = document.getElementById('refImage');
+      const canvas = document.getElementById('drawCanvas');
+      const wrap = document.getElementById('previewWrap');
+      const fileInput = document.getElementById('fileInput');
+      const btnOpenPlayer = document.getElementById('btnOpenPlayer');
+      const btnSuggest = document.getElementById('btnSuggest');
+      const suggestBar = document.getElementById('suggestBar');
+      const srcInfo = document.getElementById('srcInfo');
+      const genInfo = document.getElementById('genInfo');
+      const regionForm = document.getElementById('regionForm');
+      const btnResetRegions = document.getElementById('btnResetRegions');
+      const btnGenerate = document.getElementById('btnGenerate');
+      const btnVariants = document.getElementById('btnVariants');
+      const variantsRow = document.getElementById('variantsRow');
+      const variantsGrid = document.getElementById('variantsGrid');
 
-<script>
-/* ---------- Mini-Helpers ---------- */
-const $=(q,r=document)=>r.querySelector(q);const $$=(q,r=document)=>Array.from(r.querySelectorAll(q));
-const preview=$('#preview');const overlay=$('#overlay');
-const fileInput=$('#fileOpen'); const btnOpen=$('#btn-open'); const btnOpenTop=$('#btn-open-top');
-let mode='generate';let selection='rect';let regionCount=0;let dirtySelections=false;
-const regions=[];const history=[];let histIndex=-1;
-let baseImg=null; // HTMLImageElement
-let posePoints=[];let poseLines=[];
+      let tool = 'rect';
+      let mode = 'generate';
+      let regions = []; // {id, x, y, w, h, type:'rect'|'lasso'|'smart'}
+      let activeRegionId = null;
+      let resultURL = null; // Blob URL vom generierten Ergebnis
+      let resultIsGenerated = false; // wichtig: Player nur für generiert
 
-/* ---------- Mode handling with confirm ---------- */
-function confirmDiscardIfDirty(){
-  if(!dirtySelections) return Promise.resolve(true);
-  return new Promise(res=>{
-    const ok=confirm('Nicht angewendete Markierungen verwerfen?'); if(ok){clearPrompts();} res(ok);
-  });
-}
-function setMode(m){
-  confirmDiscardIfDirty().then(ok=>{
-    if(!ok) return;
-    mode=m; dirtySelections=false;
-    $$('.mode').forEach(b=>b.classList.toggle('primary', b.dataset.mode===m));
-    $$('[data-pane]').forEach(p=>p.style.display=(p.dataset.pane===m)?'block':'none');
-    if(m==='filter'){ $('#selectionBar').style.display='none'; } else { $('#selectionBar').style.display='block'; }
-    rebuildPromptUI();
-    if(m!=='pose') clearPose();
-  });
-}
-$$('.mode').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+      // Tool-Buttons
+      document.querySelectorAll('[data-tool]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          document.querySelectorAll('[data-tool]').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          tool = btn.getAttribute('data-tool');
+          Andio.toast('Tool: '+tool);
+        });
+      });
+      document.querySelector('[data-tool="rect"]').classList.add('active');
 
-/* ---------- Selection tool ---------- */
-function setSel(s){ selection=s; $$('.sel').forEach(b=>b.classList.toggle('primary', b.dataset.sel===s)); }
-$$('.sel').forEach(b=>b.addEventListener('click',()=>setSel(b.dataset.sel)));
+      // Modus
+      document.querySelectorAll('input[name="mode"]').forEach(r=>{
+        r.addEventListener('change', ()=>{
+          mode = document.querySelector('input[name="mode"]:checked').value;
+          renderRegionForm();
+          Andio.toast('Modus: '+mode);
+        });
+      });
 
-/* ---------- Prompt UI ---------- */
-function rebuildPromptUI(){
-  $('#promptList').innerHTML='';
-  regions.forEach(reg=> addRegionPrompt(reg._id) );
-}
-function addRegionPrompt(id){
-  const div=document.createElement('div');div.className='prompt-item';
-  if(mode==='generate'){
-    div.innerHTML=`<h5>Region #${id} · Generieren</h5>
-      <div class="prompt-grid">
-        <div class="col"><label>Was?<textarea class="input prompt-what" data-id="${id}" placeholder="Objekt/Motiv"></textarea></label></div>
-        <div class="col"><label>Wo?<textarea class="input prompt-where" data-id="${id}" placeholder="z. B. „am rechten Rand“, „auf der Hand“"></textarea></label></div>
-        <div class="col"><label>Stil/Material<textarea class="input prompt-style" data-id="${id}" placeholder="Fotorealistisch, Leder, Neon, …"></textarea></label></div>
-      </div>`;
-  } else if(mode==='remove'){
-    div.innerHTML=`<h5>Region #${id} · Entfernen</h5>
-      <label>Was entfernen?<textarea class="input prompt-remove" data-id="${id}" placeholder="z. B. „BH-Träger rechts“"></textarea></label>`;
-  } else {
-    div.innerHTML=`<h5>Region #${id}</h5><textarea class="input" placeholder="Hinweis/Notiz"></textarea>`;
-  }
-  $('#promptList').appendChild(div);
-}
-function clearPrompts(){ $('#promptList').innerHTML=''; regions.splice(0,regions.length); regionCount=0; overlay.innerHTML=''; dirtySelections=false; }
+      // Datei laden
+      fileInput.addEventListener('change', ()=>{
+        const f = fileInput.files?.[0];
+        if(!f) return;
+        const url = URL.createObjectURL(f);
+        img.src = url;
+        img.style.display = 'block';
+        img.onload = ()=>{
+          fitCanvas();
+          draw();
+          srcInfo.textContent = `${f.name} • ${Andio.utils.human.bytes(f.size)}`;
+          resultIsGenerated = false;
+          resultURL = null;
+          genInfo.textContent = '—';
+          variantsRow.style.display = 'none';
+          variantsGrid.innerHTML = '';
+        };
+      });
 
-/* ---------- Datei öffnen (Button + Input) ---------- */
-function triggerOpen(){ fileInput.click(); }
-btnOpen.addEventListener('click', triggerOpen);
-btnOpenTop.addEventListener('click', triggerOpen);
+      // Zoom
+      document.getElementById('btnZoomFit').addEventListener('click', fitCanvas);
+      document.getElementById('btnZoom100').addEventListener('click', ()=>{
+        img.style.maxWidth = 'none';
+        img.style.maxHeight = 'none';
+        img.style.width = 'auto';
+        img.style.height = 'auto';
+        draw();
+      });
 
-fileInput.addEventListener('change',()=>{
-  const f=fileInput.files?.[0]; if(f && f.type.startsWith('image')) loadImageFile(f);
-  fileInput.value=''; // reset für erneutes Öffnen derselben Datei
-});
+      // Player öffnen – nur für generierte Ergebnisse
+      btnOpenPlayer.addEventListener('click', ()=>{
+        if(!resultIsGenerated || !resultURL){
+          Andio.toast('Kein generiertes Ergebnis vorhanden');
+          return;
+        }
+        Andio.openPlayer({ type:'image', src: resultURL, meta:{ from:'Editor', mode }});
+      });
 
-/* ---------- Drag & Drop + Clipboard ---------- */
-preview.addEventListener('drop',e=>{
-  e.preventDefault();const f=e.dataTransfer.files?.[0];
-  if(f&&f.type.startsWith('image')){ loadImageFile(f); }
-});
-preview.addEventListener('dragover',e=>e.preventDefault());
+      // Vorschlagsbutton
+      btnSuggest.addEventListener('click', ()=>{
+        const k = mode === 'filter' ? 'editor' : (mode === 'generate' ? 'image' : (mode === 'remove' ? 'editor' : 'motion'));
+        const s = Andio.suggest.prompt(k);
+        if(!s || s==='—') return;
+        // Pill hinzufügen
+        const pill = document.createElement('span');
+        pill.className = 'pill';
+        pill.textContent = s;
+        pill.addEventListener('click', ()=>{
+          // in das aktuelle Feld schreiben
+          const ta = regionForm.querySelector('textarea');
+          if(ta){ ta.value = (ta.value ? ta.value + '\n' : '') + s; ta.dispatchEvent(new Event('input')); }
+        });
+        suggestBar.prepend(pill);
+      });
 
-// Strg+V: Bild aus Zwischenablage (PNG/JPEG)
-document.addEventListener('paste',async (e)=>{
-  if(!e.clipboardData) return;
-  const item=[...e.clipboardData.items].find(i=>i.type.startsWith('image/'));
-  if(!item) return;
-  const blob=item.getAsFile(); if(!blob) return;
-  const f=new File([blob],'clipboard.png',{type:blob.type});
-  loadImageFile(f);
-});
+      // Reset
+      btnResetRegions.addEventListener('click', ()=>{
+        regions = [];
+        activeRegionId = null;
+        renderSelections();
+        renderRegionForm();
+        draw();
+      });
 
-function loadImageFile(f){
-  const url=URL.createObjectURL(f);
-  let img=$('#preview img'); if(!img){ img=document.createElement('img'); preview.insertBefore(img, overlay); }
-  img.onload=()=>{ baseImg=img; // reset history on new base
-    history.length=0; histIndex=-1; pushHistory();
-  };
-  img.src=url;
-}
+      // Generieren (Stub – hier später Backend anbinden)
+      btnGenerate.addEventListener('click', async ()=>{
+        if(!img.src){
+          Andio.toast('Bitte zuerst ein Bild hochladen');
+          return;
+        }
+        // Simuliertes Ergebnis: wir rendern Canvas-Snapshot der Quelle + Markern
+        const out = await snapshotCurrent();
+        resultURL = out;
+        resultIsGenerated = true;
+        genInfo.textContent = 'Generiert (lokal, Vorschau)';
+        Andio.toast('Ergebnis generiert (Demo)');
+      });
 
-/* ---------- Region creation (click & drag) ---------- */
-let dragState=null;
-preview.addEventListener('mousedown',e=>{
-  if(!baseImg) return;
-  if(e.target.classList.contains('handle') || e.target.classList.contains('pose-point')) return;
-  if(mode==='filter' || mode==='pose') return;
-  dirtySelections=true;
-  const start={x:e.offsetX,y:e.offsetY};
-  if(selection==='lasso'){ startLasso(start); return; }
-  const r=document.createElement('div');r.className='region '+(selection==='ellipse'?'ellipse':'rect');
-  r.style.left=start.x+'px'; r.style.top=start.y+'px'; r.style.width='1px'; r.style.height='1px';
-  r._id=++regionCount;
-  const lbl=document.createElement('div');lbl.className='label';lbl.textContent='#'+r._id; r.appendChild(lbl);
-  addHandles(r);
-  overlay.appendChild(r); regions.push(r); addRegionPrompt(r._id);
+      // Varianten (Stub)
+      btnVariants.addEventListener('click', async ()=>{
+        if(!img.src){
+          Andio.toast('Bitte zuerst ein Bild hochladen');
+          return;
+        }
+        variantsGrid.innerHTML = '';
+        variantsRow.style.display = 'block';
+        for(let i=0;i<6;i++){
+          const u = await snapshotCurrent({variant:i});
+          const fig = document.createElement('div');
+          fig.className = 'card';
+          fig.style.padding = '6px';
+          const im = document.createElement('img');
+          im.src = u;
+          im.style.width = '100%';
+          im.style.display = 'block';
+          im.setAttribute('data-open-player','');
+          im.addEventListener('click', ()=> {
+            // Varianten zählen als generiert → Player öffnen
+            Andio.openPlayer({type:'image', src:u, meta:{variant:i}});
+          });
+          fig.appendChild(im);
+          variantsGrid.appendChild(fig);
+        }
+        Andio.toast('Varianten erzeugt (Demo)');
+      });
 
-  dragState={type:'create',el:r,start};
-  enableRegionDrag(r);
-});
-preview.addEventListener('mousemove',e=>{
-  if(!dragState) return;
-  if(dragState.type==='create'){
-    const dx=e.offsetX-dragState.start.x; const dy=e.offsetY-dragState.start.y;
-    const left=Math.min(dragState.start.x, e.offsetX);
-    const top=Math.min(dragState.start.y, e.offsetY);
-    const w=Math.abs(dx); const h=Math.abs(dy);
-    const el=dragState.el; el.style.left=left+'px'; el.style.top=top+'px'; el.style.width=w+'px'; el.style.height=h+'px';
-  } else if(dragState.type==='resize'){
-    resizeFromHandle(dragState,e);
-  }
-});
-window.addEventListener('mouseup',()=>{ dragState=null; });
+      // Auswahl: rechteckiges Ziehen
+      let dragStart = null;
+      wrap.addEventListener('mousedown', (e)=>{
+        if(!img.src) return;
+        // Lasso/Smart könnten anders reagieren (hier Demo: nur Rect)
+        if(tool !== 'rect') return;
 
-/* ---------- Handles / Resize / Move ---------- */
-function addHandles(r){
-  ['tl','tr','bl','br'].forEach(pos=>{
-    const h=document.createElement('div');h.className='handle '+pos; r.appendChild(h);
-    h.addEventListener('mousedown',e=>{
-      e.stopPropagation(); dragState={type:'resize',el:r,handle:pos,start:{x:e.offsetX,y:e.offsetY}};
-    });
-  });
-}
-function resizeFromHandle(state, e){
-  const el=state.el;
-  const rect=el.getBoundingClientRect();
-  const pRect=preview.getBoundingClientRect();
-  let left=parseFloat(el.style.left), top=parseFloat(el.style.top);
-  let w=parseFloat(el.style.width), h=parseFloat(el.style.height);
-  const mx=e.clientX-pRect.left, my=e.clientY-pRect.top;
+        const {ox, oy, scale} = imageMetrics();
+        const rx = (e.offsetX - ox) / scale;
+        const ry = (e.offsetY - oy) / scale;
+        dragStart = {x:rx, y:ry};
+      });
+      window.addEventListener('mousemove', (e)=>{
+        if(!dragStart) return;
+        const {ox, oy, scale} = imageMetrics();
+        const rect = wrap.getBoundingClientRect();
+        const mx = (e.clientX - rect.left - ox) / scale;
+        const my = (e.clientY - rect.top - oy) / scale;
+        const x = Math.min(dragStart.x, mx);
+        const y = Math.min(dragStart.y, my);
+        const w = Math.abs(mx - dragStart.x);
+        const h = Math.abs(my - dragStart.y);
+        renderTempSelection(x,y,w,h);
+      });
+      window.addEventListener('mouseup', (e)=>{
+        if(!dragStart) return;
+        const {ox, oy, scale} = imageMetrics();
+        const rect = wrap.getBoundingClientRect();
+        const mx = (e.clientX - rect.left - ox) / scale;
+        const my = (e.clientY - rect.top - oy) / scale;
+        const x = Math.min(dragStart.x, mx);
+        const y = Math.min(dragStart.y, my);
+        const w = Math.abs(mx - dragStart.x);
+        const h = Math.abs(my - dragStart.y);
+        dragStart = null;
+        clearTempSelection();
+        if(w<10 || h<10) return;
+        const id = regions.length + 1;
+        regions.push({id, x, y, w, h, type:'rect'});
+        activeRegionId = id;
+        renderSelections();
+        renderRegionForm();
+        draw();
+      });
 
-  if(state.handle==='br'){ w=mx-left; h=my-top; }
-  if(state.handle==='tr'){ w=mx-left; h=h+(top-my); top=my; }
-  if(state.handle==='bl'){ w=w+(left-mx); left=mx; h=my-top; }
-  if(state.handle==='tl'){ w=w+(left-mx); left=mx; h=h+(top-my); top=my; }
-  if(w<6) w=6; if(h<6) h=6;
-  el.style.left=left+'px'; el.style.top=top+'px'; el.style.width=w+'px'; el.style.height=h+'px';
-}
-function enableRegionDrag(r){
-  r.addEventListener('mousedown',e=>{
-    if(e.target.classList.contains('handle')) return;
-    const offX=e.offsetX, offY=e.offsetY;
-    function mm(ev){
-      r.style.left=(ev.offsetX-offX)+'px';
-      r.style.top=(ev.offsetY-offY)+'px';
-    }
-    function up(){ preview.removeEventListener('mousemove',mm); window.removeEventListener('mouseup',up); }
-    preview.addEventListener('mousemove',mm); window.addEventListener('mouseup',up);
-  });
-}
+      // --- Helpers ---
+      function fitCanvas(){
+        // auf Container anpassen
+        canvas.width = wrap.clientWidth;
+        canvas.height = wrap.clientHeight;
+        // Bild beschränken
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '72vh';
+        draw();
+      }
 
-/* ---------- Lasso (simple polygon box) ---------- */
-let lassoPoints=null, lassoBox=null;
-function startLasso(p){
-  lassoPoints=[p];
-  if(lassoBox){ lassoBox.remove(); }
-  lassoBox=document.createElement('div'); lassoBox.className='lasso-path';
-  lassoBox.style.left=p.x+'px'; lassoBox.style.top=p.y+'px'; lassoBox.style.width='1px'; lassoBox.style.height='1px';
-  overlay.appendChild(lassoBox);
+      function imageMetrics(){
+        // Berechne Offset (ox, oy) und scale, um Bildkoordinaten <-> Canvas zu mappen
+        const rect = wrap.getBoundingClientRect();
+        const iw = img.naturalWidth;
+        const ih = img.naturalHeight;
+        const dispW = img.clientWidth;
+        const dispH = img.clientHeight;
+        // Bild ist in der Mitte zentriert
+        const ox = (rect.width - dispW) / 2;
+        const oy = (rect.height - dispH) / 2;
+        const scale = dispW / iw;
+        return {ox, oy, scale};
+      }
 
-  function move(e){
-    const last={x:e.offsetX,y:e.offsetY}; lassoPoints.push(last);
-    const xs=lassoPoints.map(pt=>pt.x), ys=lassoPoints.map(pt=>pt.y);
-    const left=Math.min(...xs), top=Math.min(...ys), w=Math.max(...xs)-left, h=Math.max(...ys)-top;
-    lassoBox.style.left=left+'px'; lassoBox.style.top=top+'px'; lassoBox.style.width=w+'px'; lassoBox.style.height=h+'px';
-  }
-  function up(){
-    preview.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up);
-    const r=document.createElement('div');r.className='region rect'; r._id=++regionCount;
-    r.style.left=lassoBox.style.left; r.style.top=lassoBox.style.top; r.style.width=lassoBox.style.width; r.style.height=lassoBox.style.height;
-    const lbl=document.createElement('div');lbl.className='label';lbl.textContent='#'+r._id; r.appendChild(lbl);
-    addHandles(r); overlay.appendChild(r); regions.push(r); addRegionPrompt(r._id); enableRegionDrag(r);
-    lassoBox.remove(); lassoBox=null;
-  }
-  preview.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
-}
+      function draw(){
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(!img.src) return;
+        // Visualisierung der Regionen
+        const {ox, oy, scale} = imageMetrics();
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.scale(scale, scale);
+        regions.forEach(r=>{
+          ctx.strokeStyle = '#8ab4f8';
+          ctx.setLineDash([6,6]);
+          ctx.lineWidth = 2/scale;
+          ctx.strokeRect(r.x, r.y, r.w, r.h);
+          // Nummernmarker
+          const mx = r.x + 4, my = r.y;
+          ctx.setLineDash([]);
+          ctx.fillStyle = 'rgba(17,17,17,.9)';
+          const label = `#${r.id}`;
+          ctx.font = `${12/scale}px sans-serif`;
+          const tw = ctx.measureText(label).width + 10/scale;
+          const th = 18/scale;
+          ctx.fillRect(mx, my - th, tw, th);
+          ctx.strokeStyle = '#333';
+          ctx.lineWidth = 1/scale;
+          ctx.strokeRect(mx, my - th, tw, th);
+          ctx.fillStyle = '#e5e7eb';
+          ctx.fillText(label, mx + 5/scale, my - 5/scale);
+        });
+        ctx.restore();
+      }
 
-/* ---------- Smart Select (placeholder) ---------- */
-function smartSelectCenter(){
-  const rect=preview.getBoundingClientRect();
-  const w=rect.width*0.3, h=rect.height*0.3, left=rect.width*0.35, top=rect.height*0.35;
-  const r=document.createElement('div');r.className='region rect'; r._id=++regionCount;
-  Object.assign(r.style,{left:left+'px',top:top+'px',width:w+'px',height:h+'px'});
-  const lbl=document.createElement('div');lbl.className='label';lbl.textContent='#'+r._id; r.appendChild(lbl);
-  addHandles(r); overlay.appendChild(r); regions.push(r); addRegionPrompt(r._id); enableRegionDrag(r);
-  dirtySelections=true;
-}
-$('#selectionBar').addEventListener('click',e=>{
-  const b=e.target.closest('.sel'); if(!b) return;
-  if(b.dataset.sel==='smart'){ smartSelectCenter(); return; }
-});
+      let tempEl = null;
+      function renderTempSelection(x,y,w,h){
+        clearTempSelection();
+        const {ox, oy, scale} = imageMetrics();
+        const div = document.createElement('div');
+        div.className = 'handles';
+        div.style.left = (ox + x*scale) + 'px';
+        div.style.top = (oy + y*scale) + 'px';
+        div.style.width = (w*scale) + 'px';
+        div.style.height = (h*scale) + 'px';
+        wrap.appendChild(div);
+        tempEl = div;
+      }
+      function clearTempSelection(){
+        if(tempEl){ tempEl.remove(); tempEl=null; }
+      }
 
-/* ---------- Apply / Download / History ---------- */
-function collectPayload(){
-  const payload={mode, regions:[], settings:{}};
-  if(mode==='generate'){
-    payload.settings={model:$('#modelGen').value,steps:+$('#stepsGen').value,guidance:+$('#guidanceGen').value,
-      edgeKeep:$('#edgeKeepGen').checked,relight:$('#relightGen').checked,shadow:$('#shadowGen').checked};
-    $$('.prompt-item').forEach(div=>{
-      const id=+div.querySelector('[data-id]').dataset.id;
-      payload.regions.push({id,
-        what:div.querySelector('.prompt-what')?.value||'',
-        where:div.querySelector('.prompt-where')?.value||'',
-        style:div.querySelector('.prompt-style')?.value||''});
-    });
-  } else if(mode==='remove'){
-    payload.settings={strength:+$('#strengthRem').value,edgeClean:$('#edgeCleanRem').checked,skinTone:$('#skinToneRem').checked};
-    $$('.prompt-remove').forEach(t=>payload.regions.push({id:+t.dataset.id, remove:t.value}));
-  } else if(mode==='filter'){
-    payload.settings={
-      color:$('#colorFilter').value, contrast:+$('#contrastFilter').value, gamma:+$('#gammaFilter').value/100,
-      skin:+$('#skinFilter').value, shine:+$('#shineFilter').value, grain:+$('#grainFilter').value,
-      vignette:+$('#vignetteFilter').value, sharp:+$('#sharpFilter').value, denoise:+$('#denoiseFilter').value
-    };
-  } else if(mode==='pose'){
-    payload.settings={stiff:+$('#stiffPose').value, prompt:$('#posePrompt').value, anatomy:$('#anatomyGuard').checked};
-    payload.regions=[];
-  }
-  return payload;
-}
+      function renderSelections(){
+        // entferne alte DOM-Marker
+        wrap.querySelectorAll('.handles, .mark').forEach(n=>n.remove());
+        const {ox, oy, scale} = imageMetrics();
+        regions.forEach(r=>{
+          const div = document.createElement('div');
+          div.className = 'handles';
+          Object.assign(div.style, {
+            left: (ox + r.x*scale) + 'px',
+            top: (oy + r.y*scale) + 'px',
+            width: (r.w*scale) + 'px',
+            height: (r.h*scale) + 'px'
+          });
+          // Ecken
+          ['nw','ne','sw','se'].forEach(pos=>{
+            const h = document.createElement('div');
+            h.className = 'handle '+pos;
+            div.appendChild(h);
+          });
+          // Nummer
+          const label = document.createElement('div');
+          label.className = 'mark';
+          label.textContent = '#'+r.id;
+          label.style.left = (ox + r.x*scale + 6) + 'px';
+          label.style.top = (oy + r.y*scale) + 'px';
+          wrap.appendChild(div);
+          wrap.appendChild(label);
 
-function pushHistory(){
-  const data=renderToCanvas(); if(!data) return;
-  history.splice(histIndex+1);
-  history.push(data); histIndex=history.length-1; renderLayerBar();
-}
-function undo(){ if(histIndex>0){ histIndex--; setFromDataURL(history[histIndex]); renderLayerBar(); } }
-function redo(){ if(histIndex<history.length-1){ histIndex++; setFromDataURL(history[histIndex]); renderLayerBar(); } }
+          // Auswahl klickbar machen
+          div.style.pointerEvents = 'auto';
+          div.addEventListener('click', ()=>{
+            activeRegionId = r.id;
+            renderRegionForm();
+          });
+        });
+      }
 
-function setFromDataURL(url){
-  if(!url) return;
-  let img=$('#preview img'); if(!img){ img=document.createElement('img'); preview.insertBefore(img, overlay); }
-  img.src=url; baseImg=img;
-}
+      function renderRegionForm(){
+        const r = regions.find(x=>x.id===activeRegionId);
+        regionForm.innerHTML = '';
+        if(!r){
+          regionForm.innerHTML = '<p class="muted">Kein Bereich aktiv. Markiere im Bild einen Bereich.</p>';
+          return;
+        }
+        const box = document.createElement('div');
+        box.innerHTML = `<p><span class="badge">#${r.id}</span> – ${mode.toUpperCase()}</p>`;
+        if(mode==='generate'){
+          box.innerHTML += `
+            <label>Was/Objekt?<textarea data-key="what" rows="3" placeholder="z. B. roter Schal, weiche Wolle, realistisch"></textarea></label>
+            <label>Stil/Material<textarea data-key="style" rows="2" placeholder="Stil/Material/Beleuchtung"></textarea></label>
+            <label>Wo (optional)<input data-key="where" type="text" placeholder="rechts oben / Schulter / etc."></label>
+            <div class="row">
+              <label class="row"><input type="checkbox" data-key="keepEdges"/> Kanten bewahren</label>
+              <label class="row"><input type="checkbox" data-key="matchLight"/> Licht anpassen</label>
+              <label class="row"><input type="checkbox" data-key="shadow"/> Schatten einblenden</label>
+            </div>
+          `;
+        } else if(mode==='remove'){
+          box.innerHTML += `
+            <label>Was entfernen?<textarea data-key="remove" rows="3" placeholder='z. B. "BH-Träger rechts", "Fleck unten"'></textarea></label>
+            <div class="row">
+              <label class="row"><input type="checkbox" data-key="skinUnify"/> Hautton-Angleichung</label>
+              <label class="row"><input type="checkbox" data-key="edgeClean"/> Kanten-Clean</label>
+            </div>
+          `;
+        } else if(mode==='filter'){
+          box.innerHTML += `
+            <label>Global-Filter (wirkt auf gesamtes Bild)<div class="row"><input type="range" min="-100" max="100" value="0" data-key="temp"/><span>Temperatur</span></div>
+            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="tint"/><span>Tönung</span></div>
+            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="contrast"/><span>Kontrast</span></div>
+            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="grain"/><span>Körnung</span></div>
+            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="vignette"/><span>Vignette</span></div>
+            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="sharpen"/><span>Schärfen</span></div>
+            <div class="row"><input type="range" min="-100" max="100" value="0" data-key="denoise"/><span>DeNoise</span></div>
+            </label>
+            <p class="muted">Nutze „Varianten“, um Mini-Previews zu generieren.</p>
+          `;
+        } else if(mode==='pose'){
+          box.innerHTML += `
+            <p class="muted">Pose: Keypoints werden im Bild erkannt. Ziehe Punkte (Soft-IK) oder gib eine Prompt-Beschreibung für die gesamte Pose ein.</p>
+            <label>Gesamt-Pose (Prompt)<textarea data-key="posePrompt" rows="3" placeholder="lässige Haltung, Gewicht auf rechtem Bein, Hand an Hüfte"></textarea></label>
+          `;
+        }
+        regionForm.appendChild(box);
+      }
 
-function renderToCanvas(){
-  const img=$('#preview img'); if(!img) return null;
-  const w=img.naturalWidth||img.width; const h=img.naturalHeight||img.height;
-  const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d');
-  ctx.drawImage(img,0,0,w,h);
-  return c.toDataURL('image/png');
-}
+      async function snapshotCurrent(opts={}){
+        // Render das IMG + Regionen in ein Offscreen-Canvas (Demo)
+        const iw = img.naturalWidth, ih = img.naturalHeight;
+        const off = document.createElement('canvas');
+        off.width = iw; off.height = ih;
+        const ctx = off.getContext('2d');
+        // Quelle
+        ctx.drawImage(img, 0, 0, iw, ih);
+        // Markierungen (als sichtbarer Effekt)
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,.6)';
+        ctx.lineWidth = 3;
+        regions.forEach(r=>{
+          ctx.setLineDash([12,10]);
+          ctx.strokeRect(r.x, r.y, r.w, r.h);
+          ctx.setLineDash([]);
+          ctx.fillStyle = 'rgba(0,0,0,.55)';
+          ctx.fillRect(r.x, r.y-22, 40, 20);
+          ctx.fillStyle = '#fff';
+          ctx.font = '16px sans-serif';
+          ctx.fillText('#'+r.id, r.x+6, r.y-7);
+        });
+        ctx.restore();
+        // Einfache „Variante“
+        if(Number.isFinite(opts.variant)){
+          ctx.save();
+          const v = opts.variant % 3;
+          if(v===0){ ctx.globalCompositeOperation='color-burn'; ctx.fillStyle='rgba(0,80,255,.08)'; ctx.fillRect(0,0,iw,ih); }
+          if(v===1){ ctx.globalCompositeOperation='overlay'; ctx.fillStyle='rgba(255,140,0,.08)'; ctx.fillRect(0,0,iw,ih); }
+          if(v===2){ ctx.globalCompositeOperation='soft-light'; ctx.fillStyle='rgba(0,0,0,.12)'; ctx.fillRect(0,0,iw,ih); }
+          ctx.restore();
+        }
+        return off.toDataURL('image/png');
+      }
 
-function applyOperation(){
-  const payload=collectPayload();
-  console.log('APPLY payload', payload);
-  showSpinner(true);
-  setTimeout(()=>{
-    pushHistory();
-    dirtySelections=false;
-    alert(`Demo: ${mode} angewendet (${payload.regions.length} Bereich(e)).`);
-    showSpinner(false);
-  }, 300);
-}
-function downloadMerged(){
-  const data=renderToCanvas(); if(!data) return alert('Kein Bild.');
-  const a=document.createElement('a'); a.href=data; a.download='andio-edit.png'; a.click();
-}
-function renderLayerBar(){
-  const bar=$('#layerBar'); bar.innerHTML='';
-  history.forEach((_,i)=>{
-    const chip=document.createElement('div'); chip.className='chip'; chip.textContent=i===0?'Basis':`Layer ${i}`;
-    if(i===histIndex) chip.style.background='rgba(120,160,255,.15)';
-    chip.addEventListener('click',()=>{ histIndex=i; setFromDataURL(history[i]); renderLayerBar(); });
-    bar.appendChild(chip);
-  });
-}
-
-/* ---------- Spinner ---------- */
-function showSpinner(v){ $('.progress').style.display=v?'grid':'none'; }
-
-/* ---------- Filter Variants (client-side preview) ---------- */
-$('#btn-generateVariants')?.addEventListener('click',()=>{
-  const grid=$('#variantGrid'); grid.innerHTML='';
-  const variants=[
-    {name:'Kontrast +20', css:'contrast(1.2)'},
-    {name:'Warm', css:'saturate(1.1) sepia(.15)'},
-    {name:'Kalt', css:'saturate(1.05) hue-rotate(180deg)'},
-    {name:'S/W + Körnung', css:'grayscale(1) contrast(1.1)'},
-    {name:'Teal&Orange', css:'saturate(1.1) contrast(1.08) hue-rotate(-18deg)'},
-  ];
-  const src=$('#preview img'); if(!src) return alert('Bitte zuerst ein Bild öffnen.');
-  variants.forEach(v=>{
-    const wrap=document.createElement('div'); wrap.className='thumb';
-    const img=src.cloneNode(); img.style.filter=v.css; img.removeAttribute('id');
-    wrap.appendChild(img); grid.appendChild(wrap);
-    wrap.title=v.name;
-    wrap.addEventListener('click',()=>{ $('#preview img').style.filter=v.css; pushHistory(); });
-  });
-});
-
-/* ---------- Pose demo (simple skeleton) ---------- */
-const defaultSkeleton=[
-  {name:'head',x:.5,y:.2},{name:'neck',x:.5,y:.28},
-  {name:'r_sh',x:.42,y:.3},{name:'l_sh',x:.58,y:.3},
-  {name:'r_el',x:.36,y:.42},{name:'l_el',x:.64,y:.42},
-  {name:'r_wr',x:.32,y:.54},{name:'l_wr',x:.68,y:.54},
-  {name:'hip',x:.5,y:.52},
-  {name:'r_kn',x:.46,y:.68},{name:'l_kn',x:.54,y:.68},
-  {name:'r_an',x:.44,y:.86},{name:'l_an',x:.56,y:.86},
-];
-const bones=[['head','neck'],['neck','r_sh'],['neck','l_sh'],['r_sh','r_el'],['r_el','r_wr'],['l_sh','l_el'],['l_el','l_wr'],['neck','hip'],['hip','r_kn'],['hip','l_kn'],['r_kn','r_an'],['l_kn','l_an']];
-function clearPose(){
-  posePoints.forEach(p=>p.remove()); poseLines.forEach(l=>l.remove());
-  posePoints=[]; poseLines=[];
-}
-function detectPoseDemo(){
-  if(!baseImg) return alert('Bitte zuerst ein Bild laden.');
-  clearPose();
-  const imgRect=preview.getBoundingClientRect();
-  defaultSkeleton.forEach(pt=>{
-    const el=document.createElement('div'); el.className='pose-point'; el.dataset.name=pt.name;
-    el.style.left=(pt.x*imgRect.width-5)+'px'; el.style.top=(pt.y*imgRect.height-5)+'px';
-    overlay.appendChild(el); posePoints.push(el);
-    makePointDraggable(el);
-  });
-  redrawBones();
-}
-function redrawBones(){
-  poseLines.forEach(l=>l.remove()); poseLines=[];
-  bones.forEach(([a,b])=>{
-    const A=posePoints.find(p=>p.dataset.name===a), B=posePoints.find(p=>p.dataset.name===b);
-    if(!A||!B) return;
-    const ax=A.offsetLeft+5, ay=A.offsetTop+5, bx=B.offsetLeft+5, by=B.offsetTop+5;
-    const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy), ang=Math.atan2(dy,dx)*180/Math.PI;
-    const line=document.createElement('div'); line.className='pose-line';
-    line.style.left=ax+'px'; line.style.top=ay+'px'; line.style.width=len+'px'; line.style.transform=`rotate(${ang}deg)`;
-    overlay.appendChild(line); poseLines.push(line);
-  });
-}
-function makePointDraggable(p){
-  let md=false, offX=0, offY=0;
-  p.addEventListener('mousedown',e=>{ md=true; offX=e.offsetX; offY=e.offsetY; p.style.cursor='grabbing'; });
-  window.addEventListener('mouseup',()=>{ md=false; p.style.cursor='grab'; });
-  preview.addEventListener('mousemove',e=>{
-    if(!md) return;
-    p.style.left=(e.offsetX-offX)+'px'; p.style.top=(e.offsetY-offY)+'px'; redrawBones();
-  });
-}
-$('#btn-detectPose')?.addEventListener('click',detectPoseDemo);
-
-/* ---------- Buttons ---------- */
-$('#btn-apply').addEventListener('click',applyOperation);
-$('#btn-save').addEventListener('click',downloadMerged);
-$('#btn-clear').addEventListener('click',()=>{ clearPrompts(); });
-$('#btn-undo').addEventListener('click',undo);
-$('#btn-redo').addEventListener('click',redo);
-
-/* ---------- Keyboard Shortcuts ---------- */
-document.addEventListener('keydown',e=>{
-  if(e.ctrlKey && e.key==='0'){ e.preventDefault(); preview.scrollIntoView({block:'center'}); return; }
-  if(e.ctrlKey && e.key==='1'){ e.preventDefault(); $('#preview img')?.scrollIntoView({block:'center'}); return; }
-  if(e.key.toLowerCase()==='g'){ e.preventDefault(); applyOperation(); }
-  if(e.key.toLowerCase()==='s'){ e.preventDefault(); downloadMerged(); }
-  if(e.key.toLowerCase()==='z'){ e.preventDefault(); undo(); }
-  if(e.key.toLowerCase()==='y'){ e.preventDefault(); redo(); }
-  if(e.key.toLowerCase()==='v'){ setSel('rect'); }
-  if(e.key.toLowerCase()==='b'){ setSel('lasso'); }
-  if(e.key.toLowerCase()==='e'){ setSel('ellipse'); }
-});
-
-/* ---------- Init ---------- */
-function init(){
-  const img=$('#preview img'); if(img){ baseImg=img; pushHistory(); }
-}
-init();
-</script>
+      // Init
+      Andio.polish();
+      renderRegionForm();
+      window.addEventListener('resize', fitCanvas);
+    })();
+  </script>
+  <script>Andio.polish();</script>
 </body>
 </html>

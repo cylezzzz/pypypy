@@ -1,4 +1,32 @@
 <!doctype html>
+<!-- === Brand / Navbar (standardisiert) === -->
+<header class="header">
+  <nav>
+    <div class="brand">
+      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+      <span class="wordmark">Andio Media Studio</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="links">
+      <a href="index.html" data-link="index">Übersicht</a>
+      <a href="images.html" data-link="images">Image Studio</a>
+      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
+      <a href="motion.html" data-link="motion">Motion</a>
+      <a href="gallery.html" data-link="gallery">Gallery</a>
+      <a href="catalog.html" data-link="catalog">Store</a>
+      <a href="editor.html" data-link="editor">Editor</a>
+    </div>
+  </nav>
+</header>
+<script>
+  (function(){
+    var p=document.body.getAttribute('data-page')||'index';
+    var a=document.querySelector('.links a[data-link="'+p+'"]');
+    if(a) a.classList.add('active');
+  })();
+</script>
+
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
@@ -15,23 +43,7 @@
 <script src="assets/app.js"></script>
 
 <!-- === Brand / Navbar (statisch) === -->
-<header class="header">
-  <nav>
-    <div class="brand">
-      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
-      <span class="wordmark">Andio Media Studio</span>
-    </div>
-    <div class="spacer"></div>
-    <div class="links">
-      <a href="index.html" data-link="index">Übersicht</a>
-      <a href="images.html" data-link="images">Image Studio</a>
-      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
-      <a href="gallery.html" data-link="gallery">Gallery</a>
-      <a href="catalog.html" data-link="catalog">Store</a>
-      <a href="player.html" data-link="player">Player</a>
-    </div>
-  </nav>
-</header>
+
 <script>
   // Aktiven Link markieren
   (function(){
@@ -124,7 +136,6 @@
       <h3>Player</h3>
       <p>Bilder/Videos aus URL/Datei abspielen, Metadaten-Overlay anzeigen (z. B. Modell/Seed/NSFW-Level), Download.</p>
       <div class="toolbar">
-        <a class="btn primary" href="player.html">Öffnen</a>
         <span class="badge">Overlay</span>
         <span class="badge">Download</span>
       </div>

@@ -1,397 +1,429 @@
-// AndioMediaStudio · Nav + StatusDock ("kleines Gehirn") + Glossy Polish
-;(() => {
-  const $  = (sel, el=document) => el.querySelector(sel);
-  const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+/*! Andio – global utilities & overlay (additive) */
+/* File: web/assets/app.js */
 
-  /* =================== NAV =================== */
-  // Nutzt relative Links (robust für Hosting und file://). Wenn du absolute Windows-Pfade willst,
-  // stell BASE_PATH z.B. auf "file:///X:/pypygennew/web/" um.
-  const BASE_PATH = ""; // z.B. "file:///X:/pypygennew/web/"  (leer lassen = relative Links)
-  const LINKS = [
-  ["Übersicht", "index.html"],
-  ["Image Studio", "images.html"],
-  ["Video Studio", "video-gen.html"],
-  ["Motion", "motion.html"],
-  ["Pro Editor", "editor.html"],
-  ["Store", "catalog.html"],
-  ["Gallery", "gallery.html"],
-];
+(function () {
+  "use strict";
 
-  function linkHref(file){ return BASE_PATH ? (BASE_PATH + file) : file; }
+  // ---- Safe define/augment ---------------------------------------------------
+  const Andio = (function initAndioNamespace(root) {
+    const ns = root.Andio || {};
+    ns.version = ns.version || "1.0.0";
+    ns.state = ns.state || {
+      nsfw: localStorage.getItem("andio.nsfw") === "1",
+      models: null,
+      overlayOpen: false,
+      lastOpen: null,
+    };
+    ns.ui = ns.ui || {};
+    ns.utils = ns.utils || {};
+    ns.player = ns.player || {};
+    ns.models = ns.models || {};
+    ns.llm = ns.llm || {};
+    ns.suggest = ns.suggest || {};
+    return ns;
+  })(window);
 
-  function injectNavbar(active=''){
-    const header = document.createElement('div');
-    header.className = 'header';
-    header.innerHTML = `
-      <nav>
-        <div class="brand">AndioMediaStudio</div>
-        <div class="links">
-          ${LINKS.map(([label,file]) =>
-            `<a href="${linkHref(file)}" class="${active===file.split('.')[0]?'active':''}">${label}</a>`
-          ).join('')}
-        </div>
-        <div class="spacer"></div>
-        <div id="status-dock" class="status-dock" title="Task Status">
-          <div class="brain" aria-hidden="true">
-            <svg viewBox="0 0 64 64" width="22" height="22">
-              <defs>
-                <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#66a3ff"/>
-                  <stop offset="1" stop-color="#b48cff"/>
-                </linearGradient>
-              </defs>
-              <path d="M20 28c-6 0-10-4-10-9 0-6 5-11 11-11 3 0 5 1 7 3 2-2 4-3 7-3 6 0 11 5 11 11 0 5-4 9-10 9"
-                    fill="none" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
-              <path d="M20 28v14a6 6 0 0 1-6 6M40 28v14a6 6 0 0 0 6 6"
-                    fill="none" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="sd-info">
-            <div class="sd-top">
-              <span class="sd-task">Bereit</span>
-              <span class="sd-eta">—</span>
-            </div>
-            <div class="sd-bar"><div></div></div>
-          </div>
-        </div>
-      </nav>
-    `;
-    document.body.prepend(header);
+  // ---- Utils -----------------------------------------------------------------
+  if (!Andio.utils.qs) {
+    Andio.utils.qs = (sel, el) => (el || document).querySelector(sel);
   }
-
-  /* =================== TOAST =================== */
-  const Toast = {
-    el:null,
-    show(msg, ms=1800){
-      this.hide();
-      this.el = document.createElement('div');
-      this.el.className = 'toast reveal in';
-      this.el.textContent = msg;
-      document.body.appendChild(this.el);
-      setTimeout(()=>this.hide(), ms);
-    },
-    hide(){ if(this.el){ this.el.remove(); this.el=null; } }
-  };
-
-  /* =================== PROGRESS =================== */
-  class Progress {
-    constructor(el){ this.el=el; this.bar=el?.querySelector('.progress > div'); }
-    set(p){ if(this.bar) this.bar.style.width = Math.max(0,Math.min(100,p)) + '%'; }
-    async fake(ms=2000, cb){
-      let p=0, step=ms/40;
-      Status.start(Status._defaultTaskLabel(), { estMs: ms });
-      const t0 = performance.now();
-      while(p<100){
-        await new Promise(r=>setTimeout(r, step));
-        p += 2 + Math.random()*6;
-        this.set(p);
-        Status.progress(p, { elapsed: performance.now()-t0, estMs: ms });
-        cb?.(p);
-      }
-      this.set(100);
-      Status.done('Fertig');
-    }
+  if (!Andio.utils.qsa) {
+    Andio.utils.qsa = (sel, el) => Array.from((el || document).querySelectorAll(sel));
   }
-
-  /* =================== STATUS DOCK (kleines Gehirn) =================== */
-  const Status = {
-    _el: null, _bar: null, _task: null, _eta: null, _tick: null,
-    _startedAt: 0, _estMs: 0, _running: false,
-    mount(){
-      this._el = $('#status-dock');
-      this._bar = this._el?.querySelector('.sd-bar > div');
-      this._task = this._el?.querySelector('.sd-task');
-      this._eta  = this._el?.querySelector('.sd-eta');
-    },
-    _fmtETA(ms){
-      if(!ms || ms<0) return '—';
-      const s = Math.ceil(ms/1000);
-      return s>=60 ? `${Math.floor(s/60)}m ${s%60}s` : `${s}s`;
-    },
-    _defaultTaskLabel(){
-      // Titel ohne Suffix
-      const t = document.title || 'Task';
-      return t.replace(/·.*$/,'');
-    },
-    start(task='Task', {estMs=3000}={}){
-      if(!this._el) this.mount();
-      this._startedAt = performance.now();
-      this._estMs = estMs;
-      this._running = true;
-      if(this._task) this._task.textContent = task;
-      if(this._eta)  this._eta.textContent  = this._fmtETA(estMs);
-      if(this._bar)  this._bar.style.width  = '2%';
-      // subtle pulse
-      this._el?.classList.add('active');
-      // ticking ETA fallback
-      clearInterval(this._tick);
-      this._tick = setInterval(()=>{
-        if(!this._running) return;
-        const elapsed = performance.now() - this._startedAt;
-        const remain  = Math.max(0, this._estMs - elapsed);
-        if(this._eta) this._eta.textContent = this._fmtETA(remain);
-      }, 500);
-      return { cancel: ()=>this.fail('Abgebrochen') };
-    },
-    progress(p, {elapsed, estMs}={}){
-      if(!this._el) this.mount();
-      if(typeof p==='number' && this._bar) this._bar.style.width = Math.max(0,Math.min(100,p))+'%';
-      if(typeof elapsed==='number' && typeof estMs==='number' && this._eta){
-        const remain = Math.max(0, estMs - elapsed);
-        this._eta.textContent = this._fmtETA(remain);
-      }
-    },
-    done(msg='Fertig'){
-      this._running=false;
-      clearInterval(this._tick);
-      if(this._task) this._task.textContent = msg;
-      if(this._eta)  this._eta.textContent  = '0s';
-      if(this._bar)  this._bar.style.width  = '100%';
-      setTimeout(()=> this._el?.classList.remove('active'), 700);
-    },
-    fail(msg='Fehler'){
-      this._running=false;
-      clearInterval(this._tick);
-      if(this._task) this._task.textContent = msg;
-      if(this._eta)  this._eta.textContent  = '—';
-      if(this._bar)  this._bar.style.width  = '0%';
-      this._el?.classList.remove('active');
-    }
-  };
-
-  /* =================== POLISH (Optik/Interaktion) =================== */
-  function addTilt(el, max=6){
-    let rect, raf;
-    function onMove(e){
-      rect = rect || el.getBoundingClientRect();
-      const x = (e.clientX - rect.left)/rect.width - .5;
-      const y = (e.clientY - rect.top)/rect.height - .5;
-      const rx = (+max * y).toFixed(2);
-      const ry = (-max * x).toFixed(2);
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(()=>{
-        el.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
-      });
-    }
-    function reset(){ el.style.transform=''; rect=null; }
-    el.addEventListener('mousemove', onMove);
-    el.addEventListener('mouseleave', reset);
-  }
-
-  function addRipple(el){
-    el.style.overflow='hidden';
-    el.addEventListener('click', (e)=>{
-      const r = el.getBoundingClientRect();
-      const d = Math.max(r.width, r.height);
-      const span = document.createElement('span');
-      span.style.position='absolute';
-      span.style.width=span.style.height=d+'px';
-      span.style.left=(e.clientX-r.left-d/2)+'px';
-      span.style.top =(e.clientY-r.top -d/2)+'px';
-      span.style.borderRadius='50%';
-      span.style.background='radial-gradient(circle, rgba(255,255,255,.35), rgba(255,255,255,0) 60%)';
-      span.style.pointerEvents='none';
-      span.style.transform='scale(0)';
-      span.style.transition='transform .6s ease, opacity .8s ease';
-      el.appendChild(span);
-      requestAnimationFrame(()=>{ span.style.transform='scale(1)'; span.style.opacity='0'; });
-      setTimeout(()=> span.remove(), 800);
-    });
-  }
-
-  function enableReveal(){
-    const io = new IntersectionObserver((entries)=>{
-      for(const en of entries){
-        if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
-      }
-    }, {threshold:.12});
-    $$('.card, .thumb, .toolbar, .preview').forEach(el=>{
-      el.classList.add('reveal'); io.observe(el);
-    });
-  }
-
-  function polish(){
-    document.documentElement.style.scrollBehavior='smooth';
-    document.body.style.opacity='0'; document.body.style.transition='opacity .45s ease';
-    requestAnimationFrame(()=> document.body.style.opacity='1');
-    $$('.card').forEach(el => addTilt(el, 5));
-    $$('.btn').forEach(el => { addTilt(el, 4); addRipple(el); });
-    enableReveal();
-  }
-
-  // Public API
-  window.Andio = { $, $$, Toast, Progress, injectNavbar, polish, Status };
-
-})();
-
-
-// ===== Global Overlay Player =====
-window.Andio = window.Andio || {};
-(function(NS){
-  let root = null;
-
-  function ensureRoot(){
-    if (root) return root;
-    root = document.createElement('div');
-    root.id = 'andio-player-root';
-    root.innerHTML = `
-      <div class="andio-modal is-hidden" role="dialog" aria-modal="true" aria-label="Player">
-        <div class="andio-modal__backdrop" data-close></div>
-        <div class="andio-modal__dialog">
-          <header class="andio-modal__header">
-            <div class="andio-modal__title">Player</div>
-            <div class="andio-modal__spacer"></div>
-            <a class="btn" id="andio-player-download" download>Download</a>
-            <button class="btn danger" id="andio-player-close" aria-label="Schließen">✕</button>
-          </header>
-          <div class="andio-modal__body">
-            <div class="andio-player__media" id="andio-player-media"></div>
-            <aside class="andio-player__meta">
-              <div class="badge">Metadaten</div>
-              <pre id="andio-player-meta" class="andio-player__pre">Lade Metadaten…</pre>
-            </aside>
-          </div>
-        </div>
-      </div>`;
-    document.body.appendChild(root);
-    root.querySelector('#andio-player-close').addEventListener('click', close);
-    root.querySelector('.andio-modal__backdrop').addEventListener('click', close);
-    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') close(); });
-    return root;
-  }
-
-  function open(src){
-    ensureRoot();
-    const modal = root.querySelector('.andio-modal');
-    const mediaBox = root.querySelector('#andio-player-media');
-    const metaBox  = root.querySelector('#andio-player-meta');
-    const dlLink   = root.querySelector('#andio-player-download');
-    mediaBox.innerHTML='';
-    metaBox.textContent='Lade Metadaten…';
-    dlLink.href = src;
-    dlLink.download = (src.split('/').pop() || 'download');
-
-    // Render media
-    if (/\.(mp4|webm|mkv)$/i.test(src)) {
-      const v = document.createElement('video');
-      v.src = src; v.controls = true; v.autoplay = true; v.playsInline = true;
-      mediaBox.appendChild(v);
-    } else {
-      const img = new Image();
-      img.src = src; img.alt = 'Media';
-      mediaBox.appendChild(img);
-    }
-
-    // Fetch metadata (skip for data: URLs)
-    if (!/^data:/.test(src)) {
-      fetch(`/api/player/meta?url=${encodeURIComponent(src)}`)
-        .then(r => r.ok ? r.json() : Promise.reject(r))
-        .then(j => {
-          if (j && j.ok) metaBox.textContent = JSON.stringify(j.meta || {}, null, 2);
-          else metaBox.textContent = JSON.stringify({error: j?.message || 'Keine Metadaten'}, null, 2);
-        })
-        .catch(()=> metaBox.textContent = JSON.stringify({error:'Meta-Request fehlgeschlagen'}, null, 2));
-    } else {
-      metaBox.textContent = JSON.stringify({note:'Lokale Vorschau (data URL), keine Server-Metadaten vorhanden.'}, null, 2);
-    }
-
-    modal.classList.remove('is-hidden');
-    document.documentElement.classList.add('andio-modal-open');
-  }
-
-  function close(){
-    if (!root) return;
-    const modal = root.querySelector('.andio-modal');
-    const mediaBox = root.querySelector('#andio-player-media');
-    mediaBox.querySelectorAll('video').forEach(v => { try{ v.pause(); v.src=''; }catch{} });
-    modal.classList.add('is-hidden');
-    document.documentElement.classList.remove('andio-modal-open');
-  }
-
-  // Helper: attach click/dblclick handlers and auto-annotate dynamic previews
-  function bindGlobal(){
-    // Click to open
-    document.addEventListener('click', (e)=>{
-      const el = e.target.closest('[data-player-src], .open-in-player, a[href], .preview img, .thumb img, .thumb video');
+  if (!Andio.utils.on) {
+    Andio.utils.on = function (el, ev, fn, opts) {
       if (!el) return;
-      let src = el.getAttribute('data-player-src');
-
-      if (!src && (el.matches('.preview img, .thumb img, .thumb video'))) {
-        // Use media src directly
-        src = el.currentSrc || el.src;
-      }
-      if (!src && el.tagName === 'A') {
-        const href = el.getAttribute('href') || '';
-        if (/^\/?outputs\//i.test(href)) src = href;
-      }
-      if (!src) return;
-
-      // Prevent navigation for links
-      if (el.tagName === 'A') e.preventDefault();
-      // If it's a video thumb with a play button in parent, allow opening
-      open(src);
-    });
-
-    // Double-click on any media to open
-    document.addEventListener('dblclick', (e)=>{
-      const el = e.target.closest('[data-player-src], .preview img, .thumb img, .thumb video');
-      if (!el) return;
-      let src = el.getAttribute('data-player-src') || el.currentSrc || el.src;
-      if (!src) return;
-      e.preventDefault();
-      open(src);
-    });
-
-    // Observe dynamic media in .preview/.thumb containers and auto-annotate
-    const obs = new MutationObserver((muts)=>{
-      muts.forEach(m=>{
-        m.addedNodes.forEach(node=>{
-          if (!(node instanceof HTMLElement)) return;
-          node.querySelectorAll?.('.preview img, .thumb img, .thumb video').forEach(media=>{
-            if (!media.getAttribute('data-player-src')) {
-              const s = media.currentSrc || media.src || '';
-              if (s) media.setAttribute('data-player-src', s);
-            }
-          });
-        });
-      });
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
+      el.addEventListener(ev, fn, opts || false);
+    };
   }
-
-  // expose
-  NS.Player = { open, close, bindGlobal };
-
-  // Bind at ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindGlobal);
-  } else {
-    bindGlobal();
+  if (!Andio.utils.cssInjectOnce) {
+    Andio.utils.cssInjectOnce = function (id, cssText) {
+      if (document.getElementById(id)) return;
+      const style = document.createElement("style");
+      style.id = id;
+      style.type = "text/css";
+      style.appendChild(document.createTextNode(cssText));
+      document.head.appendChild(style);
+    };
   }
-})(window.Andio);
-
-
-// ===== Andio Helpers Export =====
-(function(NS){
-  try{
-    if (!NS.$)  NS.$  = (sel, el=document) => el.querySelector(sel);
-    if (!NS.$$) NS.$$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
-    if (!NS.Progress) {
-      NS.Progress = class {
-        constructor(el){ this.el=el; this.bar=el?.querySelector('.progress > div'); }
-        set(p){ if(this.bar) this.bar.style.width = Math.max(0,Math.min(100,p)) + '%'; }
-        async fake(ms=2000){
-          let p=0, step=Math.max(40, ms/40);
-          while(p<100){
-            await new Promise(r=>setTimeout(r, step));
-            p += 3 + Math.random()*5;
-            this.set(p);
+  if (!Andio.utils.createEl) {
+    Andio.utils.createEl = function (tag, attrs, children) {
+      const el = document.createElement(tag);
+      if (attrs) {
+        Object.keys(attrs).forEach((k) => {
+          if (k === "style" && typeof attrs[k] === "object") {
+            Object.assign(el.style, attrs[k]);
+          } else if (k in el) {
+            el[k] = attrs[k];
+          } else {
+            el.setAttribute(k, attrs[k]);
           }
-          this.set(100);
-          setTimeout(()=> this.set(0), 500);
+        });
+      }
+      (children || []).forEach((c) => el.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+      return el;
+    };
+  }
+  if (!Andio.utils.human) {
+    Andio.utils.human = {
+      bytes(n) {
+        if (n == null || isNaN(n)) return "-";
+        const u = ["B", "KB", "MB", "GB", "TB"];
+        let i = 0;
+        while (n >= 1024 && i < u.length - 1) {
+          n /= 1024; i++;
+        }
+        return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${u[i]}`;
+      },
+    };
+  }
+
+  // ---- Overlay CSS (injected, minimal) ---------------------------------------
+  Andio.utils.cssInjectOnce("andio-overlay-css", `
+    #andio-overlay-backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:9999}
+    #andio-overlay-backdrop[aria-hidden="false"]{display:flex}
+    .andio-modal{position:relative;max-width:92vw;max-height:88vh;background:#111;border:1px solid #333;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.5);overflow:hidden}
+    .andio-modal header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #333;background:#0e0e0e;color:#eee;font-weight:600}
+    .andio-modal .andio-body{display:flex;gap:12px;padding:12px}
+    .andio-modal .andio-media{display:flex;align-items:center;justify-content:center;max-width:70vw;max-height:70vh;background:#000;border-radius:12px;overflow:hidden}
+    .andio-modal .andio-media img,.andio-modal .andio-media video{max-width:100%;max-height:70vh;display:block}
+    .andio-modal .andio-meta{min-width:260px;max-width:28vw;color:#ddd;font-size:13px}
+    .andio-close{appearance:none;border:0;background:#222;color:#ddd;border-radius:10px;padding:6px 10px;cursor:pointer}
+    .andio-close:hover{background:#2d2d2d}
+    .andio-badge{display:inline-block;background:#1f2937;border:1px solid #374151;color:#e5e7eb;border-radius:999px;font-size:11px;padding:2px 8px;margin-left:8px}
+    .andio-meta dl{display:grid;grid-template-columns:90px 1fr;gap:6px;padding:8px 0;margin:0}
+    .andio-meta dt{color:#aaa}
+    .andio-meta dd{margin:0;color:#eee;overflow-wrap:anywhere}
+    .andio-actions{display:flex;gap:8px;margin-top:8px}
+    .andio-btn{appearance:none;border:1px solid #374151;background:#111;color:#e5e7eb;border-radius:10px;padding:7px 10px;cursor:pointer}
+    .andio-btn:hover{background:#1a1a1a}
+    .andio-hidden{display:none!important}
+    .andio-toast{position:fixed;right:16px;bottom:16px;background:#111;color:#eee;border:1px solid #333;border-radius:10px;padding:10px 12px;z-index:10000}
+    .andio-nsfw-toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+    .andio-nsfw-toggle input{accent-color:#6b7280}
+  `);
+
+  // ---- Overlay creation (idempotent) -----------------------------------------
+  function ensureOverlay() {
+    if (document.getElementById("andio-overlay-backdrop")) return;
+
+    const closeBtn = Andio.utils.createEl("button", { className: "andio-close", type: "button", innerText: "Schließen (Esc)" });
+    const titleSpan = Andio.utils.createEl("span", { innerText: "Player" });
+    const badge = Andio.utils.createEl("span", { className: "andio-badge", innerText: "Overlay" });
+
+    const img = Andio.utils.createEl("img", { id: "andio-overlay-img", className: "andio-hidden", alt: "preview" });
+    const vid = Andio.utils.createEl("video", { id: "andio-overlay-vid", className: "andio-hidden", controls: true });
+
+    const mediaBox = Andio.utils.createEl("div", { className: "andio-media" }, [img, vid]);
+
+    const metaBox = Andio.utils.createEl("div", { className: "andio-meta" });
+    const metaList = Andio.utils.createEl("dl", { id: "andio-overlay-meta" });
+    const actions = Andio.utils.createEl("div", { className: "andio-actions" }, [
+      Andio.utils.createEl("button", { className: "andio-btn", type: "button", innerText: "Download", onclick: () => {
+        const src = Andio.state?.lastOpen?.src;
+        if (!src) return;
+        const a = document.createElement("a");
+        a.href = src; a.download = ""; a.click();
+      }}),
+      Andio.utils.createEl("button", { className: "andio-btn", type: "button", innerText: "In neuem Tab", onclick: () => {
+        const src = Andio.state?.lastOpen?.src;
+        if (src) window.open(src, "_blank");
+      }}),
+    ]);
+    metaBox.appendChild(metaList);
+    metaBox.appendChild(actions);
+
+    const header = Andio.utils.createEl("header", null, [
+      Andio.utils.createEl("div", null, [titleSpan, badge]),
+      closeBtn
+    ]);
+
+    const body = Andio.utils.createEl("div", { className: "andio-body" }, [mediaBox, metaBox]);
+    const modal = Andio.utils.createEl("div", { className: "andio-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "andio-overlay-title" }, [header, body]);
+
+    const backdrop = Andio.utils.createEl("div", { id: "andio-overlay-backdrop", "aria-hidden": "true" }, [modal]);
+
+    document.body.appendChild(backdrop);
+
+    // Events
+    Andio.utils.on(closeBtn, "click", Andio.closePlayer);
+    Andio.utils.on(backdrop, "click", (e) => { if (e.target === backdrop) Andio.closePlayer(); });
+    Andio.utils.on(document, "keydown", (e) => { if (e.key === "Escape") Andio.closePlayer(); });
+  }
+
+  // ---- Player controls --------------------------------------------------------
+  if (!Andio.openPlayer) {
+    Andio.openPlayer = function openPlayer(opts) {
+      ensureOverlay();
+      const o = Object.assign({ type: "image", src: "", meta: null, autoplay: true }, opts || {});
+      const backdrop = document.getElementById("andio-overlay-backdrop");
+      const img = document.getElementById("andio-overlay-img");
+      const vid = document.getElementById("andio-overlay-vid");
+      const meta = document.getElementById("andio-overlay-meta");
+      if (!backdrop || !img || !vid || !meta) return;
+
+      // Reset
+      img.classList.add("andio-hidden");
+      vid.classList.add("andio-hidden");
+      try { vid.pause(); vid.currentTime = 0; } catch (_) {}
+
+      // Media
+      if (o.type === "video") {
+        vid.src = o.src || "";
+        vid.classList.remove("andio-hidden");
+        if (o.autoplay) {
+          setTimeout(() => { try { vid.play(); } catch (_) {} }, 50);
+        }
+      } else {
+        img.src = o.src || "";
+        img.classList.remove("andio-hidden");
+      }
+
+      // Meta
+      meta.innerHTML = "";
+      const entries = [];
+      if (o.meta && typeof o.meta === "object") {
+        for (const k of Object.keys(o.meta)) {
+          entries.push([k, String(o.meta[k])]);
+        }
+      } else if (o.src) {
+        // Fallback meta
+        try {
+          const url = new URL(o.src, window.location.href);
+          entries.push(["Datei", url.pathname.split("/").pop()]);
+          entries.push(["Pfad", url.pathname]);
+        } catch {
+          entries.push(["Quelle", o.src]);
         }
       }
-    }
-  }catch(e){ /* noop */ }
-})(window.Andio = window.Andio || {});
+      if (entries.length === 0) entries.push(["Info", "—"]);
 
+      for (const [k, v] of entries) {
+        const dt = Andio.utils.createEl("dt", { innerText: k });
+        const dd = Andio.utils.createEl("dd", { innerText: v });
+        meta.appendChild(dt); meta.appendChild(dd);
+      }
+
+      Andio.state.lastOpen = { type: o.type, src: o.src, meta: o.meta };
+      backdrop.setAttribute("aria-hidden", "false");
+      Andio.state.overlayOpen = true;
+    };
+  }
+
+  if (!Andio.closePlayer) {
+    Andio.closePlayer = function closePlayer() {
+      const backdrop = document.getElementById("andio-overlay-backdrop");
+      const vid = document.getElementById("andio-overlay-vid");
+      if (!backdrop) return;
+      if (vid && !vid.classList.contains("andio-hidden")) {
+        try { vid.pause(); } catch (_) {}
+      }
+      backdrop.setAttribute("aria-hidden", "true");
+      Andio.state.overlayOpen = false;
+    };
+  }
+
+  // ---- Navbar mark active -----------------------------------------------------
+  if (!Andio.navbar) {
+    Andio.navbar = function navbar(active) {
+      // Sucht Links mit data-nav oder href, markiert .active
+      const links = Andio.utils.qsa('[data-nav], nav a, .navbar a');
+      links.forEach((a) => a.classList.remove("active"));
+      if (!active) return;
+      links.forEach((a) => {
+        const key = a.getAttribute("data-nav") || a.id || a.textContent?.trim()?.toLowerCase();
+        if (key && String(key).toLowerCase() === String(active).toLowerCase()) {
+          a.classList.add("active");
+        } else if (a.getAttribute("href")) {
+          const href = a.getAttribute("href").toLowerCase();
+          if (href.includes(`${active}.html`)) a.classList.add("active");
+        }
+      });
+    };
+  }
+
+  // ---- NSFW toggle ------------------------------------------------------------
+  if (!Andio.toggleNSFW) {
+    Andio.toggleNSFW = function toggleNSFW(on) {
+      const newVal = !!on;
+      Andio.state.nsfw = newVal;
+      localStorage.setItem("andio.nsfw", newVal ? "1" : "0");
+      // UI: Schalter syncen (optional)
+      const inputs = Andio.utils.qsa('#nsfw-toggle, [data-toggle="nsfw"]');
+      inputs.forEach((el) => {
+        if ("checked" in el) el.checked = newVal;
+        el.setAttribute("aria-pressed", String(newVal));
+      });
+      Andio.toast(`NSFW ${newVal ? "aktiv" : "deaktiviert"}`);
+    };
+  }
+
+  // ---- Toast helper -----------------------------------------------------------
+  if (!Andio.toast) {
+    Andio.toast = function toast(msg, ms) {
+      const div = document.createElement("div");
+      div.className = "andio-toast";
+      div.textContent = msg || "";
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), ms || 2200);
+    };
+  }
+
+  // ---- Polish (auto hooks) ----------------------------------------------------
+  if (!Andio.polish) {
+    Andio.polish = function polish() {
+      ensureOverlay();
+
+      // Doppelklick auf Bilder/Videos in .card oder [data-open-player]
+      document.addEventListener("dblclick", (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        // Direct <img>/<video>
+        if (t.tagName === "IMG" || t.tagName === "VIDEO") {
+          const src = (t).getAttribute("src");
+          if (src) {
+            Andio.openPlayer({ type: t.tagName === "VIDEO" ? "video" : "image", src });
+          }
+          return;
+        }
+        // Click on a wrapper element that declares data-open-player/src/type
+        const opener = t.closest("[data-open-player]");
+        if (opener) {
+          const src = opener.getAttribute("data-src") || opener.querySelector("img,video")?.getAttribute("src");
+          const type = opener.getAttribute("data-type") || (opener.querySelector("video") ? "video" : "image");
+          if (src) Andio.openPlayer({ type, src });
+        }
+      });
+
+      // NSFW UI Hook (optional)
+      const nsfwInputs = Andio.utils.qsa('#nsfw-toggle, [data-toggle="nsfw"]');
+      nsfwInputs.forEach((el) => {
+        if ("checked" in el) el.checked = Andio.state.nsfw;
+        el.setAttribute("aria-pressed", String(Andio.state.nsfw));
+        el.addEventListener("change", (ev) => {
+          const val = "checked" in ev.target ? !!ev.target.checked : ev.target.getAttribute("aria-pressed") !== "true";
+          Andio.toggleNSFW(val);
+        });
+        el.addEventListener("click", (ev) => {
+          if (!("checked" in ev.target)) {
+            const newVal = ev.target.getAttribute("aria-pressed") !== "true";
+            Andio.toggleNSFW(newVal);
+          }
+        });
+      });
+
+      // Basic drag&drop (optional)
+      document.addEventListener("dragover", (e) => { e.preventDefault(); });
+      document.addEventListener("drop", (e) => {
+        if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+        e.preventDefault();
+        Andio.toast(`${e.dataTransfer.files.length} Datei(en) gedroppt`);
+      });
+
+      // Auto Navbar markieren anhand aktueller Seite
+      try {
+        const page = (location.pathname.split("/").pop() || "").replace(".html", "");
+        if (page) Andio.navbar(page);
+      } catch {}
+    };
+  }
+
+  // ---- Models API -------------------------------------------------------------
+  if (!Andio.models.load) {
+    Andio.models.load = async function loadModels() {
+      try {
+        const res = await fetch("/api/models");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        Andio.state.models = data;
+        // Optional: simple render if container exists
+        const host = document.getElementById("catalog-list");
+        if (host && Array.isArray(data?.items)) {
+          host.innerHTML = "";
+          data.items.forEach((m) => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <h4>${m.name || "Model"}</h4>
+              <p>Kategorie: ${m.category || "-"}</p>
+              <p>Pfad: <code>${m.path || "-"}</code></p>
+            `;
+            host.appendChild(card);
+          });
+        }
+        return data;
+      } catch (err) {
+        Andio.toast("Modelle konnten nicht geladen werden");
+        console.error("Andio.models.load:", err);
+        return null;
+      }
+    };
+  }
+
+  // ---- LLM proxy --------------------------------------------------------------
+  if (!Andio.llm.ask) {
+    Andio.llm.ask = async function ask(prompt, options) {
+      try {
+        const res = await fetch("/api/llm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: String(prompt || ""), options: options || {} }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json().catch(() => ({}));
+        return data;
+      } catch (err) {
+        console.error("Andio.llm.ask:", err);
+        Andio.toast("LLM nicht erreichbar");
+        return null;
+      }
+    };
+  }
+
+  // ---- Suggest prompts --------------------------------------------------------
+  if (!Andio.suggest.prompt) {
+    Andio.suggest.prompt = function prompt(kind) {
+      const nsfw = Andio.state.nsfw;
+      const pools = {
+        image: [
+          { t: "cinematic portrait, shallow depth of field, soft light" },
+          { t: "studio still life, high contrast, rim light" },
+          { t: "macro photo of a flower with dewdrops, bokeh" },
+          { t: "[NSFW] tasteful artistic nude, chiaroscuro lighting" },
+        ],
+        video: [
+          { t: "slow camera push-in on a city skyline at sunset" },
+          { t: "looping particle animation, hypnotic flow" },
+          { t: "[NSFW] sensual silhouette dance, low key lighting" },
+        ],
+        editor: [
+          { t: "inpainting: add a red scarf, soft wool texture" },
+          { t: "remove: unwanted object on the right, blend background" },
+          { t: "[NSFW] bikini to lingerie, lace texture, soft shadows" },
+        ],
+        motion: [
+          { t: "pose transfer: T-pose to relaxed stance, subtle sway" },
+          { t: "action: waving hand, slow rhythm" },
+          { t: "lip-sync: natural speech with gentle head motion" },
+        ],
+      };
+      const list = pools[kind] || pools.image;
+      const filtered = nsfw ? list : list.filter((x) => !/\[NSFW\]/i.test(x.t));
+      if (filtered.length === 0) return "—";
+      const pick = filtered[Math.floor(Math.random() * filtered.length)];
+      return pick.t.replace(/\[NSFW\]\s*/i, "");
+    };
+  }
+
+  // ---- Expose back ------------------------------------------------------------
+  window.Andio = Andio;
+
+  // Auto-polish on DOM ready (non-breaking)
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      try { Andio.polish(); } catch (e) { console.error(e); }
+    });
+  } else {
+    try { Andio.polish(); } catch (e) { console.error(e); }
+  }
+})();

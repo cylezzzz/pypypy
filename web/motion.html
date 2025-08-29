@@ -1,793 +1,763 @@
 <!doctype html>
+<!-- === Brand / Navbar (standardisiert) === -->
+<header class="header">
+  <nav>
+    <div class="brand">
+      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+      <span class="wordmark">Andio Media Studio</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="links">
+      <a href="index.html" data-link="index">Übersicht</a>
+      <a href="images.html" data-link="images">Image Studio</a>
+      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
+      <a href="motion.html" data-link="motion">Motion</a>
+      <a href="gallery.html" data-link="gallery">Gallery</a>
+      <a href="catalog.html" data-link="catalog">Store</a>
+      <a href="editor.html" data-link="editor">Editor</a>
+    </div>
+  </nav>
+</header>
+<script>
+  (function(){
+    var p=document.body.getAttribute('data-page')||'motion';
+    var a=document.querySelector('.links a[data-link="'+p+'"]');
+    if(a) a.classList.add('active');
+  })();
+</script>
+
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Motion · AndioMediaStudio</title>
+  <title>Motion – AndioMediaStudio</title>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .page{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}
-    @media (max-width:980px){.page{grid-template-columns:1fr}}
-    .preview{position:relative;width:100%;min-height:560px;border-radius:14px;border:1px solid rgba(140,160,210,.18);
-      background:linear-gradient(180deg,#0c1220,#0a0e18);overflow:hidden}
-    .preview img{display:block;max-width:100%;height:auto;margin:auto}
-    .overlay{position:absolute;inset:0;pointer-events:none}
-    .kf-tools{position:absolute;left:12px;top:12px;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
-      background:rgba(20,28,48,.66);backdrop-filter:blur(6px);padding:8px;border-radius:12px;border:1px solid rgba(140,160,210,.22)}
-    .hidden{display:none !important}
-    .timeline{margin-top:12px;padding:10px;border-radius:10px;border:1px solid rgba(140,160,210,.18);background:rgba(12,18,32,.6)}
-    .t-row{display:flex;align-items:center;gap:8px;margin:6px 0}
-    .t-bar{position:relative;flex:1;height:10px;border-radius:999px;background:rgba(140,160,210,.18);overflow:hidden}
-    .t-playhead{position:absolute;top:-3px;width:2px;height:16px;background:#9fbaff;left:0}
-    .track{height:10px;border-radius:999px;background:rgba(120,160,255,.28)}
-    .under-preview{margin-top:12px}
-    .prompt-list{display:flex;flex-direction:column;gap:8px}
-    .prompt-item{border:1px solid rgba(140,160,210,.25);border-radius:10px;padding:8px;background:rgba(12,18,32,.6)}
-    .prompt-item h5{margin:0 0 6px;font-size:14px;color:#9fbaff}
-    textarea.input{min-height:68px;resize:vertical}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(140,160,210,.25)}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{padding:6px 10px;border-radius:999px;border:1px solid rgba(140,160,210,.25);background:rgba(20,28,48,.55);cursor:pointer}
-    .chip.active{outline:1px solid rgba(120,160,255,.8);background:rgba(20,28,48,.75)}
-    .region{position:absolute;border:2px dashed rgba(120,160,255,.85);background:rgba(120,160,255,.12);pointer-events:auto;cursor:move}
-    .region:focus{outline:none}
-    .region-label{position:absolute;top:-18px;left:0;background:rgba(20,28,48,.8);padding:2px 6px;border-radius:6px;
-      font-size:12px;color:#fff}
-    .handle{position:absolute;width:12px;height:12px;background:#9fbaff;border:2px solid #fff;border-radius:3px;box-shadow:0 0 6px rgba(120,160,255,.6);cursor:nwse-resize}
-    .handle.n{top:-6px;left:50%;transform:translateX(-50%);cursor:ns-resize}
-    .handle.s{bottom:-6px;left:50%;transform:translateX(-50%);cursor:ns-resize}
-    .handle.e{right:-6px;top:50%;transform:translateY(-50%);cursor:ew-resize}
-    .handle.w{left:-6px;top:50%;transform:translateY(-50%);cursor:ew-resize}
-    .handle.nw{top:-6px;left:-6px}
-    .handle.ne{top:-6px;right:-6px}
-    .handle.sw{bottom:-6px;left:-6px}
-    .handle.se{bottom:-6px;right:-6px}
-    .pose-point{position:absolute;width:10px;height:10px;border-radius:50%;background:#9fbaff;border:2px solid #fff;box-shadow:0 0 8px rgba(120,160,255,.6);pointer-events:auto;cursor:grab}
-    .pose-line{position:absolute;height:2px;background:rgba(159,186,255,.7);transform-origin:left center;pointer-events:none}
-    .progress{position:absolute;inset:0;display:none;place-content:center;background:rgba(8,12,22,.45)}
-    .progress>div{width:56px;height:56px;border-radius:50%;border:4px solid rgba(120,160,255,.25);border-top-color:rgba(120,160,255,.95);animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .help{opacity:.75}
+    /* Minimal add-on styles für Layout/Timeline/Skeleton */
+    .page { display:grid; grid-template-columns: 360px 1fr; gap:16px; }
+    .controls .group { margin-bottom:14px; }
+    .controls .group h4 { margin:0 0 6px; }
+    .controls .muted { opacity:.8; font-size:13px; }
+    .row { display:flex; align-items:center; gap:8px; }
+    .split { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .badge { display:inline-block; padding:2px 8px; border:1px solid #333; border-radius:999px; font-size:12px; }
 
-    /* Overlay-Player: nur für generierte Previews/Videos */
-    .player-overlay {
-      position: fixed; inset: 0; display: none; place-items: center;
-      background: rgba(8,12,22,.65); backdrop-filter: blur(6px); z-index: 9999;
-    }
-    .player-sheet {
-      width: min(92vw, 1200px); aspect-ratio: 16/9; background: #000;
-      border-radius: 14px; overflow: hidden; border: 1px solid rgba(140,160,210,.25);
-      position: relative;
-    }
-    .player-sheet video, .player-sheet canvas { width: 100%; height: 100%; display: block; }
-    .player-close {
-      position: absolute; top: 8px; right: 8px; z-index: 2;
-      border-radius: 999px; border: 1px solid rgba(140,160,210,.35);
-      background: rgba(12,18,32,.7); color: #fff; padding: 8px 12px; cursor: pointer;
-    }
+    .preview-wrap { position:relative; background:#0b0b0b; border:1px solid #2a2a2a; border-radius:12px; min-height:420px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    #motionRef { max-width:100%; max-height:68vh; display:none; }
+    #motionCanvas { position:absolute; inset:0; pointer-events:none; }
+    .preview-toolbar { position:absolute; top:10px; left:10px; display:flex; gap:8px; z-index:2; }
+    .tool-btn { border:1px solid #374151; background:#111; color:#e5e7eb; border-radius:10px; padding:6px 10px; cursor:pointer; }
+    .tool-btn.active { background:#1a1a1a; }
+
+    /* Pose-Joints */
+    .joint { position:absolute; width:12px; height:12px; border-radius:50%; background:#8ab4f8; transform:translate(-50%,-50%); cursor:grab; }
+    .joint:active { cursor:grabbing; }
+    .joint-label { position:absolute; background:#111; color:#e5e7eb; border:1px solid #333; border-radius:6px; font-size:11px; padding:1px 6px; transform:translate(-50%,-150%); }
+
+    /* Timeline */
+    .timeline { position:relative; height:140px; background:#0d0d0d; border:1px solid #2a2a2a; border-radius:12px; overflow:hidden; }
+    .timeline .ruler { position:absolute; top:0; left:0; right:0; height:24px; background:#0f0f0f; border-bottom:1px solid #262626; color:#bbb; font-size:12px; display:flex; align-items:center; padding:0 8px; gap:12px; }
+    .timeline .scrub { position:absolute; top:0; bottom:0; width:2px; background:#8ab4f8; transform:translateX(-1px); }
+    .timeline .lanes { position:absolute; top:24px; left:0; right:0; bottom:0; overflow:auto; }
+    .lane { position:relative; height:28px; border-bottom:1px dashed #2a2a2a; display:flex; align-items:center; padding:0 8px; color:#ddd; font-size:12px; }
+    .kf { position:absolute; top:8px; width:10px; height:10px; background:#eab308; border-radius:2px; transform:translateX(-5px); cursor:pointer; }
+
+    /* Spurenliste */
+    .track { border:1px solid #2a2a2a; border-radius:10px; padding:8px; margin-bottom:10px; }
+    .track h4 { margin:0 0 6px; font-size:14px; }
+    .track textarea { width:100%; min-height:60px; }
+
+    .suggest { display:flex; gap:8px; flex-wrap:wrap; }
+    .suggest .pill { border:1px solid #333; border-radius:999px; padding:4px 8px; font-size:12px; cursor:pointer; }
+    .suggest .pill:hover { background:#1a1a1a; }
   </style>
-
-  <!-- Optional: MediaPipe Pose (Pose-Modus behält sich) -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5/pose.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.5/drawing_utils.js"></script>
 </head>
-<body>
-<script src="assets/app.js"></script>
-<script>
-  if (window.Andio?.injectNavbar) Andio.injectNavbar('motion');
-  else if (window.Andio?.navbar) Andio.navbar('motion');
-</script>
+<body data-page="motion">
+  <script src="assets/app.js"></script>
+  
 
-<div class="container">
-  <h1>Motion</h1>
+  <div class="container">
+    <h1>Motion</h1>
+    <p class="muted">
+      Standbild animieren – <b>Aktion</b>, <b>Pose</b>, <b>Transfer</b>, <b>Lip-Sync</b>, <b>Kamera</b>.<br/>
+      Player/Overlay öffnet sich <b>nur</b> für generierte Clips, nicht für das reine Referenzbild.
+    </p>
 
-  <div class="page">
-    <!-- LINKS -->
-    <aside class="card">
-      <h3>Workflow</h3>
-
-      <!-- Quelle -->
-      <section>
-        <div class="pill"><strong>1) Quelle</strong><span class="badge">Bild hochladen</span></div>
-        <div class="grid cols-2" style="margin-top:10px">
-          <div>
-            <label>Bild-Datei</label>
-            <input id="fileImage" type="file" accept="image/*" class="input"/>
-            <small class="badge" style="margin-top:6px">Drag & Drop in die Vorschau möglich</small>
-          </div>
-          <div>
-            <label>Referenzvideo (optional)</label>
-            <input id="fileRefVideo" type="file" accept="video/*" class="input"/>
-            <small class="help">Nur im Modus „Transfer“ genutzt.</small>
+    <div class="page">
+      <!-- Linke Spalte -->
+      <aside class="controls">
+        <div class="card">
+          <h3>Dateien</h3>
+          <div class="group">
+            <label class="row">
+              <span>Bild hochladen</span>
+              <input id="imgInput" type="file" accept="image/*"/>
+            </label>
+            <label class="row">
+              <span>Audio (Lip-Sync)</span>
+              <input id="audInput" type="file" accept="audio/*"/>
+            </label>
+            <p class="muted">Audio ist optional (nur für Lip-Sync). Vorschau ohne Audio; Audio-Mux erfolgt später im Backend.</p>
           </div>
         </div>
-      </section>
-      <hr/>
 
-      <!-- Modus -->
-      <section>
-        <div class="pill"><strong>2) Modus</strong><span class="badge">ein Modus zur Zeit</span></div>
-        <div class="toolbar" style="margin-top:10px">
-          <button class="btn mode primary" data-mode="action">Aktion</button>
-          <button class="btn mode" data-mode="pose">Pose</button>
-          <button class="btn mode" data-mode="transfer">Transfer</button>
-          <button class="btn mode" data-mode="lipsync">Lip-Sync</button>
-          <button class="btn mode" data-mode="camera">Kamera</button>
-        </div>
-      </section>
-
-      <!-- Aktion -->
-      <section data-pane="action" style="margin-top:10px">
-        <h4>Aktion</h4>
-        <div class="chips" id="actionChips">
-          <div class="chip" data-val="idle">Idle</div>
-          <div class="chip" data-val="wave">Winken</div>
-          <div class="chip" data-val="walk">Walk Cycle</div>
-          <div class="chip" data-val="dance">Dance</div>
-          <div class="chip" data-val="twerk">Twerken</div>
-          <div class="chip" data-val="blink">Blinzeln</div>
-        </div>
-        <div class="grid cols-2" style="margin-top:10px">
-          <div><label>Intensität</label><input id="actionIntensity" type="range" min="0" max="1" step="0.05" value="0.6"/></div>
-          <div><label>Geschwindigkeit</label><input id="actionSpeed" type="range" min="0.25" max="2" step="0.05" value="1"/></div>
-          <div><label>Dauer (s)</label><input id="duration" type="number" class="input" value="5"/></div>
-          <div><label>Loop</label><select id="loop" class="input"><option value="on">An</option><option value="off">Aus</option></select></div>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <label class="pill"><input id="pathEnable" type="checkbox"> Positionspfad zeichnen</label>
-          <label class="pill"><input id="physics" type="checkbox" checked> Physik/Weiche Ketten</label>
-        </div>
-      </section>
-
-      <!-- Pose -->
-      <section data-pane="pose" style="display:none;margin-top:10px">
-        <h4>Pose</h4>
-        <div class="toolbar">
-          <button id="btnDetectPose" class="btn">Pose erkennen (MediaPipe)</button>
-          <button id="btnClearPose" class="btn">Pose löschen</button>
-        </div>
-        <div class="grid cols-2" style="margin-top:10px">
-          <div><label>Steifigkeit</label><input id="poseStiff" type="range" min="0" max="1" step="0.05" value="0.6"/></div>
-          <div><label>Glättung</label><input id="poseSmooth" type="range" min="0" max="1" step="0.05" value="0.5"/></div>
-        </div>
-        <div style="margin-top:10px">
-          <label>Pose-Prompt (gesamt)</label>
-          <textarea id="posePrompt" class="input" placeholder="z.B. t-pose; arme hoch; hände an hüfte; sitzen; leicht nach links lehnen …"></textarea>
-          <div class="chips" id="posePresets" style="margin-top:8px">
-            <div class="chip" data-pose="tpose">T-Pose</div>
-            <div class="chip" data-pose="armsup">Arme hoch</div>
-            <div class="chip" data-pose="handsonhips">Hände an Hüfte</div>
-            <div class="chip" data-pose="sit">Sitzen</div>
-            <div class="chip" data-pose="leanleft">Nach links lehnen</div>
-            <div class="chip" data-pose="leanright">Nach rechts lehnen</div>
+        <div class="card">
+          <h3>Modus</h3>
+          <div class="group split">
+            <label class="row"><input type="radio" name="mode" value="action" checked/> <span>Aktion</span></label>
+            <label class="row"><input type="radio" name="mode" value="pose"/> <span>Pose</span></label>
+            <label class="row"><input type="radio" name="mode" value="transfer"/> <span>Transfer</span></label>
+            <label class="row"><input type="radio" name="mode" value="lipsync"/> <span>Lip-Sync</span></label>
+            <label class="row"><input type="radio" name="mode" value="camera"/> <span>Kamera</span></label>
           </div>
-          <div class="row" style="margin-top:8px">
-            <button id="btnApplyPosePrompt" class="btn primary">Anwenden</button>
+
+          <div class="group row">
+            <label class="row andio-nsfw-toggle">
+              <input id="nsfw-toggle" type="checkbox"/>
+              <span>NSFW aktivieren</span>
+            </label>
+            <button id="btnSuggest" class="tool-btn" type="button">Vorschlag</button>
           </div>
-          <small class="help">Punkte direkt ziehen oder Zielpose per Prompt/Preset setzen.</small>
-        </div>
-      </section>
-
-      <!-- Transfer -->
-      <section data-pane="transfer" style="display:none;margin-top:10px">
-        <h4>Motion-Transfer</h4>
-        <div class="grid cols-2">
-          <div><label>Tempo-Anpassung</label><input id="transferTempo" type="range" min="0.5" max="1.5" step="0.05" value="1"/></div>
-          <div><label>Segmentierung</label><select id="transferSeg" class="input"><option>Auto</option><option>Person</option><option>Oberkörper</option></select></div>
-        </div>
-        <small class="help">Nutze das Referenzvideo aus „Quelle“.</small>
-      </section>
-
-      <!-- Lip-Sync -->
-      <section data-pane="lipsync" style="display:none;margin-top:10px">
-        <h4>Lip-Sync</h4>
-        <label>Audiodatei<input id="fileAudio" type="file" accept="audio/*" class="input"/></label>
-        <div class="grid cols-2" style="margin-top:10px">
-          <div><label>Ausdruck</label><input id="lipExpr" type="range" min="0" max="1" step="0.05" value="0.6"/></div>
-          <div><label>Sync-Methode</label><select id="lipMethod" class="input"><option>Auto-Align</option><option>Phonem</option></select></div>
-        </div>
-        <small class="help">Ohne Audio wird kein Lip-Sync generiert.</small>
-      </section>
-
-      <!-- Kamera -->
-      <section data-pane="camera" style="display:none;margin-top:10px">
-        <h4>Kamera</h4>
-        <div class="grid cols-2">
-          <div><label>Pan</label><input id="camPan" type="range" min="-100" max="100" value="0"/></div>
-          <div><label>Zoom</label><input id="camZoom" type="range" min="0.8" max="1.5" step="0.01" value="1"/></div>
-          <div><label>Tilt</label><input id="camTilt" type="range" min="-20" max="20" value="0"/></div>
-          <div><label>Shake</label><input id="camShake" type="range" min="0" max="1" step="0.05" value="0"/></div>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <label class="pill"><input id="camAutoEase" type="checkbox" checked> Auto-Ease</label>
-        </div>
-      </section>
-
-      <hr/>
-
-      <!-- Export -->
-      <section>
-        <div class="pill"><strong>3) Export</strong><span class="badge">Render</span></div>
-        <div class="grid cols-2" style="margin-top:10px">
-          <div><label>Auflösung</label><select id="res" class="input"><option>720p</option><option selected>1080p</option><option>4K</option></select></div>
-          <div><label>FPS</label><input id="fps" type="number" class="input" value="24"/></div>
-          <div><label>Format</label><select id="format" class="input"><option>mp4</option><option>webm</option></select></div>
-          <div><label>Qualität</label><input id="quality" type="range" min="0.5" max="1" step="0.05" value="0.9"/></div>
-        </div>
-      </section>
-    </aside>
-
-    <!-- RECHTS -->
-    <main class="card">
-      <h3>Vorschau</h3>
-      <div id="preview" class="preview">
-        <div class="progress"><div></div></div>
-
-        <!-- Keyframe/Player – nur bei generiertem Inhalt sichtbar -->
-        <div id="kfTools" class="kf-tools hidden">
-          <button id="btnPlay" class="btn">▶</button>
-          <button id="btnPause" class="btn">⏸</button>
-          <button id="btnKFAdd" class="btn">+ Keyframe</button>
-          <button id="btnKFClear" class="btn">Keyframes löschen</button>
-          <button id="btnSnapPath" class="btn">Pfad fixieren</button>
-          <span class="badge" id="statusBadge">Bereit</span>
+          <div id="suggestBar" class="suggest"></div>
         </div>
 
-        <!-- Overlays -->
-        <div id="overlay" class="overlay"></div>
-      </div>
-
-      <!-- Timeline – nur bei generiertem Inhalt sichtbar -->
-      <div id="timeline" class="timeline hidden">
-        <div class="t-row">
-          <span class="badge">Zeit</span>
-          <div class="t-bar"><div id="tPlayhead" class="t-playhead"></div><div class="track" style="width:100%"></div></div>
-          <span id="timeLabel" class="badge">0.0s</span>
+        <div class="card" id="actionControls">
+          <h3>Aktion</h3>
+          <div class="group">
+            <label class="row">
+              <span>Preset</span>
+              <select id="actPreset">
+                <option>Idle</option>
+                <option>Winken</option>
+                <option>Walk</option>
+                <option>Dance</option>
+                <option>Twerken</option>
+                <option>Blinzeln</option>
+              </select>
+            </label>
+            <div class="split">
+              <label class="row"><span>Speed</span><input id="actSpeed" type="range" min="0.2" max="3" step="0.1" value="1"/></label>
+              <label class="row"><span>Intensität</span><input id="actIntensity" type="range" min="0" max="1" step="0.05" value="0.5"/></label>
+            </div>
+            <label class="row">
+              <input id="drawPathToggle" type="checkbox"/> <span>Pfad zeichnen</span>
+            </label>
+            <label class="row">
+              <span>Physik-Weichheit</span><input id="actSoft" type="range" min="0" max="1" step="0.05" value="0.3"/>
+            </label>
+          </div>
         </div>
-      </div>
 
-      <!-- Overlay-Player: erscheint nur bei generierten Inhalten -->
-      <div id="playerOverlay" class="player-overlay" aria-hidden="true">
-        <div class="player-sheet">
-          <button id="playerClose" class="player-close">✕</button>
-          <video id="genVideo" controls playsinline></video>
-          <!-- <canvas id="genCanvas"></canvas> -->
+        <div class="card" id="poseControls" style="display:none;">
+          <h3>Pose</h3>
+          <div class="group">
+            <p class="muted">Keypoints sind im Bild sichtbar und können gezogen werden (Soft-IK). Oder Gesamt-Prompt eingeben.</p>
+            <label>Gesamt-Pose (Prompt)
+              <textarea id="posePrompt" rows="3" placeholder="lässige Haltung, Gewicht rechts, Hand an Hüfte"></textarea>
+            </label>
+            <div class="row">
+              <button id="poseReset" class="tool-btn" type="button">Pose zurücksetzen</button>
+              <button id="poseSym" class="tool-btn" type="button">Spiegeln</button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Spuren / Eingaben -->
-      <div class="under-preview">
-        <h4>Eingaben / Aktionen</h4>
-        <div id="promptList" class="prompt-list"></div>
-        <div class="row" style="gap:8px;margin-top:8px">
-          <button id="btnAddAction" class="btn">+ Bereich/Spur anlegen</button>
-          <button id="btnClearActions" class="btn">Spuren löschen</button>
+        <div class="card">
+          <h3>Spuren</h3>
+          <div id="tracks"></div>
+          <div class="group">
+            <button id="addTrack" class="tool-btn" type="button">Spur hinzufügen</button>
+          </div>
         </div>
-      </div>
 
-      <!-- Aktionen -->
-      <div class="toolbar" style="margin-top:12px">
-        <button id="btnApply" class="btn primary">Anwenden</button>
-        <button id="btnRender" class="btn ok">Rendern</button>
-        <button id="btnDownload" class="btn">Download</button>
-        <button id="btnReset" class="btn">Zurücksetzen</button>
-      </div>
-    </main>
+        <div class="card">
+          <h3>Aktion</h3>
+          <div class="group row">
+            <button id="btnPreview" class="tool-btn" type="button">Vorschau</button>
+            <button id="btnExport" class="tool-btn" type="button">Generieren</button>
+            <button id="btnOpenPlayer" class="tool-btn" type="button">Im Player öffnen</button>
+          </div>
+          <p class="muted">„Generieren“ erzeugt einen kurzen Demo-Clip (WebM) aus der Vorschau. Player öffnet sich nur für generierte Clips.</p>
+        </div>
+      </aside>
+
+      <!-- Rechte Spalte -->
+      <main class="view">
+        <div class="card">
+          <h3>Vorschau/Player</h3>
+          <div class="preview-wrap" id="previewWrap">
+            <div class="preview-toolbar">
+              <button id="btnPlay" class="tool-btn" type="button" title="Play/Pause">Play</button>
+              <button id="btnStop" class="tool-btn" type="button">Stop</button>
+              <button id="btnZoomFit" class="tool-btn" type="button">Zoom-Fit</button>
+              <button id="btnZoom100" class="tool-btn" type="button">100%</button>
+            </div>
+            <img id="motionRef" alt="Referenz"/>
+            <canvas id="motionCanvas"></canvas>
+            <!-- Pose joints werden dynamisch eingefügt -->
+          </div>
+
+          <div class="split" style="margin-top:12px;">
+            <div>
+              <h4>Quelle</h4>
+              <p class="muted">Hochgeladenes Standbild</p>
+              <span class="badge" id="srcInfo">—</span>
+            </div>
+            <div>
+              <h4>Ergebnis</h4>
+              <p class="muted">Generierter Clip (nur nach „Generieren“)</p>
+              <span class="badge" id="genInfo">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Timeline</h3>
+          <div class="timeline" id="timeline">
+            <div class="ruler" id="ruler"></div>
+            <div class="lanes" id="lanes"></div>
+            <div class="scrub" id="scrub" style="left:0px;"></div>
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <label class="row"><span>Dauer (s)</span><input id="durSec" type="number" min="1" max="20" step="1" value="5"/></label>
+            <label class="row"><span>FPS</span><input id="fps" type="number" min="10" max="60" step="1" value="30"/></label>
+          </div>
+        </div>
+      </main>
+    </div>
   </div>
-</div>
 
-<footer>© AndioMediaStudio</footer>
+  <footer>© AndioMediaStudio</footer>
 
-<script>
-/* ===== Utilities ===== */
-const $=(q,r=document)=>r.querySelector(q);
-const $$=(q,r=document)=>Array.from(r.querySelectorAll(q));
-class Progress{constructor(c){this.c=c;this.el=c.querySelector('.progress')}show(){this.el.style.display='grid'}hide(){this.el.style.display='none'}async fake(ms=900){this.show();await new Promise(r=>setTimeout(r,ms));this.hide()}}
+  <script>
+    // --- Page Script (nur für motion.html) ---
+    (function(){
+      const imgEl = document.getElementById('motionRef');
+      const canvas = document.getElementById('motionCanvas');
+      const wrap = document.getElementById('previewWrap');
+      const ctx = canvas.getContext('2d');
 
-const pm=new Progress($('#preview'));
+      const imgInput = document.getElementById('imgInput');
+      const audInput = document.getElementById('audInput');
 
-/* ===== State ===== */
-let mode='action';
-let imgURL=null, refVideoURL=null, audioURL=null;
-let hasGenerated=false; // << Player/Timeline/Overlay nur wenn true
+      const btnZoomFit = document.getElementById('btnZoomFit');
+      const btnZoom100 = document.getElementById('btnZoom100');
+      const btnPlay = document.getElementById('btnPlay');
+      const btnStop = document.getElementById('btnStop');
+      const btnPreview = document.getElementById('btnPreview');
+      const btnExport = document.getElementById('btnExport');
+      const btnOpenPlayer = document.getElementById('btnOpenPlayer');
 
-let playTimer=null, t=0, duration=5, playing=false;
-let playhead=$('#tPlayhead'), timeLabel=$('#timeLabel');
+      const srcInfo = document.getElementById('srcInfo');
+      const genInfo = document.getElementById('genInfo');
 
-let actionSpuren=[]; // [{id, rect:{x,y,w,h}, prompt, action, strength, speed, path:[{x,y},...] }]
-let spurCount=0;
+      const tracksHost = document.getElementById('tracks');
+      const addTrackBtn = document.getElementById('addTrack');
 
-/* Pose */
-let posePoints=[]; // [{name,x,y,el}]
-let keyframes=[];
+      const drawPathToggle = document.getElementById('drawPathToggle');
+      const actPreset = document.getElementById('actPreset');
+      const actSpeed = document.getElementById('actSpeed');
+      const actIntensity = document.getElementById('actIntensity');
+      const actSoft = document.getElementById('actSoft');
 
-/* Pose skeleton edges (Hilfslinien) */
-const POSE_EDGES=[['head','l_shoulder'],['head','r_shoulder'],
-  ['l_shoulder','r_shoulder'],['l_shoulder','l_elbow'],['l_elbow','l_hand'],
-  ['r_shoulder','r_elbow'],['r_elbow','r_hand'],['l_shoulder','hip'],['r_shoulder','hip'],
-  ['hip','l_knee'],['l_knee','l_foot'],['hip','r_knee'],['r_knee','r_foot']];
+      const poseControls = document.getElementById('poseControls');
+      const actionControls = document.getElementById('actionControls');
+      const posePrompt = document.getElementById('posePrompt');
+      const poseReset = document.getElementById('poseReset');
+      const poseSym = document.getElementById('poseSym');
 
-const defaultPose = [
-  {name:'head', x:.5, y:.2},{name:'l_shoulder',x:.42,y:.3},{name:'r_shoulder',x:.58,y:.3},
-  {name:'l_elbow',x:.37,y:.42},{name:'r_elbow',x:.63,y:.42},{name:'l_hand',x:.34,y:.55},{name:'r_hand',x:.66,y:.55},
-  {name:'hip',x:.5,y:.5},{name:'l_knee',x:.45,y:.65},{name:'r_knee',x:.55,y:.65},{name:'l_foot',x:.44,y:.80},{name:'r_foot',x:.56,y:.80}
-];
+      const suggestBar = document.getElementById('suggestBar');
+      const btnSuggest = document.getElementById('btnSuggest');
 
-/* ===== Helpers ===== */
-function setGenerated(on){
-  hasGenerated=!!on;
-  $('#kfTools').classList.toggle('hidden', !hasGenerated);
-  $('#timeline').classList.toggle('hidden', !hasGenerated);
-}
-function resetGenerated(){ setGenerated(false); t=0; updatePlayhead(); }
+      const ruler = document.getElementById('ruler');
+      const lanes = document.getElementById('lanes');
+      const scrub = document.getElementById('scrub');
+      const durSecEl = document.getElementById('durSec');
+      const fpsEl = document.getElementById('fps');
 
-function openPlayer(src){
-  if(!hasGenerated) return;            // harte Sperre: kein Overlay für Uploads
-  if(src) genVideo.src = src;
-  playerOverlay.style.display = 'grid';
-  playerOverlay.setAttribute('aria-hidden','false');
-  try { genVideo.play(); } catch {}
-}
-function closePlayer(){
-  playerOverlay.style.display = 'none';
-  playerOverlay.setAttribute('aria-hidden','true');
-  try { genVideo.pause(); } catch {}
-}
+      let mode = 'action';
+      let resultVideoURL = null;
+      let resultIsGenerated = false;
 
-/* ===== Mode handling ===== */
-function setMode(m){
-  if(!confirm('Beim Moduswechsel werden nicht angewendete Zwischenschritte verworfen. Fortfahren?')) return;
-  mode=m;
-  $$('.mode').forEach(b=>b.classList.toggle('primary', b.dataset.mode===m));
-  $$('[data-pane]').forEach(p=>p.style.display=(p.dataset.pane===m)?'block':'none');
-  $('#statusBadge').textContent = m.toUpperCase();
-  $('#pathEnable')?.closest('.pill')?.style.setProperty('display', (m==='action') ? '' : 'none');
-  clearOverlay();
-  if(m==='pose') initPosePoints();
-  if(m!=='pose') removePosePoints();
-}
+      // Timeline state
+      let duration = +durSecEl.value; // seconds
+      let fps = +fpsEl.value;
+      let time = 0; // seconds
+      let playing = false;
+      let raf = null;
 
-/* ===== Files ===== */
-$('#fileImage').addEventListener('change', e=>{
-  const f=e.target.files?.[0]; if(!f) return;
-  imgURL=URL.createObjectURL(f); putImage(imgURL);
-  resetGenerated(); closePlayer(); // Nur Referenzbild → Player/Timeline aus
-});
-$('#fileRefVideo').addEventListener('change', e=>{
-  const f=e.target.files?.[0]; if(!f) return;
-  refVideoURL=URL.createObjectURL(f);
-});
-$('#fileAudio').addEventListener('change', e=>{
-  const f=e.target.files?.[0]; if(!f) return;
-  audioURL=URL.createObjectURL(f);
-});
+      // Path drawing
+      let pathPoints = []; // [{x,y}, ...] in image coords
+      let drawingPath = false;
 
-function putImage(url){
-  let img=$('#preview img');
-  if(!img){ img=document.createElement('img'); $('#preview').appendChild(img); }
-  img.src=url;
-}
+      // Tracks
+      let tracks = []; // {id, name, prompt}
+      let nextTrackId = 1;
 
-/* Drag&Drop auf Preview */
-$('#preview').addEventListener('dragover', e=>e.preventDefault());
-$('#preview').addEventListener('drop', e=>{
-  e.preventDefault();
-  const f=e.dataTransfer.files?.[0]; if(!f) return;
-  if(f.type.startsWith('image')){ imgURL=URL.createObjectURL(f); putImage(imgURL); resetGenerated(); closePlayer(); }
-  if(f.type.startsWith('video')){ refVideoURL=URL.createObjectURL(f); }
-  if(f.type.startsWith('audio')){ audioURL=URL.createObjectURL(f); }
-});
+      // Pose skeleton (simple stickman)
+      // joint order & default layout (normalized to [0..1])
+      const jointNames = ["head","neck","l_shoulder","r_shoulder","l_elbow","r_elbow","l_hand","r_hand","hip","l_knee","r_knee","l_foot","r_foot"];
+      let joints = {};
+      let draggingJoint = null;
+      let dragOffset = {x:0,y:0};
 
-/* ===== Mode buttons ===== */
-$$('.mode').forEach(b=>b.addEventListener('click', ()=>setMode(b.dataset.mode)));
+      function defaultPose(){
+        joints = {};
+        jointNames.forEach(n => joints[n] = { x:0.5, y:0.5, el:null, label:null });
+        // simple proportions
+        joints.head.y = 0.28; joints.neck.y = 0.35; joints.hip.y = 0.58;
+        joints.l_shoulder.y = joints.r_shoulder.y = 0.36;
+        joints.l_elbow.y = joints.r_elbow.y = 0.44;
+        joints.l_hand.y = joints.r_hand.y = 0.52;
+        joints.l_knee.y = joints.r_knee.y = 0.70;
+        joints.l_foot.y = joints.r_foot.y = 0.86;
 
-/* ===== Aktion Chips ===== */
-$('#actionChips').addEventListener('click', e=>{
-  const chip=e.target.closest('.chip'); if(!chip) return;
-  $$('#actionChips .chip').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
-});
+        const spreadX = 0.08;
+        joints.l_shoulder.x = 0.5 - spreadX; joints.r_shoulder.x = 0.5 + spreadX;
+        joints.l_elbow.x = 0.5 - spreadX*1.2; joints.r_elbow.x = 0.5 + spreadX*1.2;
+        joints.l_hand.x = 0.5 - spreadX*1.4; joints.r_hand.x = 0.5 + spreadX*1.4;
+        joints.l_knee.x = 0.5 - spreadX*0.6; joints.r_knee.x = 0.5 + spreadX*0.6;
+        joints.l_foot.x = 0.5 - spreadX*0.7; joints.r_foot.x = 0.5 + spreadX*0.7;
+        joints.hip.x = 0.5; joints.neck.x = 0.5; joints.head.x = 0.5;
+      }
 
-/* ===== Timeline playback (nur wenn generated) ===== */
-function play(){
-  if(!hasGenerated) return;
-  if(playing) return; playing=true;
-  const dur = +$('#duration').value || 5; duration = Math.max(1, dur);
-  const start = performance.now() - t*1000;
-  playTimer = requestAnimationFrame(function step(now){
-    t = (now - start)/1000;
-    if($('#loop').value==='on') t = t % duration;
-    if(t > duration && $('#loop').value==='off'){ pause(); return; }
-    updatePlayhead();
-    playTimer = requestAnimationFrame(step);
-  });
-}
-function pause(){ playing=false; if(playTimer) cancelAnimationFrame(playTimer); playTimer=null; }
-function updatePlayhead(){
-  const barWidth = $('.t-bar') ? $('.t-bar').clientWidth : 1;
-  const x = Math.min(1, Math.max(0, t/(duration||1))) * barWidth;
-  if(playhead) playhead.style.left = (x|0)+'px';
-  if(timeLabel) timeLabel.textContent = (t||0).toFixed(1)+'s';
-}
-$('#btnPlay').addEventListener('click', play);
-$('#btnPause').addEventListener('click', pause);
+      function ensurePoseHandles(){
+        // remove old
+        wrap.querySelectorAll('.joint, .joint-label').forEach(n=>n.remove());
+        const {ox, oy, scale} = imageMetrics();
+        for(const name of jointNames){
+          const j = joints[name];
+          const px = ox + j.x * imgEl.clientWidth;
+          const py = oy + j.y * imgEl.clientHeight;
+          const dot = document.createElement('div');
+          dot.className = 'joint';
+          Object.assign(dot.style, { left: px+'px', top: py+'px' });
+          const lab = document.createElement('div');
+          lab.className = 'joint-label';
+          lab.textContent = name;
+          Object.assign(lab.style, { left: px+'px', top: (py-8)+'px' });
+          wrap.appendChild(dot); wrap.appendChild(lab);
+          j.el = dot; j.label = lab;
 
-/* ===== Overlays & Interaktion ===== */
-const overlay = $('#overlay');
-const playerOverlay = document.getElementById('playerOverlay');
-const genVideo = document.getElementById('genVideo');
-const playerClose = document.getElementById('playerClose');
-playerClose.addEventListener('click', closePlayer);
-playerOverlay.addEventListener('click', (e)=>{ if(e.target===playerOverlay) closePlayer(); });
+          dot.addEventListener('mousedown', (e)=>{
+            draggingJoint = name;
+            const rect = wrap.getBoundingClientRect();
+            dragOffset.x = e.clientX - px;
+            dragOffset.y = e.clientY - py;
+            e.preventDefault();
+          });
+        }
+      }
 
-function clearOverlay(){ overlay.innerHTML=''; $$('.region').forEach(r=>r.remove()); $$('.pose-line').forEach(l=>l.remove()); }
-function getPreviewBox(){ return $('#preview').getBoundingClientRect(); }
+      window.addEventListener('mousemove', (e)=>{
+        if(!draggingJoint) return;
+        const rect = wrap.getBoundingClientRect();
+        const {ox, oy} = imageMetrics();
+        const dx = e.clientX - rect.left - dragOffset.x;
+        const dy = e.clientY - rect.top - dragOffset.y;
+        // convert to normalized image coords
+        const nx = (dx - ox) / imgEl.clientWidth;
+        const ny = (dy - oy) / imgEl.clientHeight;
+        const j = joints[draggingJoint];
+        j.x = Math.max(0, Math.min(1, nx));
+        j.y = Math.max(0, Math.min(1, ny));
+        positionJoint(draggingJoint);
+        draw(); // update skeleton lines
+      });
 
-function makeHandles(r){
-  const names=['nw','n','ne','e','se','s','sw','w'];
-  names.forEach(n=>{
-    const h=document.createElement('div'); h.className='handle '+n; h.dataset.dir=n;
-    r.appendChild(h);
-  });
-}
+      window.addEventListener('mouseup', ()=> draggingJoint = null);
 
-/* Bereich hinzufügen (draggable + resizable) */
-function addRegionAt(x,y){
-  const r=document.createElement('div'); r.className='region'; r.tabIndex=0;
-  const lbl=document.createElement('div'); lbl.className='region-label'; lbl.textContent='#'+(++spurCount);
-  r.appendChild(lbl); makeHandles(r);
+      function positionJoint(name){
+        const j = joints[name];
+        if(!j || !j.el) return;
+        const {ox, oy} = imageMetrics();
+        const px = ox + j.x * imgEl.clientWidth;
+        const py = oy + j.y * imgEl.clientHeight;
+        j.el.style.left = px+'px';
+        j.el.style.top = py+'px';
+        j.label.style.left = px+'px';
+        j.label.style.top = (py-8)+'px';
+      }
 
-  const box=getPreviewBox();
-  const w=140, h=140;
-  const left=Math.max(0, Math.min(box.width - w, x - w/2));
-  const top =Math.max(0, Math.min(box.height- h, y - h/2));
-  Object.assign(r.style,{left:left+'px', top:top+'px', width:w+'px', height:h+'px'});
+      function drawSkeleton(){
+        // lines between joints
+        const lines = [
+          ["head","neck"], ["neck","l_shoulder"], ["neck","r_shoulder"],
+          ["l_shoulder","l_elbow"], ["l_elbow","l_hand"],
+          ["r_shoulder","r_elbow"], ["r_elbow","r_hand"],
+          ["neck","hip"], ["hip","l_knee"], ["l_knee","l_foot"],
+          ["hip","r_knee"], ["r_knee","r_foot"]
+        ];
+        const {ox, oy, scale} = imageMetrics();
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#8ab4f8";
+        ctx.globalAlpha = 0.9;
+        ctx.beginPath();
+        for(const [a,b] of lines){
+          const ja = joints[a], jb = joints[b];
+          const ax = ja.x * imgEl.clientWidth, ay = ja.y * imgEl.clientHeight;
+          const bx = jb.x * imgEl.clientWidth, by = jb.y * imgEl.clientHeight;
+          ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
 
-  $('#preview').appendChild(r);
+      // File handling
+      imgInput.addEventListener('change', ()=>{
+        const f = imgInput.files?.[0];
+        if(!f) return;
+        const url = URL.createObjectURL(f);
+        imgEl.src = url;
+        imgEl.style.display = 'block';
+        imgEl.onload = ()=>{
+          fitCanvas();
+          defaultPose();
+          ensurePoseHandles();
+          togglePoseHandlesVisibility();
+          draw();
+          srcInfo.textContent = `${f.name} • ${Andio.utils.human.bytes(f.size)}`;
+          resultIsGenerated = false; resultVideoURL = null; genInfo.textContent = '—';
+        };
+      });
 
-  const id=spurCount;
-  actionSpuren.push({id, rect:{x:left,y:top,w,h}, prompt:'', action:getAction(),
-                     strength:+$('#actionIntensity').value, speed:+$('#actionSpeed').value, path:[]});
-  addPromptItem(id);
+      audInput.addEventListener('change', ()=>{
+        const f = audInput.files?.[0];
+        if(!f) return;
+        Andio.toast(`Audio geladen: ${f.name}`);
+      });
 
-  enableRegionDrag(r, id);
-  enableRegionResize(r, id);
-}
+      // Mode switching
+      document.querySelectorAll('input[name="mode"]').forEach(r=>{
+        r.addEventListener('change', ()=>{
+          mode = document.querySelector('input[name="mode"]:checked').value;
+          actionControls.style.display = (mode==='action' || mode==='camera') ? '' : 'none';
+          poseControls.style.display = (mode==='pose') ? '' : 'none';
+          togglePoseHandlesVisibility();
+          Andio.toast('Modus: '+mode);
+        });
+      });
 
-function getAction(){
-  const active = $('#actionChips .chip.active');
-  return active ? active.dataset.val : 'idle';
-}
+      // Suggest prompts
+      btnSuggest.addEventListener('click', ()=>{
+        const s = Andio.suggest.prompt('motion');
+        if(!s || s==='—') return;
+        const pill = document.createElement('span');
+        pill.className = 'pill';
+        pill.textContent = s;
+        pill.addEventListener('click', ()=>{
+          // in aktive Spur schreiben
+          const ta = tracksHost.querySelector('.track textarea');
+          if(ta){ ta.value = (ta.value ? ta.value+'\n' : '') + s; }
+        });
+        suggestBar.prepend(pill);
+      });
 
-$('#btnAddAction').addEventListener('click', ()=>{
-  const box=getPreviewBox();
-  addRegionAt(box.width/2, box.height/2);
-});
-$('#btnClearActions').addEventListener('click', ()=>{
-  spurCount=0; actionSpuren=[]; clearOverlay(); $('#promptList').innerHTML='';
-});
+      // Tracks
+      addTrackBtn.addEventListener('click', addTrack);
+      function addTrack(){
+        const id = nextTrackId++;
+        tracks.push({id, name:`Spur #${id}`, prompt:''});
+        renderTracks();
+        renderTimeline();
+      }
+      function renderTracks(){
+        tracksHost.innerHTML = '';
+        tracks.forEach(t=>{
+          const div = document.createElement('div');
+          div.className = 'track';
+          div.innerHTML = `
+            <h4>${t.name}</h4>
+            <textarea placeholder="Prompt/Anweisung für diese Spur..."></textarea>
+          `;
+          const ta = div.querySelector('textarea');
+          ta.value = t.prompt || '';
+          ta.addEventListener('input', ()=> t.prompt = ta.value);
+          tracksHost.appendChild(div);
+        });
+      }
 
-/* Pfadzeichnen (bei Aktion) */
-let pathDrawing=false;
-$('#pathEnable')?.addEventListener('change', e=>{
-  pathDrawing = e.target.checked;
-  $('#statusBadge').textContent = pathDrawing ? 'Pfad: aktiv' : mode.toUpperCase();
-});
-$('#preview').addEventListener('click', e=>{
-  if(mode!=='action' || pathDrawing) return; // Klick legt Region, Pfad separat
-  const rect=getPreviewBox();
-  const x=e.clientX-rect.left, y=e.clientY-rect.top;
-  addRegionAt(x,y);
-});
-$('#preview').addEventListener('click', e=>{
-  if(mode!=='action' || !pathDrawing) return;
-  const rect=getPreviewBox();
-  const x=e.clientX-rect.left, y=e.clientY-rect.top;
-  const dot=document.createElement('div');
-  dot.style.position='absolute'; dot.style.width='8px'; dot.style.height='8px'; dot.style.borderRadius='50%';
-  dot.style.background='#9fbaff'; dot.style.left=(x-4)+'px'; dot.style.top=(y-4)+'px';
-  overlay.appendChild(dot);
-  if(actionSpuren.length===0) addRegionAt(x,y);
-  actionSpuren[actionSpuren.length-1].path.push({x:x/rect.width, y:y/rect.height});
-});
+      // Timeline
+      function renderRuler(){
+        ruler.innerHTML = '';
+        const marks = Math.min(20, duration);
+        for(let s=0; s<=marks; s++){
+          const span = document.createElement('span');
+          span.textContent = s+'s';
+          ruler.appendChild(span);
+        }
+      }
+      function pxPerSec(){
+        const w = document.getElementById('timeline').clientWidth;
+        return (w - 8) / duration;
+      }
+      function renderTimeline(){
+        renderRuler();
+        lanes.innerHTML = '';
+        tracks.forEach((t, i)=>{
+          const lane = document.createElement('div');
+          lane.className = 'lane';
+          lane.textContent = t.name;
+          // Add a sample keyframe in the middle
+          const kf = document.createElement('div');
+          kf.className = 'kf';
+          kf.style.left = (pxPerSec() * (duration/2)) + 'px';
+          kf.title = 'Keyframe';
+          kf.addEventListener('mousedown', (e)=>{
+            const startX = e.clientX, startLeft = parseFloat(kf.style.left||'0');
+            const onMove = (ev)=>{
+              const dx = ev.clientX - startX;
+              kf.style.left = (startLeft + dx) + 'px';
+            };
+            const onUp = ()=>{
+              window.removeEventListener('mousemove', onMove);
+              window.removeEventListener('mouseup', onUp);
+            };
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+          });
+          lane.appendChild(kf);
+          lanes.appendChild(lane);
+        });
+        updateScrub();
+      }
+      function updateScrub(){
+        scrub.style.left = (pxPerSec() * time) + 'px';
+      }
 
-/* Region Drag (Verschieben) */
-function enableRegionDrag(el, id){
-  let dragging=false, offX=0, offY=0;
-  el.addEventListener('mousedown', ev=>{
-    if(ev.target.classList.contains('handle')) return; // resize übernimmt
-    dragging=true;
-    const rect=el.getBoundingClientRect();
-    offX=ev.clientX-rect.left; offY=ev.clientY-rect.top;
-    ev.preventDefault();
-  });
-  window.addEventListener('mousemove', ev=>{
-    if(!dragging) return;
-    const box=getPreviewBox();
-    let x=ev.clientX-box.left-offX, y=ev.clientY-box.top-offY;
-    const w=parseFloat(el.style.width), h=parseFloat(el.style.height);
-    x=Math.max(0, Math.min(box.width - w, x));
-    y=Math.max(0, Math.min(box.height- h, y));
-    el.style.left=x+'px'; el.style.top=y+'px';
-    const s=actionSpuren.find(s=>s.id===id);
-    s.rect.x=x; s.rect.y=y;
-  });
-  window.addEventListener('mouseup', ()=>dragging=false);
-}
+      durSecEl.addEventListener('change', ()=>{
+        duration = Math.max(1, Math.min(20, +durSecEl.value||5));
+        renderTimeline();
+      });
+      fpsEl.addEventListener('change', ()=> {
+        fps = Math.max(10, Math.min(60, +fpsEl.value||30));
+      });
 
-/* Region Resize (Griffe) */
-function enableRegionResize(el, id){
-  const minW=48, minH=48;
-  let resizing=false, dir='', start={x:0,y:0,l:0,t:0,w:0,h:0};
-  el.querySelectorAll('.handle').forEach(h=>{
-    h.addEventListener('mousedown', ev=>{
-      resizing=true; dir=h.dataset.dir;
-      const r=el.getBoundingClientRect(), b=getPreviewBox();
-      start={x:ev.clientX, y:ev.clientY, l:r.left-b.left, t:r.top-b.top, w:r.width, h:r.height};
-      ev.preventDefault(); ev.stopPropagation();
-    });
-  });
-  window.addEventListener('mousemove', ev=>{
-    if(!resizing) return;
-    const b=getPreviewBox();
-    let l=start.l, t=start.t, w=start.w, h=start.h;
-    const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+      // Scrubbing
+      (function enableScrubDrag(){
+        let dragging=false, startX=0, startLeft=0;
+        const tl = document.getElementById('timeline');
+        scrub.addEventListener('mousedown', (e)=>{
+          dragging = true; startX = e.clientX; startLeft = parseFloat(scrub.style.left||'0');
+          e.preventDefault();
+        });
+        window.addEventListener('mousemove', (e)=>{
+          if(!dragging) return;
+          const dx = e.clientX - startX;
+          const left = Math.max(0, Math.min(tl.clientWidth, startLeft + dx));
+          scrub.style.left = left + 'px';
+          time = left / pxPerSec();
+          draw();
+        });
+        window.addEventListener('mouseup', ()=> dragging=false);
+        tl.addEventListener('click', (e)=>{
+          const rect = tl.getBoundingClientRect();
+          const left = e.clientX - rect.left;
+          scrub.style.left = left + 'px';
+          time = Math.max(0, Math.min(duration, left / pxPerSec()));
+          draw();
+        });
+      })();
 
-    if(dir.includes('e')) w = Math.max(minW, Math.min(b.width - l, start.w + dx));
-    if(dir.includes('s')) h = Math.max(minH, Math.min(b.height- t, start.h + dy));
-    if(dir.includes('w')) { l = Math.max(0, Math.min(start.l+dx, start.l+start.w-minW)); w = (start.w - (l-start.l)); }
-    if(dir.includes('n')) { t = Math.max(0, Math.min(start.t+dy, start.t+start.h-minH)); h = (start.h - (t-start.t)); }
+      // Preview & Export
+      btnPlay.addEventListener('click', ()=>{ playing = !playing; if(playing) loop(); });
+      btnStop.addEventListener('click', ()=>{ playing = false; time = 0; updateScrub(); draw(); });
+      btnPreview.addEventListener('click', ()=> { playing = true; loop(); });
 
-    el.style.left=l+'px'; el.style.top=t+'px'; el.style.width=w+'px'; el.style.height=h+'px';
-    const s=actionSpuren.find(s=>s.id===id);
-    s.rect={x:l,y:t,w,h};
-  });
-  window.addEventListener('mouseup', ()=>resizing=false);
-}
+      btnExport.addEventListener('click', async ()=>{
+        if(!imgEl.src){ Andio.toast('Bitte zuerst ein Bild hochladen'); return; }
+        // Render to offscreen canvas and record short WebM
+        const off = document.createElement('canvas');
+        const w = imgEl.naturalWidth, h = imgEl.naturalHeight;
+        off.width = w; off.height = h;
+        const octx = off.getContext('2d');
 
-/* ===== Prompts (nummeriert pro Spur) ===== */
-function addPromptItem(id){
-  const div=document.createElement('div'); div.className='prompt-item'; div.dataset.id=id;
-  div.innerHTML = `
-    <h5>Spur #${id}</h5>
-    <div class="grid cols-2">
-      <div>
-        <label>Aktion / Beschreibung</label>
-        <textarea class="input pi-action" placeholder="z. B. twerken, sanfte Hüftbewegung, Blick nach links …"></textarea>
-      </div>
-      <div>
-        <label>Position (optional)</label>
-        <textarea class="input pi-position" placeholder="z. B. Start Mitte → Pfad im Bild per Klick setzen"></textarea>
-      </div>
-    </div>`;
-  $('#promptList').appendChild(div);
-}
+        const stream = off.captureStream(fps);
+        const chunks = [];
+        const rec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+        rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+        const seconds = Math.max(2, Math.min(8, duration)); // kurze Demo
+        const totalFrames = Math.floor(fps * seconds);
+        let frame = 0;
 
-/* ===== Pose (erweitert, kurz) ===== */
-function initPosePoints(){
-  removePosePoints();
-  const box=getPreviewBox();
-  defaultPose.forEach(p=>{
-    const el=document.createElement('div'); el.className='pose-point';
-    el.style.left=(p.x*box.width-5)+'px'; el.style.top=(p.y*box.height-5)+'px';
-    el.dataset.name=p.name; $('#preview').appendChild(el);
-    posePoints.push({name:p.name,x:p.x,y:p.y,el});
-    dragPosePoint(el);
-  });
-  drawPoseLines();
-}
-function removePosePoints(){ posePoints.forEach(p=>p.el.remove()); posePoints=[]; $$('.pose-line').forEach(l=>l.remove()); }
-function dragPosePoint(el){
-  let dragging=false, offX=0, offY=0;
-  el.addEventListener('mousedown', e=>{
-    if(mode!=='pose') return; dragging=true; el.style.cursor='grabbing'; offX=e.offsetX; offY=e.offsetY; e.preventDefault();
-  });
-  window.addEventListener('mousemove', e=>{
-    if(!dragging) return; const box=getPreviewBox();
-    let x=e.clientX-box.left-offX, y=e.clientY-box.top-offY;
-    x=Math.max(0,Math.min(box.width-10,x)); y=Math.max(0,Math.min(box.height-10,y));
-    el.style.left=x+'px'; el.style.top=y+'px';
-  });
-  window.addEventListener('mouseup', ()=>{
-    if(!dragging) return; dragging=false; el.style.cursor='grab';
-    const box=getPreviewBox();
-    const p=posePoints.find(pp=>pp.el===el);
-    p.x=(parseFloat(el.style.left)+5)/box.width;
-    p.y=(parseFloat(el.style.top)+5)/box.height;
-    drawPoseLines();
-  });
-}
-function drawPoseLines(){
-  $$('.pose-line').forEach(l=>l.remove());
-  const box=getPreviewBox();
-  POSE_EDGES.forEach(([a,b])=>{
-    const A=posePoints.find(p=>p.name===a), B=posePoints.find(p=>p.name===b);
-    if(!A||!B) return;
-    const x1=A.x*box.width, y1=A.y*box.height, x2=B.x*box.width, y2=B.y*box.height;
-    const dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy), ang=Math.atan2(dy,dx)*180/Math.PI;
-    const line=document.createElement('div'); line.className='pose-line';
-    line.style.left=(x1)+'px'; line.style.top=(y1)+'px';
-    line.style.width=len+'px'; line.style.transform=`rotate(${ang}deg)`;
-    $('#preview').appendChild(line);
-  });
-}
+        rec.start();
+        function drawFrame(){
+          // clear
+          octx.fillStyle = "#000"; octx.fillRect(0,0,w,h);
+          // draw image
+          octx.drawImage(imgEl, 0, 0, w, h);
 
-/* ===== Pose Prompt & Presets (Kurzlogik) ===== */
-$('#posePresets')?.addEventListener('click', e=>{
-  const chip=e.target.closest('.chip'); if(!chip) return;
-  applyPosePreset(chip.dataset.pose);
-});
-$('#btnApplyPosePrompt')?.addEventListener('click', ()=>{
-  const txt = ($('#posePrompt').value||'').toLowerCase();
-  applyPoseFromPrompt(txt);
-});
-function setPose(normalizedPoints){
-  const box=getPreviewBox();
-  const stiff=+$('#poseStiff').value, smooth=+$('#poseSmooth').value;
-  posePoints.forEach(p=>{
-    const target = normalizedPoints[p.name]; if(!target) return;
-    const nx = p.x*(smooth*stiff) + target.x*(1 - smooth*stiff);
-    const ny = p.y*(smooth*stiff) + target.y*(1 - smooth*stiff);
-    p.x=nx; p.y=ny;
-    p.el.style.left=(p.x*box.width-5)+'px';
-    p.el.style.top=(p.y*box.height-5)+'px';
-  });
-  drawPoseLines();
-}
-function applyPosePreset(kind){
-  const P={}; posePoints.forEach(p=>P[p.name]={x:p.x,y:p.y});
-  const up=v=>Math.max(0, v-0.08), down=v=>Math.min(1, v+0.08), left=v=>Math.max(0, v-0.08), right=v=>Math.min(1, v+0.08);
-  switch(kind){
-    case 'tpose':
-      P.l_shoulder.x=.42; P.r_shoulder.x=.58;
-      P.l_elbow.x = left(.32); P.l_elbow.y=.30; P.r_elbow.x = right(.68); P.r_elbow.y=.30;
-      P.l_hand.x  = left(.22); P.l_hand.y=.30;  P.r_hand.x  = right(.78); P.r_hand.y=.30;
-      break;
-    case 'armsup':
-      P.l_elbow.y=up(.18); P.r_elbow.y=up(.18); P.l_hand.y=up(.08); P.r_hand.y=up(.08); break;
-    case 'handsonhips':
-      P.l_elbow.x=right(.50); P.l_elbow.y=down(.36); P.r_elbow.x=left(.50); P.r_elbow.y=down(.36);
-      P.l_hand.x=.52; P.l_hand.y=.54; P.r_hand.x=.48; P.r_hand.y=.54; break;
-    case 'sit':
-      P.hip.y=.60; P.l_knee.y=.70; P.r_knee.y=.70; P.l_foot.y=.80; P.r_foot.y=.80; break;
-    case 'leanleft':
-      P.head.x=left(.46); P.l_shoulder.x=left(.38); P.r_shoulder.x=left(.54); break;
-    case 'leanright':
-      P.head.x=right(.54); P.l_shoulder.x=right(.46); P.r_shoulder.x=right(.62); break;
-  }
-  setPose(P);
-}
-function applyPoseFromPrompt(txt){
-  if(/t-?pose|tpose/.test(txt)) applyPosePreset('tpose');
-  if(/arm(e|s)? hoch|hands? up|raise arms/.test(txt)) applyPosePreset('armsup');
-  if(/h(ä|ae)nde an (der )?h(ü|ue)fte|hands? on hips/.test(txt)) applyPosePreset('handsonhips');
-  if(/sitz|sit/.test(txt)) applyPosePreset('sit');
-  if(/nach links lehnen|lean left/.test(txt)) applyPosePreset('leanleft');
-  if(/nach rechts lehnen|lean right/.test(txt)) applyPosePreset('leanright');
-  $('#statusBadge').textContent='Pose-Prompt angewendet';
-}
+          // simple action along path or idle sway
+          const t = frame / totalFrames; // 0..1
+          const swing = Math.sin(t * Math.PI*2 * (actSpeed.value)) * (20 * +actIntensity.value);
+          // draw pose skeleton lines (rough)
+          octx.save();
+          octx.globalAlpha = 0.6;
+          octx.strokeStyle = "#8ab4f8"; octx.lineWidth = 4;
+          const P = (name)=>({ x: joints[name].x*w, y: joints[name].y*h });
+          function L(a,b){ octx.beginPath(); octx.moveTo(a.x, a.y); octx.lineTo(b.x, b.y); octx.stroke(); }
+          const seq = [["head","neck"], ["neck","l_shoulder"], ["neck","r_shoulder"],
+                       ["l_shoulder","l_elbow"], ["l_elbow","l_hand"],
+                       ["r_shoulder","r_elbow"], ["r_elbow","r_hand"],
+                       ["neck","hip"], ["hip","l_knee"], ["l_knee","l_foot"],
+                       ["hip","r_knee"], ["r_knee","r_foot"]];
+          for(const [a,b] of seq){ L(P(a), P(b)); }
+          octx.restore();
 
-/* ===== Pose: MediaPipe Detection (optional) ===== */
-async function detectPoseFromImage(){
-  if(!$('#preview img')){ alert('Bitte zuerst ein Bild laden.'); return; }
-  if(typeof window.Pose==='undefined'){ alert('MediaPipe Pose nicht geladen. Dummy-Punkte werden verwendet.'); initPosePoints(); return; }
-  await pm.fake(300);
-  const pose = new window.Pose.Pose({ locateFile: (file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5/${file}` });
-  pose.setOptions({modelComplexity:1, smoothLandmarks:true});
-  pose.onResults((res)=>{
-    if(!res?.poseLandmarks?.length){ initPosePoints(); return; }
-    const lm=res.poseLandmarks, map=i=>({x:Math.min(1,Math.max(0,lm[i].x)), y:Math.min(1,Math.max(0,lm[i].y))});
-    const hip={x:(lm[23].x+lm[24].x)/2, y:(lm[23].y+lm[24].y)/2};
-    const points={ head: map(0), l_shoulder: map(11), r_shoulder: map(12), l_elbow: map(13), r_elbow: map(14),
-      l_hand: map(15), r_hand: map(16), hip, l_knee: map(25), r_knee: map(26), l_foot: map(31), r_foot: map(32) };
-    if(posePoints.length===0) initPosePoints(); setPose(points); $('#statusBadge').textContent='Pose erkannt';
-  });
-  const img=$('#preview img'), tmp=document.createElement('canvas'), ctx=tmp.getContext('2d');
-  tmp.width=img.naturalWidth||img.width; tmp.height=img.naturalHeight||img.height; ctx.drawImage(img,0,0,tmp.width,tmp.height);
-  await pose.send({image:tmp});
-}
-$('#btnDetectPose')?.addEventListener('click', detectPoseFromImage);
-$('#btnClearPose')?.addEventListener('click', ()=>{ removePosePoints(); });
+          // path-driven camera pan (if path exists or camera mode)
+          let tx = 0, ty = 0;
+          if(pathPoints.length >= 2 && (mode==='action' || mode==='camera')){
+            const idx = Math.floor(t * (pathPoints.length-1));
+            const frac = t * (pathPoints.length-1) - idx;
+            const p0 = pathPoints[idx], p1 = pathPoints[idx+1];
+            tx = (p1.x - p0.x) * frac * 10; // small camera motion
+            ty = (p1.y - p0.y) * frac * 10;
+          } else if (mode==='action'){
+            tx = swing; // idle sway
+          }
 
-/* ===== Keyframes (nur bei generated) ===== */
-$('#btnKFAdd').addEventListener('click', ()=>{
-  if(!hasGenerated) return;
-  const tm = (+t.toFixed(2)) || 0; keyframes.push(tm); $('#statusBadge').textContent = `KF @ ${tm}s`;
-});
-$('#btnKFClear').addEventListener('click', ()=>{ if(!hasGenerated) return; keyframes=[]; $('#statusBadge').textContent='Keyframes gelöscht'; });
-$('#btnSnapPath').addEventListener('click', ()=>{ if(!hasGenerated) return; $('#statusBadge').textContent='Pfad fixiert'; });
+          // overlay motion hint
+          octx.save();
+          octx.translate(tx, ty);
+          octx.globalAlpha = 0.15;
+          octx.fillStyle = "#fff"; octx.fillRect(0,0,w,h);
+          octx.restore();
 
-/* ===== APPLY / RENDER / DOWNLOAD ===== */
-function assemblePayload(){
-  const payload = {
-    mode,
-    image: !!imgURL,
-    refs: { video: !!refVideoURL, audio: !!audioURL },
-    export: {
-      res: $('#res').value, fps: +$('#fps').value, format: $('#format').value, quality: +$('#quality').value,
-      duration: +$('#duration').value, loop: $('#loop').value==='on'
-    }
-  };
-  if(mode==='action'){
-    payload.action = {
-      kind: getAction(),
-      intensity: +$('#actionIntensity').value,
-      speed: +$('#actionSpeed').value,
-      physics: !!$('#physics').checked,
-      path: (actionSpuren[actionSpuren.length-1]?.path)||[]
-    };
-    payload.tracks = $$('#promptList .prompt-item').map(div=>{
-      const id=+div.dataset.id;
-      const piAct=div.querySelector('.pi-action').value.trim();
-      const piPos=div.querySelector('.pi-position').value.trim();
-      return { id, prompt: piAct, position: piPos };
-    });
-    payload.regions = actionSpuren.map(s=>({id:s.id, rect:s.rect}));
-  } else if(mode==='pose'){
-    const box=getPreviewBox();
-    payload.pose = {
-      stiff: +$('#poseStiff').value, smooth: +$('#poseSmooth').value,
-      keypoints: posePoints.map(p=>({name:p.name, x:(parseFloat(p.el.style.left)+5)/box.width, y:(parseFloat(p.el.style.top)+5)/box.height})),
-      prompt: ($('#posePrompt')?.value||'').trim()
-    };
-  } else if(mode==='transfer'){
-    payload.transfer = { tempo: +$('#transferTempo').value, seg: $('#transferSeg').value, hasRef: !!refVideoURL };
-  } else if(mode==='lipsync'){
-    payload.lipsync = { audio: !!audioURL, expr: +$('#lipExpr').value, method: $('#lipMethod').value };
-  } else if(mode==='camera'){
-    payload.camera = { pan:+$('#camPan').value, zoom:+$('#camZoom').value, tilt:+$('#camTilt').value, shake:+$('#camShake').value, ease: !!$('#camAutoEase').checked };
-  }
-  payload.keyframes = keyframes.slice();
-  return payload;
-}
+          frame++;
+          if(frame <= totalFrames){
+            requestAnimationFrame(drawFrame);
+          } else {
+            rec.stop();
+          }
+        }
+        rec.onstop = ()=>{
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          resultVideoURL = url;
+          resultIsGenerated = true;
+          genInfo.textContent = 'Generiert (WebM Demo)';
+          Andio.toast('Clip generiert (Demo)');
+        };
 
-async function applyDemo(){
-  if(!$('#preview img')){ alert('Bitte zuerst ein Bild laden.'); return; }
-  const payload = assemblePayload();
-  console.log('APPLY', payload);
-  await pm.fake(700);
-  // -> hier würdest du vom Backend ein Vorschaubild/-clip bekommen
-  // Demo: wir markieren als generiert, lassen Overlay optional geschlossen
-  setGenerated(true);
-  $('#statusBadge').textContent = 'Angewendet';
-}
-async function renderDemo(){
-  if(!$('#preview img')){ alert('Bitte zuerst ein Bild laden.'); return; }
-  const payload = assemblePayload();
-  console.log('RENDER', payload);
-  await pm.fake(1200);
-  // Beispiel: vom Backend kommt ein MP4/WebM – hier könntest du genVideo.src setzen:
-  // const generatedUrl = URL.createObjectURL(blob) oder Server-URL
-  // genVideo.src = generatedUrl;
-  setGenerated(true);
-  openPlayer(genVideo.src || null); // öffnet nur, wenn hasGenerated==true
-  $('#statusBadge').textContent = 'Gerendert (Demo)';
-}
-function downloadDemo(){
-  const payload = assemblePayload();
-  const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='motion_payload.json'; a.click();
-}
+        drawFrame();
+      });
 
-/* Buttons */
-$('#btnApply').addEventListener('click', applyDemo);
-$('#btnRender').addEventListener('click', renderDemo);
-$('#btnDownload').addEventListener('click', downloadDemo);
-$('#btnReset').addEventListener('click', ()=>{
-  pause(); t=0; updatePlayhead();
-  spurCount=0; actionSpuren=[]; keyframes=[]; $('#promptList').innerHTML='';
-  clearOverlay(); removePosePoints();
-  resetGenerated(); closePlayer();
-  $('#statusBadge').textContent='Bereit';
-});
+      btnOpenPlayer.addEventListener('click', ()=>{
+        if(!resultIsGenerated || !resultVideoURL){
+          Andio.toast('Kein generierter Clip vorhanden');
+          return;
+        }
+        Andio.openPlayer({ type:'video', src: resultVideoURL, meta:{ from:'Motion', mode, duration }});
+      });
 
-/* Init */
-setMode('action');
-updatePlayhead();
-setGenerated(false); // Start: Player/Timeline aus
+      // Zoom
+      btnZoomFit.addEventListener('click', fitCanvas);
+      btnZoom100.addEventListener('click', ()=>{
+        imgEl.style.maxWidth = 'none';
+        imgEl.style.maxHeight = 'none';
+        imgEl.style.width = 'auto';
+        imgEl.style.height = 'auto';
+        draw();
+      });
 
-/* Polish */
-if (window.Andio?.polish) Andio.polish();
-</script>
+      // Play loop
+      function loop(){
+        if(!playing) return;
+        const dt = 1 / fps;
+        time += dt;
+        if(time > duration) time = 0;
+        updateScrub();
+        draw();
+        raf = requestAnimationFrame(loop);
+      }
+
+      // Drawing path on canvas
+      wrap.addEventListener('click', (e)=>{
+        if(!imgEl.src) return;
+        if(!drawPathToggle.checked) return;
+        const {ox, oy, scale} = imageMetrics();
+        const rect = wrap.getBoundingClientRect();
+        const x = (e.clientX - rect.left - ox) / scale;
+        const y = (e.clientY - rect.top - oy) / scale;
+        pathPoints.push({x,y});
+        draw();
+      });
+
+      // Pose controls
+      poseReset.addEventListener('click', ()=>{ defaultPose(); ensurePoseHandles(); draw(); });
+      poseSym.addEventListener('click', ()=>{
+        // Spiegeln entlang Bildmitte
+        for(const name of jointNames){
+          joints[name].x = 1 - joints[name].x;
+        }
+        ensurePoseHandles(); draw();
+      });
+
+      function togglePoseHandlesVisibility(){
+        const show = (mode==='pose' || mode==='transfer' || mode==='lipsync');
+        wrap.querySelectorAll('.joint, .joint-label').forEach(el=> el.style.display = show ? '' : 'none');
+      }
+
+      // Render
+      function fitCanvas(){
+        canvas.width = wrap.clientWidth;
+        canvas.height = wrap.clientHeight;
+        imgEl.style.maxWidth = '100%';
+        imgEl.style.maxHeight = '68vh';
+        ensurePoseHandles();
+        draw();
+      }
+      function imageMetrics(){
+        const rect = wrap.getBoundingClientRect();
+        const dispW = imgEl.clientWidth || 1;
+        const dispH = imgEl.clientHeight || 1;
+        const ox = (rect.width - dispW) / 2;
+        const oy = (rect.height - dispH) / 2;
+        const scale = dispW / (imgEl.naturalWidth || dispW);
+        return {ox, oy, scale};
+      }
+      function draw(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(!imgEl.src) return;
+
+        const {ox, oy, scale} = imageMetrics();
+
+        // Path points
+        if(pathPoints.length){
+          ctx.save();
+          ctx.translate(ox, oy);
+          ctx.scale(scale, scale);
+          ctx.strokeStyle = '#34d399';
+          ctx.lineWidth = 2/scale;
+          ctx.setLineDash([8,6]);
+          ctx.beginPath();
+          ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+          for(let i=1;i<pathPoints.length;i++){ ctx.lineTo(pathPoints[i].x, pathPoints[i].y); }
+          ctx.stroke();
+          ctx.setLineDash([]);
+          // points
+          ctx.fillStyle = '#34d399';
+          pathPoints.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x, p.y, 4/scale, 0, Math.PI*2); ctx.fill(); });
+          ctx.restore();
+        }
+
+        // Pose skeleton (if visible)
+        if(poseControls.style.display !== 'none'){
+          drawSkeleton();
+        }
+      }
+
+      window.addEventListener('resize', fitCanvas);
+
+      // Init
+      Andio.polish();
+      defaultPose();
+      renderTracks(); renderTimeline();
+    })();
+  </script>
+  <script>Andio.polish();</script>
 </body>
 </html>

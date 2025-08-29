@@ -107,23 +107,27 @@ def print_startup_banner():
 async def run_server(config: Dict[str, Any]):
     """Run the FastAPI server with enhanced configuration"""
 
-    # App target: **wichtig** – hier liegt der /api-Router!
-    app_target = os.environ.get("ANDIO_APP", "server.app_with_api:app")
+    # FIX: Standard-App jetzt korrekt auf server.app:app
+    app_target = os.environ.get("ANDIO_APP", "server.app:app")
 
-    # Set environment variables
+    # Ensure project root is importable
+    root = str(BASE_DIR)
+    if root not in sys.path:
+        sys.path.insert(0, root)
+
+    # Env
     os.environ.setdefault('TOKENIZERS_PARALLELISM', 'false')
 
     server_config = uvicorn.Config(
-        app_target,                               # <— vorher: "server.app:app"
+        app_target,
         host=config.get('host', '0.0.0.0'),
         port=int(config.get('port', 3000)),
-        reload=config.get('reload', False),
-        log_level=config.get('log_level', 'info'),
-        workers=config.get('workers', 1),
+        reload=bool(config.get('reload', False)),
+        log_level=str(config.get('log_level', 'info')),
+        workers=int(config.get('workers', 1)),
         access_log=True,
         use_colors=True
     )
-
     server = uvicorn.Server(server_config)
 
     logger.info(f"🌐 Starting server on http://{config['host']}:{config['port']}")
@@ -156,11 +160,6 @@ def main():
         port = int(os.environ.get('PORT', config.get('port', 3000)))
         host = os.environ.get('HOST', config.get('host', '0.0.0.0'))
         config.update({'port': port, 'host': host})
-
-        # Ensure project root is importable
-        root = str(BASE_DIR)
-        if root not in sys.path:
-            sys.path.insert(0, root)
 
         asyncio.run(run_server(config))
 

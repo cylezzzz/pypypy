@@ -1,4 +1,32 @@
 <!doctype html>
+<!-- === Brand / Navbar (standardisiert) === -->
+<header class="header">
+  <nav>
+    <div class="brand">
+      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+      <span class="wordmark">Andio Media Studio</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="links">
+      <a href="index.html" data-link="index">Übersicht</a>
+      <a href="images.html" data-link="images">Image Studio</a>
+      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
+      <a href="motion.html" data-link="motion">Motion</a>
+      <a href="gallery.html" data-link="gallery">Gallery</a>
+      <a href="catalog.html" data-link="catalog">Store</a>
+      <a href="editor.html" data-link="editor">Editor</a>
+    </div>
+  </nav>
+</header>
+<script>
+  (function(){
+    var p=document.body.getAttribute('data-page')||'images';
+    var a=document.querySelector('.links a[data-link="'+p+'"]');
+    if(a) a.classList.add('active');
+  })();
+</script>
+
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
@@ -35,10 +63,10 @@
     .toolbar .btn.ok{background:#1e8e3e;border-color:#176b2e}
   </style>
 </head>
-<body>
+<body data-page="images">
 <script src="assets/data/registry.js"></script>
 <script src="assets/app.js"></script>
-<script>window.Andio=window.Andio||{}; Andio.injectNavbar?.('images');</script>
+
 
 <div class="container">
   <h1>Image Studio</h1>
