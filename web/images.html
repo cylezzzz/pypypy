@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Image Studio · AndioMediaStudio</title>
   <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
   <style>
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -15,7 +16,6 @@
     .preview{position:relative;min-height:420px}
     #preview img,#preview canvas{display:block;max-width:100%;max-height:100%;margin:auto}
     .toast{position:fixed;bottom:26px;right:26px;background:linear-gradient(180deg,rgba(24,32,54,.95),rgba(14,20,36,.95));border:1px solid var(--border);padding:12px 14px;border-radius:14px;box-shadow:var(--shadow-md);z-index:80}
-    /* Wippschalter SFW/NSFW (voll klickbar + tastaturfähig) */
     .switch{position:relative;width:58px;height:28px;background:#1a2236;border:1px solid var(--border);border-radius:999px;cursor:pointer}
     .switch input{position:absolute;inset:0;opacity:0}
     .knob{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#fff,#cfd6ff);box-shadow:0 2px 8px rgba(0,0,0,.35);transition:left .18s}
@@ -23,10 +23,31 @@
     .switch .labels{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);padding:0 8px;pointer-events:none}
   </style>
 </head>
-<body>
+<body data-page="images">
 <script src="assets/data/registry.js"></script>
 <script src="assets/app.js"></script>
-<script>window.Andio=window.Andio||{}; Andio.injectNavbar?.('images');</script>
+
+<!-- Navbar -->
+<header class="header">
+  <nav>
+    <div class="brand">
+      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+      <span class="wordmark">Andio Media Studio</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="links">
+      <a href="index.html" data-link="index">Übersicht</a>
+      <a href="images.html" data-link="images">Image Studio</a>
+      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a href="gallery.html" data-link="gallery">Gallery</a>
+      <a href="catalog.html" data-link="catalog">Store</a>
+      <a href="player.html" data-link="player">Player</a>
+    </div>
+  </nav>
+</header>
+<script>
+  (function(){ const p=document.body.getAttribute('data-page'); const a=document.querySelector(`.links a[data-link="${p}"]`); if(a) a.classList.add('active'); })();
+</script>
 
 <div class="container">
   <h1>Image Studio</h1>
@@ -119,7 +140,7 @@
 <footer>© AndioMediaStudio</footer>
 
 <script>
-/* ==== SHIMs (stabil, ohne Abhängigkeit auf app.js-Ladezeit) ==== */
+/* ==== SHIMs ==== */
 const $ = (s,r=document)=>r.querySelector(s);
 const $$= (s,r=document)=>Array.from(r.querySelectorAll(s));
 const Progress = (window.Andio?.Progress) ? window.Andio.Progress : function(el){return{fake:async(ms=1200)=>{const b=el?.querySelector?.('.progress>div'); if(!b) return; b.style.transition='width .25s'; b.style.width='85%'; await new Promise(r=>setTimeout(r,ms)); b.style.width='100%'; setTimeout(()=>b.style.width='0%',300);}}};
@@ -136,48 +157,52 @@ const RES_BY_FORMAT = {
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 let P, MODELS;
 
-/* ==== Helpers ==== */
+/* Helpers */
 function setSel(el, items){ el.innerHTML=(items||[]).map(x=>`<option value="${x.id||x}">${x.name||x}</option>`).join(''); }
 function setRes(fmt){ $('#format').value=fmt; setSel($('#res'), RES_BY_FORMAT[fmt]); $('#res').value=RES_BY_FORMAT[fmt][1]||RES_BY_FORMAT[fmt][0]; }
 function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 1800); }
 function wipePreview(){ $$('#preview img, #preview canvas').forEach(n=>n.remove()); }
 
-/* ==== Switch voll klickbar + Tastatur ==== */
+/* Switch: klickbar + Tastatur */
 (function wireSwitch(){
-  const sw = $('.switch'); const input = $('#nsfwToggle');
+  const sw = document.querySelector('.switch'); const input = $('#nsfwToggle');
   const sync=()=> sw.setAttribute('aria-checked', input.checked?'true':'false');
   sw.addEventListener('click', e=>{ if(e.target!==input){ input.checked=!input.checked; input.dispatchEvent(new Event('change',{bubbles:true})); } sync();});
   sw.addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); input.checked=!input.checked; input.dispatchEvent(new Event('change',{bubbles:true})); sync();}});
   input.addEventListener('change', sync); sync();
 })();
 
-/* ==== Boot ==== */
+/* Chips nach Auswahl aktualisieren */
+function renderChips(){
+  const nsfw = $('#nsfwToggle').checked;
+  const genreId = $('#genre').value || null;
+  const chips = AndioData.featuredChips(P.featured, { nsfw, n:16, genreId });
+  $('#chips').innerHTML = chips.map(c=>`<span class="badge chip">${c}</span>`).join('');
+  $$('.chip').forEach(el=>el.addEventListener('click',()=>{
+    $$('.chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+    const g = P.genres.find(x=>x.name===el.textContent); if(g){ $('#genre').value=g.id; refreshModels(); }
+  }));
+}
+
+/* Boot */
 async function boot(){
-  // Katalog laden
   P = await AndioData.loadImagePresets();
   setSel($('#genre'), [{id:'',name:'— Bitte Genre wählen —'}, ...P.genres]);
   setSel($('#style'), P.styles); setSel($('#light'), P.lights);
   setSel($('#comp'),  P.comps);  setSel($('#palette'), P.palettes);
   setRes('1:1');
 
-  // Chips (zufällig pro Load)
-  const chips = AndioData.featuredChips(P.featured, {nsfw: $('#nsfwToggle').checked, n:16});
-  $('#chips').innerHTML = chips.map(c=>`<span class="badge chip">${c}</span>`).join('');
-  $$('.chip').forEach(el=>el.addEventListener('click',()=>{
-    $$('.chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
-    const g = P.genres.find(x=>x.name===el.textContent); if(g){ $('#genre').value=g.id; refreshModels(); }
-  }));
-
-  // Modelle
   MODELS = await AndioData.models('image', { nsfw: $('#nsfwToggle').checked });
   refreshModels();
+  renderChips();
 
   // Events
   $('#nsfwToggle').addEventListener('change', async ()=>{
     MODELS = await AndioData.models('image', { nsfw: $('#nsfwToggle').checked });
     refreshModels();
+    renderChips();
   });
-  $('#genre').addEventListener('change', refreshModels);
+  $('#genre').addEventListener('change', ()=>{ refreshModels(); renderChips(); });
   $('#format').addEventListener('change', ()=> setRes($('#format').value));
 
   $('#btnRandom').addEventListener('click', randomAll);
@@ -200,29 +225,24 @@ function randomAll(){
   if(!genreId){ toast('Bitte zuerst ein Genre wählen.'); return; }
   const nsfw = $('#nsfwToggle').checked;
 
-  // Format & Res (NSFW leicht Portrait-gewichtet)
   const fmtPool = nsfw ? ['3:4','9:16','1:1','16:9'] : ['1:1','16:9','4:3','3:4'];
   setRes(pick(fmtPool));
 
-  // Look
   $('#style').value   = pick(P.styles).id;
   $('#light').value   = pick(P.lights).id;
   $('#comp').value    = pick(P.comps).id;
   $('#palette').value = pick(P.palettes).id;
 
-  // Qualität
   $('#steps').value = Math.floor(24 + Math.random()*12);
   $('#guidance').value = (6.5 + Math.random()*2.2).toFixed(1);
   $('#seed').value = '';
 
-  // Prompt & Negative
   $('#promptBox').value = AndioData.randomImagePrompt(
     {genres:P.genres,styles:P.styles,lights:P.lights,comps:P.comps,palettes:P.palettes,templates:P.templates},
     {genreId, nsfw}
   );
   $('#negative').value = (P.negatives?.[nsfw?'nsfw':'sfw']) || 'Artefakte, Rauschen, falsche Proportionen, Verzerrungen';
 
-  // Smart Modell
   refreshModels();
 }
 
@@ -243,7 +263,6 @@ async function doRender(){
     wipePreview(); const img=new Image(); img.src=url; $('#preview').appendChild(img);
     Andio.Status?.done?.('Fertig');
   }else{
-    // Fallback Vorschau
     const c=document.createElement('canvas');
     c.width=640; c.height= payload.format==='9:16'?960:(payload.format==='3:4'?853:(payload.format==='16:9'?360:640));
     const ctx=c.getContext('2d');
@@ -261,6 +280,7 @@ function doReset(){
   $('#nsfwToggle').checked=false; $('#genre').value=''; setRes('1:1');
   $('#seed').value=''; $('#steps').value=28; $('#guidance').value=7.5; $('#promptBox').value=''; $('#negative').value='';
   $('#smartModel').checked=true; $('#model').disabled=true; refreshModels(); wipePreview();
+  renderChips();
 }
 
 boot().then(()=>Andio?.polish&&Andio.polish?.());

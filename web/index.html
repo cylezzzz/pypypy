@@ -5,52 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Übersicht · AndioMediaStudio</title>
   <link rel="stylesheet" href="assets/styles.css"/>
-
-  <!-- Browser Tab Icon -->
   <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
-
   <style>
-    .lead { color: var(--muted); margin-top: 6px }
-    .card .kicker { margin-bottom: 8px }
-
-    /* Logo im Header */
-    .app-header {
-      display: flex;
-      align-items: center;
-      background: #1e1e1e;
-      padding: 10px 20px;
-      color: #fff;
-    }
-    .app-header .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .app-header .logo-container img {
-      height: 40px;
-      width: auto;
-    }
-    .app-header .logo-container h1 {
-      margin: 0;
-      font-size: 1.4rem;
-    }
+    .lead{color:var(--muted);margin-top:6px}
+    .card .kicker{margin-bottom:8px}
   </style>
 </head>
-<body>
+<body data-page="index">
 <script src="assets/app.js"></script>
-<script>
-  // Navbar injizieren (kompatibel zu beiden Varianten deiner app.js)
-  if (window.Andio?.injectNavbar) Andio.injectNavbar('index');
-  else if (window.Andio?.navbar) Andio.navbar('index');
-</script>
 
-<!-- Header mit Logo -->
-<header class="app-header">
-  <div class="logo-container">
-    <img src="assets/logo/logo.png" alt="AndioMedia Logo"/>
-    <h1>Andio Media Studio</h1>
-  </div>
+<!-- === Brand / Navbar (statisch) === -->
+<header class="header">
+  <nav>
+    <div class="brand">
+      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+      <span class="wordmark">Andio Media Studio</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="links">
+      <a href="index.html" data-link="index">Übersicht</a>
+      <a href="images.html" data-link="images">Image Studio</a>
+      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a href="gallery.html" data-link="gallery">Gallery</a>
+      <a href="catalog.html" data-link="catalog">Store</a>
+      <a href="player.html" data-link="player">Player</a>
+    </div>
+  </nav>
 </header>
+<script>
+  // Aktiven Link markieren
+  (function(){
+    const p=document.body.getAttribute('data-page');
+    const a=document.querySelector(`.links a[data-link="${p}"]`);
+    if(a) a.classList.add('active');
+  })();
+</script>
 
 <div class="container">
   <h1>Willkommen</h1>
@@ -63,7 +52,7 @@
       <h3>Create</h3>
       <p>Text→Bild, Bild→Bild und Inpaint. Pinsel/Masken, Parameter (Steps/Guidance/Seed), optional NSFW (mit Alters-/Consent-Gate).</p>
       <div class="toolbar">
-        <a class="btn primary" href="create.html">Öffnen</a>
+        <a class="btn primary" href="images.html">Öffnen</a>
         <span class="badge">Pinsel/Masken</span>
         <span class="badge">NSFW (gated)</span>
       </div>
@@ -75,7 +64,7 @@
       <h3>Wardrobe</h3>
       <p>Kleidung ändern, Accessoires/Objekte platzieren (Klick-Position), Style Transfer. Enthält <em>Undress</em> (NSFW, mit Bestätigung), inkl. Masken-Tools.</p>
       <div class="toolbar">
-        <a class="btn primary" href="wardrobe.html">Öffnen</a>
+        <a class="btn primary" href="images.html">Öffnen</a>
         <span class="badge">Positions-Klick</span>
         <span class="badge">Undress (gated)</span>
       </div>
@@ -87,7 +76,7 @@
       <h3>Talking</h3>
       <p>Gesicht + Audio oder TTS → lipsync-Video. Regler für Lipsync & Bewegung. Export als MP4/GIF/WEBM.</p>
       <div class="toolbar">
-        <a class="btn primary" href="talking.html">Öffnen</a>
+        <a class="btn primary" href="video-gen.html">Öffnen</a>
         <span class="badge">TTS/Audio</span>
         <span class="badge">MP4/GIF/WEBM</span>
       </div>
@@ -99,7 +88,7 @@
       <h3>Video</h3>
       <p>Ken Burns, Slideshow oder Stylize auf Bildern/Videos anwenden. Parameter setzen, Rendern, Vorschau & Speichern.</p>
       <div class="toolbar">
-        <a class="btn primary" href="video.html">Öffnen</a>
+        <a class="btn primary" href="video-gen.html">Öffnen</a>
         <span class="badge">Ken Burns</span>
         <span class="badge">Stylize</span>
       </div>
@@ -141,14 +130,14 @@
       </div>
     </div>
 
-    <!-- (Optional) Hinweise -->
+    <!-- Hinweise -->
     <div class="card">
       <div class="kicker"><span class="badge">Hinweis</span></div>
       <h3>NSFW & Sicherheit</h3>
       <p>NSFW-Funktionen sind optional und nur mit Alters- & Einwilligungsbestätigung aktiv. Keine realen Personen ohne Consent. Keine Minderjährigen.</p>
       <div class="toolbar">
-        <a class="btn" href="wardrobe.html">Zu Wardrobe</a>
-        <a class="btn" href="create.html">Zu Create</a>
+        <a class="btn" href="images.html">Zu Image</a>
+        <a class="btn" href="video-gen.html">Zu Video</a>
       </div>
     </div>
   </div>
@@ -157,7 +146,6 @@
 <footer>© AndioMediaStudio</footer>
 
 <script>
-  // Optional: sanfter Feinschliff, wenn vorhanden
   if (window.Andio?.polish) Andio.polish();
 </script>
 </body>

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Video Studio · AndioMediaStudio</title>
   <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
   <style>
     .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
     .chip.active{outline:2px solid var(--accent); border-radius:999px}
@@ -15,7 +16,6 @@
     .pill{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.04)}
     #preview img, #preview canvas{display:block;max-width:100%;max-height:100%;margin:auto}
     .toast{position:fixed;bottom:26px;right:26px;background:linear-gradient(180deg,rgba(24,32,54,.95),rgba(14,20,36,.95));border:1px solid var(--border);padding:12px 14px;border-radius:14px;box-shadow:var(--shadow-md);z-index:80}
-    /* Wippschalter (voll klickbar + tastaturfähig) */
     .switch{position:relative;width:58px;height:28px;background:#1a2236;border:1px solid var(--border);border-radius:999px;cursor:pointer}
     .switch input{position:absolute;inset:0;opacity:0}
     .knob{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#fff,#cfd6ff);box-shadow:0 2px 8px rgba(0,0,0,.35);transition:left .18s}
@@ -23,10 +23,31 @@
     .switch .labels{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);padding:0 8px;pointer-events:none}
   </style>
 </head>
-<body>
+<body data-page="video-gen">
 <script src="assets/data/registry.js"></script>
 <script src="assets/app.js"></script>
-<script>window.Andio=window.Andio||{}; Andio.injectNavbar?.('video-gen');</script>
+
+<!-- Navbar -->
+<header class="header">
+  <nav>
+    <div class="brand">
+      <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
+      <span class="wordmark">Andio Media Studio</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="links">
+      <a href="index.html" data-link="index">Übersicht</a>
+      <a href="images.html" data-link="images">Image Studio</a>
+      <a href="video-gen.html" data-link="video-gen">Video Studio</a>
+      <a href="gallery.html" data-link="gallery">Gallery</a>
+      <a href="catalog.html" data-link="catalog">Store</a>
+      <a href="player.html" data-link="player">Player</a>
+    </div>
+  </nav>
+</header>
+<script>
+  (function(){ const p=document.body.getAttribute('data-page'); const a=document.querySelector(`.links a[data-link="${p}"]`); if(a) a.classList.add('active'); })();
+</script>
 
 <div class="container">
   <h1>Video Studio</h1>
@@ -139,7 +160,7 @@ const RES_BY_FORMAT = {
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 let V, VMODELS, mode='t2v', lastRefURL=null;
 
-/* ==== Switch voll klickbar + Tastatur ==== */
+/* Switch: klickbar + Tastatur */
 (function wireSwitch(){
   const sw = $('.switch'); const input = $('#nsfwToggle');
   const sync=()=> sw.setAttribute('aria-checked', input.checked?'true':'false');
@@ -158,33 +179,38 @@ function setMode(m){
   $$('[data-pane]').forEach(p=>p.style.display=(p.dataset.pane===m)?'block':'none');
 }
 
-/* ==== Boot ==== */
-async function bootVideo(){
-  V = await AndioData.loadVideoPresets();
-  setSel($('#genre'), V.genres); setSel($('#camera'), V.cameras);
-  setSel($('#motionStyle'), V.motions); setSel($('#grade'), V.grades);
-  setRes('16:9');
-
-  // Chips
-  const chips = AndioData.featuredChips(V.featured, {nsfw: $('#nsfwToggle').checked, n:16});
+/* Chips dynamisch nach Genre/NSFW */
+function renderChips(){
+  const nsfw = $('#nsfwToggle').checked;
+  const genreId = $('#genre').value || null;
+  const chips = AndioData.featuredChips(V.featured, { nsfw, n:16, genreId });
   $('#chipsLeft').innerHTML = chips.map(c=>`<span class="badge chip">${c}</span>`).join('');
   $$('.chip').forEach(el=>el.addEventListener('click',()=>{
     $$('.chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
     const g = V.genres.find(x=>x.name===el.textContent);
     if(g){ $('#genre').value=g.id; bindModels(); }
   }));
+}
 
-  // Modelle
+/* Boot */
+async function bootVideo(){
+  V = await AndioData.loadVideoPresets();
+  setSel($('#genre'), V.genres); setSel($('#camera'), V.cameras);
+  setSel($('#motionStyle'), V.motions); setSel($('#grade'), V.grades);
+  setRes('16:9');
+
   VMODELS = await AndioData.models('video', { nsfw: $('#nsfwToggle').checked });
   bindModels();
+  renderChips();
 
   // Events
   $('#nsfwToggle').addEventListener('change', async ()=>{
     $('#nsfwBlock').style.display = $('#nsfwToggle').checked ? 'block' : 'none';
     VMODELS = await AndioData.models('video', { nsfw: $('#nsfwToggle').checked });
     bindModels();
+    renderChips();
   });
-  $('#genre').addEventListener('change', bindModels);
+  $('#genre').addEventListener('change', ()=>{ bindModels(); renderChips(); });
   $$('.btn.mode').forEach(b=>b.addEventListener('click',()=> setMode(b.dataset.mode)));
   $('#format').addEventListener('change', ()=> setRes($('#format').value));
   $('#refImg').addEventListener('change', (e)=>{ const f=e.target.files?.[0]; if(!f) return; if(lastRefURL) URL.revokeObjectURL(lastRefURL); lastRefURL=URL.createObjectURL(f); wipePreview(); const im=new Image(); im.src=lastRefURL; $('#preview').appendChild(im); });
@@ -209,22 +235,18 @@ function randomAll(){
   if(!genreId){ toast('Bitte zuerst ein Genre wählen.'); return; }
   const nsfw = $('#nsfwToggle').checked;
 
-  // Ausgabe
   const fmtPool = nsfw ? ['9:16','16:9','1:1','2.39:1'] : ['16:9','2.39:1','1:1','9:16'];
   setRes(pick(fmtPool));
-  $('#length').value  = Math.floor(6 + Math.random()*6); // 6–11s
+  $('#length').value  = Math.floor(6 + Math.random()*6);
   $('#fps').value     = pick([24,25,30]);
 
-  // Look
   $('#camera').value      = pick(V.cameras);
   $('#motionStyle').value = pick(V.motions);
   $('#grade').value       = pick(V.grades);
 
-  // Prompt & Negative
   $('#promptBox').value = AndioData.randomVideoPrompt(V, { genreId, nsfw });
   $('#negative').value  = (V.negatives?.[nsfw?'nsfw':'sfw']) || 'Artefakte, Ruckler, Ghosting, Kompressionsfehler';
 
-  // Smart Modell
   bindModels();
 }
 
@@ -247,7 +269,6 @@ async function doRender(){
     wipePreview(); const img=new Image(); img.src=url; $('#preview').appendChild(img);
     Andio.Status?.done?.('Fertig');
   }else{
-    // Fallback Thumb
     const c=document.createElement('canvas'); c.width=640; c.height=360; const ctx=c.getContext('2d');
     ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,640,360);
     ctx.fillStyle='rgba(255,255,255,.92)'; ctx.font='bold 18px ui-monospace,monospace';
@@ -265,6 +286,7 @@ function doReset(){
   $('#promptBox').value=''; $('#negative').value='';
   $('#smartModel').checked=true; $('#model').disabled=true; bindModels(); wipePreview();
   if(lastRefURL){ URL.revokeObjectURL(lastRefURL); lastRefURL=null; }
+  renderChips();
 }
 
 bootVideo().then(()=>Andio?.polish&&Andio.polish?.());
