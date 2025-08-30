@@ -3,9 +3,8 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from pathlib import Path
 from server.utils.file_namer import next_filename
 
-router = APIRouter(prefix="/api/wardrobe", tags=["wardrobe"])
+router = APIRouter(prefix="/api/editor", tags=["editor"])
 
-# Resolve project root relative to this file: .../server/api -> project root is parents[2]
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 UPLOAD_DIR = PROJECT_ROOT / "workspace" / "uploads"
 
@@ -17,10 +16,9 @@ async def upload_file(file: UploadFile = File(...)):
     if ext not in ALLOWED:
         raise HTTPException(status_code=400, detail=f"Unsupported extension '{ext}'. Allowed: {sorted(ALLOWED)}")
 
-    new_name = next_filename("wandrobe", ext, UPLOAD_DIR)
+    new_name = next_filename("editor", ext, UPLOAD_DIR)
     save_path = UPLOAD_DIR / new_name
 
-    # Stream to disk
     contents = await file.read()
     save_path.write_bytes(contents)
 

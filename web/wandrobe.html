@@ -3,221 +3,95 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AndioMediaStudio – Advanced Wardrobe</title>
-  
+  <title>AndioMediaStudio – Wardrobe</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-  
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    :root {
-      --bg1: #667eea; --bg2: #764ba2;
-      --panel: rgba(255,255,255,.95); --border: rgba(255,255,255,.2);
-      --ink: #333; --muted: #666; --hint: #999;
-      --brand1: #667eea; --brand2: #764ba2;
-      --success: #4CAF50; --warning: #FF9800; --danger: #F44336;
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg1:#667eea;--bg2:#764ba2;--panel:rgba(255,255,255,.95);--border:rgba(0,0,0,.08);
+      --ink:#222;--muted:#666;--brand1:#667eea;--brand2:#764ba2;--success:#2e7d32;--danger:#e53935;
     }
-    
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100vh; color: var(--ink);
-      background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
-    }
-    
-    .container { max-width: 1800px; margin: 0 auto; padding: 20px; }
-    
-    .card {
-      background: var(--panel); border: 1px solid var(--border);
-      border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,.1);
-      backdrop-filter: blur(10px);
-    }
-    
-    .header { padding: 24px 28px; margin-bottom: 18px; }
-    .header h1 {
-      font-size: 2.1rem; margin: 0 0 6px;
-      background: linear-gradient(135deg, var(--bg1), var(--bg2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    
-    .modebar { display: flex; justify-content: flex-end; margin: 6px 0 18px; }
-    .modechip {
-      display: flex; align-items: center; gap: 10px; background: #fff;
-      border: 1px solid rgba(0,0,0,.08); padding: 8px 12px; border-radius: 999px; font-weight: 700;
-    }
-    
-    .workspace { display: grid; grid-template-columns: 320px 1fr 380px; gap: 22px; align-items: start; }
-    
-    /* Canvas - Erweitert für echte Tools */
-    .canvas { padding: 18px; }
-    .drop {
-      border: 2px dashed #ddd; border-radius: 16px; padding: 24px; 
-      text-align: center; cursor: pointer; transition: .2s; margin-bottom: 14px;
-    }
-    .drop:hover, .drop.dragover { border-color: var(--brand1); background: rgba(102,126,234,.06); }
-    
-    .stage {
-      background: 
-        linear-gradient(45deg, #f8f9fa 25%, transparent 25%),
-        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #f8f9fa 75%),
-        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
-      background-size: 20px 20px;
-      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
-      border-radius: 16px; min-height: 600px; position: relative; 
-      overflow: hidden; display: flex; align-items: center; justify-content: center;
-      cursor: crosshair;
-    }
-    
-    .model {
-      max-width: 100%; max-height: 100%; object-fit: contain;
-      border-radius: 10px; position: relative; z-index: 1;
-    }
-    
-    /* Overlay-Layer für Tools */
-    .overlay-layer {
-      position: absolute; inset: 0; pointer-events: none; 
-      width: 100%; height: 100%; z-index: 2;
-    }
-    
-    .overlay-layer.interactive { pointer-events: all; }
-    
-    /* Selection Tools */
-    .selection-box {
-      position: absolute; border: 2px dashed var(--brand1);
-      background: rgba(102, 126, 234, 0.1); pointer-events: none;
-      border-radius: 4px; z-index: 10;
-    }
-    
-    .drag-handle {
-      position: absolute; width: 12px; height: 12px;
-      background: var(--brand1); border: 2px solid #fff;
-      border-radius: 50%; cursor: pointer; z-index: 11;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-    
-    .drag-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
-    .drag-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
-    .drag-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
-    .drag-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
-    .drag-handle.move { top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: move; }
-    
-    /* Brush Tools */
-    .brush-cursor {
-      position: absolute; border: 2px solid var(--brand1);
-      border-radius: 50%; pointer-events: none; z-index: 15;
-      background: rgba(102, 126, 234, 0.1);
-    }
-    
-    /* Pin System */
-    .pin {
-      position: absolute; width: 8px; height: 8px;
-      background: var(--danger); border: 2px solid #fff;
-      border-radius: 50%; cursor: pointer; z-index: 12;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .pin:hover { transform: scale(1.3); }
-    
-    /* Tools Sidebar */
-    .tools { padding: 18px; max-height: calc(100vh - 200px); overflow: auto; }
-    .section { background: rgba(102,126,234,.06); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-    .title { font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-    
-    .tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
-    .tool-btn {
-      padding: 12px 8px; border: 2px solid rgba(102,126,234,.25);
-      border-radius: 10px; background: #fff; cursor: pointer;
-      text-align: center; font-size: 0.85rem; font-weight: 600;
-      transition: all 0.2s ease; position: relative;
-    }
-    
-    .tool-btn:hover { 
-      transform: translateY(-2px); 
-      box-shadow: 0 4px 12px rgba(102,126,234,.3);
-      border-color: var(--brand1);
-    }
-    
-    .tool-btn.active {
-      background: linear-gradient(135deg, var(--brand1), var(--brand2));
-      color: white; border-color: transparent;
-    }
-    
-    .tool-btn i { display: block; margin-bottom: 6px; font-size: 1.2rem; }
-    
-    /* Range Controls */
-    .rg { position: relative; margin: 10px 0; }
-    .rg label { display: block; margin-bottom: 6px; font-weight: 600; }
-    
-    input[type=range] {
-      width: 100%; height: 8px; border-radius: 4px;
-      background: #e0e0e0; outline: none; -webkit-appearance: none;
-    }
-    
-    input[type=range]::-webkit-slider-thumb {
-      appearance: none; width: 20px; height: 20px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--bg1), var(--bg2));
-      box-shadow: 0 2px 6px rgba(0,0,0,.3); cursor: pointer;
-    }
-    
-    .val {
-      position: absolute; right: 0; top: -2px;
-      background: rgba(102,126,234,.15); padding: 2px 8px;
-      border-radius: 12px; font-size: 0.8rem; font-weight: 700;
-      color: var(--brand2); min-width: 40px; text-align: center;
-    }
-    
-    /* Action Buttons */
-    .btnrow { display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; flex-wrap: wrap; }
-    .btn {
-      padding: 12px 18px; border: none; border-radius: 12px;
-      font-weight: 700; cursor: pointer; transition: all 0.2s ease;
-      display: flex; align-items: center; gap: 8px;
-    }
-    
-    .btn.primary { color: #fff; background: linear-gradient(135deg, var(--bg1), var(--bg2)); }
-    .btn.success { color: #fff; background: var(--success); }
-    .btn.danger { color: #fff; background: var(--danger); }
-    .btn.ghost { background: rgba(102,126,234,.08); color: var(--brand1); border: 1px solid rgba(102,126,234,.3); }
-    
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(102,126,234,.25); }
-    
-    /* NSFW Styling */
-    .nsfw-only { display: none; }
-    [data-mode="nsfw"] .nsfw-only { display: block; }
-    [data-mode="nsfw"] .nsfw-hide { display: none !important; }
-    
-    .nsfw-section {
-      border: 2px solid var(--danger);
-      background: rgba(244, 67, 54, 0.05);
-    }
-    
-    /* Status Display */
-    .status-bar {
-      position: fixed; bottom: 20px; right: 20px; z-index: 100;
-      background: rgba(0,0,0,0.8); color: white; padding: 12px 16px;
-      border-radius: 8px; font-size: 0.9rem; max-width: 300px;
-      transform: translateY(100px); opacity: 0;
-      transition: all 0.3s ease;
-    }
-    
-    .status-bar.show { transform: translateY(0); opacity: 1; }
-    
-    /* Responsive */
-    @media (max-width: 1400px) {
-      .workspace { grid-template-columns: 1fr; gap: 18px; }
-      .tools { max-height: none; }
-    }
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial;
+      min-height:100vh;color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2))}
+    .container{max-width:1800px;margin:0 auto;padding:20px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.12);backdrop-filter:blur(10px)}
+    .header{padding:22px 26px;margin-bottom:18px}
+    .header h1{font-size:2rem;background:linear-gradient(135deg,var(--bg1),var(--bg2));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+    .modebar{display:flex;justify-content:flex-end;margin:6px 0 18px}
+    .modechip{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);
+      padding:8px 12px;border-radius:999px;font-weight:700}
+    .workspace{display:grid;grid-template-columns:320px 1fr 410px;gap:20px;align-items:start}
+    @media (max-width:1400px){.workspace{grid-template-columns:1fr}}
+    /* Left tools */
+    aside.card{padding:18px}
+    .tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+    .tool-btn{padding:12px 8px;border:2px solid rgba(102,126,234,.25);border-radius:10px;background:#fff;cursor:pointer;
+      text-align:center;font-size:.86rem;font-weight:600;transition:.2s}
+    .tool-btn i{display:block;margin-bottom:6px}
+    .tool-btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(102,126,234,.28);border-color:var(--brand1)}
+    .tool-btn.active{background:linear-gradient(135deg,var(--bg1),var(--bg2));color:#fff;border-color:transparent}
+    .rg{position:relative;margin:10px 0}
+    .rg label{display:block;margin-bottom:6px;font-weight:700}
+    input[type=range]{width:100%;height:8px;background:#e9ecef;border-radius:4px;appearance:none;outline:none}
+    input[type=range]::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;
+      background:linear-gradient(135deg,var(--bg1),var(--bg2));box-shadow:0 2px 6px rgba(0,0,0,.3)}
+    .val{position:absolute;right:0;top:-2px;background:rgba(102,126,234,.12);padding:2px 8px;border-radius:12px;
+      font-size:.8rem;font-weight:800;color:var(--brand2);min-width:40px;text-align:center}
+    /* Canvas */
+    main.canvas{padding:18px}
+    .drop{border:2px dashed #d0d7de;border-radius:14px;padding:18px;text-align:center;margin-bottom:12px;cursor:pointer}
+    .drop:hover,.drop.dragover{border-color:var(--brand1);background:rgba(102,126,234,.06)}
+    .stage{position:relative;min-height:620px;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+      background:
+        linear-gradient(45deg,#f8f9fa 25%,transparent 25%),
+        linear-gradient(-45deg,#f8f9fa 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#f8f9fa 75%),
+        linear-gradient(-45deg,transparent 75%,#f8f9fa 75%);
+      background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
+    .model{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;position:relative;z-index:1}
+    .overlay-layer{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+    .overlay-layer.interactive{pointer-events:all}
+    .brush-cursor{position:absolute;border:2px solid #667eea;border-radius:50%;pointer-events:none;z-index:15;background:rgba(102,126,234,.1)}
+    .pin{position:absolute;width:8px;height:8px;background:var(--danger);border:2px solid #fff;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,.3);cursor:pointer;z-index:12}
+    .btnrow{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+    .btn{padding:12px 18px;border:none;border-radius:12px;font-weight:800;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:8px}
+    .btn.primary{color:#fff;background:linear-gradient(135deg,var(--bg1),var(--bg2))}
+    .btn.success{color:#fff;background:var(--success)}
+    .btn.danger{color:#fff;background:var(--danger)}
+    .btn.ghost{background:rgba(102,126,234,.08);color:var(--brand1);border:1px solid rgba(102,126,234,.3)}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(102,126,234,.25)}
+    /* Right tools */
+    .tools{padding:18px;max-height:calc(100vh - 220px);overflow:auto}
+    .section{background:rgba(102,126,234,.06);border-radius:14px;padding:14px;margin-bottom:14px}
+    .title{font-weight:900;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+    .nsfw-only{display:none}[data-mode="nsfw"] .nsfw-only{display:block}[data-mode="nsfw"] .nsfw-hide{display:none!important}
+    .nsfw-section{border:2px solid var(--danger);background:rgba(229,57,53,.05)}
+    /* Status & Job Toast */
+    .status-bar{position:fixed;bottom:20px;right:20px;z-index:100;background:rgba(0,0,0,.82);color:#fff;padding:12px 16px;border-radius:8px;font-size:.9rem;
+      transform:translateY(120%);opacity:0;transition:.25s}
+    .status-bar.show{transform:translateY(0);opacity:1}
+    .job-toast{position:fixed;bottom:20px;left:20px;z-index:110;min-width:280px;max-width:360px;background:#fff;border:1px solid rgba(0,0,0,.1);
+      border-radius:12px;box-shadow:0 12px 28px rgba(0,0,0,.18);padding:12px;display:none}
+    .job-show{display:block}
+    .job-head{display:flex;align-items:center;justify-content:space-between;font-weight:900;margin-bottom:6px}
+    #jobCancel{border:none;background:transparent;cursor:pointer;font-size:16px;opacity:.6} #jobCancel:hover{opacity:1}
+    .job-body{font-size:.9rem;color:#555;margin-bottom:8px}
+    .job-progress{height:8px;background:#eee;border-radius:999px;overflow:hidden}
+    .job-bar{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);width:0%}
+    /* Galerie */
+    .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+    .tile{padding:0;border:1px solid #eee;border-radius:10px;overflow:hidden;aspect-ratio:1/1;display:block;background:#fff}
+    .tile img{width:100%;height:100%;object-fit:cover;display:block}
   </style>
 </head>
 <body data-mode="sfw">
-
   <div class="container">
     <div class="header card">
       <h1><i class="fa-solid fa-palette"></i> Advanced Wardrobe Studio</h1>
       <p style="color:var(--muted)">Avatar Manipulation • NSFW Tools • Professional Controls</p>
     </div>
 
-    <!-- Mode Toggle -->
     <div class="modebar">
       <label class="modechip">
         <span id="modeLabel">SFW</span>
@@ -228,939 +102,454 @@
 
     <div class="workspace">
       <!-- LEFT: Quick Tools -->
-      <aside class="card" style="padding: 18px;">
+      <aside class="card">
         <h3><i class="fa-solid fa-tools"></i> Quick Tools</h3>
-        
         <div class="tool-grid">
-          <div class="tool-btn active" id="tool-select" onclick="setTool('select')">
-            <i class="fa-solid fa-mouse-pointer"></i>
-            Select
-          </div>
-          <div class="tool-btn" id="tool-brush" onclick="setTool('brush')">
-            <i class="fa-solid fa-paintbrush"></i>
-            Brush
-          </div>
-          <div class="tool-btn" id="tool-eraser" onclick="setTool('eraser')">
-            <i class="fa-solid fa-eraser"></i>
-            Eraser
-          </div>
-          <div class="tool-btn" id="tool-pin" onclick="setTool('pin')">
-            <i class="fa-solid fa-thumbtack"></i>
-            Pin
-          </div>
-          <div class="tool-btn" id="tool-mask" onclick="setTool('mask')">
-            <i class="fa-solid fa-mask"></i>
-            Mask
-          </div>
-          <div class="tool-btn" id="tool-clone" onclick="setTool('clone')">
-            <i class="fa-solid fa-copy"></i>
-            Clone
-          </div>
+          <div class="tool-btn active" id="tool-select" onclick="setTool('select')"><i class="fa-solid fa-mouse-pointer"></i>Select</div>
+          <div class="tool-btn" id="tool-brush"  onclick="setTool('brush')"><i class="fa-solid fa-paintbrush"></i>Brush</div>
+          <div class="tool-btn" id="tool-eraser" onclick="setTool('eraser')"><i class="fa-solid fa-eraser"></i>Eraser</div>
+          <div class="tool-btn" id="tool-pin"    onclick="setTool('pin')"><i class="fa-solid fa-thumbtack"></i>Pin</div>
+          <div class="tool-btn" id="tool-mask"   onclick="setTool('mask')"><i class="fa-solid fa-mask"></i>Mask</div>
+          <div class="tool-btn" id="tool-clone"  onclick="setTool('clone')"><i class="fa-solid fa-copy"></i>Clone</div>
         </div>
-
         <div class="rg">
           <label>Brush Size</label>
-          <input id="brushSize" type="range" min="5" max="100" value="20" 
-                 oninput="updateVal(this, 'brushSizeVal'); updateBrushSize(this.value)"/>
+          <input id="brushSize" type="range" min="5" max="100" value="20" oninput="updateVal(this,'brushSizeVal');updateBrushSize(this.value)"/>
           <span class="val" id="brushSizeVal">20px</span>
         </div>
-
         <div class="rg">
           <label>Opacity</label>
-          <input id="brushOpacity" type="range" min="0" max="100" value="80" 
-                 oninput="updateVal(this, 'brushOpacityVal'); updateBrushOpacity(this.value)"/>
+          <input id="brushOpacity" type="range" min="0" max="100" value="80" oninput="updateVal(this,'brushOpacityVal');updateBrushOpacity(this.value)"/>
           <span class="val" id="brushOpacityVal">80%</span>
         </div>
       </aside>
 
-      <!-- MIDDLE: Canvas -->
+      <!-- CENTER: Canvas, Upload, Galerie -->
       <main class="card canvas">
-        <div class="drop" onclick="document.getElementById('avatarInput').click()"
-             ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
-          <i class="fa-solid fa-user-plus"></i>
-          <h3>Avatar hochladen</h3>
-          <p>PNG/JPG für erweiterte Bearbeitung</p>
+        <div class="drop" onclick="document.getElementById('avatarInput').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+          <i class="fa-solid fa-user-plus"></i> <strong>Avatar lokal laden</strong>
+          <p style="color:var(--muted)">PNG/JPG (nur Vorschau). Für KI bitte unten auf Server hochladen.</p>
           <input id="avatarInput" type="file" accept="image/*" style="display:none" onchange="loadAvatar(event)"/>
         </div>
 
+        <div class="rg" style="margin:10px 0 6px;">
+          <label>Serverpfad (relativ, z. B. <code>workspace/uploads/IMG_1234.jpg</code>)</label>
+          <input id="serverPath" type="text" placeholder="workspace/uploads/…" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd"/>
+        </div>
+
+        <div class="rg" style="margin:10px 0 14px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost" id="btnSrvUpload"><i class="fa fa-cloud-arrow-up"></i> Auf Server hochladen</button>
+          <input id="multiInput" type="file" accept="image/*" multiple style="display:none"/>
+          <button class="btn ghost" onclick="refreshGallery()"><i class="fa fa-arrows-rotate"></i> Galerie aktualisieren</button>
+        </div>
+
         <div class="stage" id="stage">
-          <div style="color:#666; text-align:center;">
-            <i class="fa-solid fa-user-circle" style="font-size:3rem;color:#ccc"></i>
-            <p style="margin-top:8px;">Lade deinen Avatar um zu beginnen</p>
-            <p class="nsfw-only" style="margin-top:6px;font-size:.9rem;">
-              <em>NSFW-Tools verfügbar nach Upload</em>
-            </p>
+          <div style="text-align:center;color:#777">
+            <i class="fa-solid fa-user-circle" style="font-size:3rem;color:#bbb"></i>
+            <p>Vorschau hier. Wähle ein Bild aus der Galerie oder lade eines hoch.</p>
+            <p class="nsfw-only" style="font-size:.9rem"><em>NSFW-Tools werden im NSFW-Modus eingeblendet.</em></p>
           </div>
         </div>
 
         <div class="btnrow">
-          <button class="btn ghost" onclick="undoAction()">
-            <i class="fa-solid fa-undo"></i> Rückgängig
-          </button>
-          <button class="btn ghost" onclick="redoAction()">
-            <i class="fa-solid fa-redo"></i> Wiederholen
-          </button>
-          <button class="btn primary" onclick="applyChanges()">
-            <i class="fa-solid fa-magic"></i> Anwenden
-          </button>
-          <button class="btn success" onclick="saveResult()">
-            <i class="fa-solid fa-save"></i> Speichern
-          </button>
+          <button class="btn ghost"   onclick="undoAction()"><i class="fa-solid fa-undo"></i> Rückgängig</button>
+          <button class="btn ghost"   onclick="redoAction()"><i class="fa-solid fa-redo"></i> Wiederholen</button>
+          <button class="btn primary" onclick="applyChanges()"><i class="fa-solid fa-magic"></i> Anwenden</button>
+          <button class="btn success" onclick="exportImage()"><i class="fa-solid fa-download"></i> Export</button>
+          <button class="btn danger"  onclick="resetAll()"><i class="fa-solid fa-broom"></i> Reset</button>
+        </div>
+
+        <div class="card" style="padding:12px;margin-top:12px">
+          <div style="font-weight:900;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+            <i class="fa fa-images"></i> Galerie (workspace/uploads)
+          </div>
+          <div id="gallery" class="gallery-grid"></div>
         </div>
       </main>
 
-      <!-- RIGHT: Advanced Tools -->
+      <!-- RIGHT: Advanced + NSFW -->
       <aside class="card tools">
-        <!-- Transform Tools -->
         <div class="section">
           <div class="title"><i class="fa-solid fa-arrows-alt"></i> Transform</div>
-          
-          <div class="rg">
-            <label>Scale</label>
-            <input id="scaleSlider" type="range" min="10" max="200" value="100" 
-                   oninput="updateVal(this, 'scaleVal'); applyTransform()"/>
-            <span class="val" id="scaleVal">100%</span>
-          </div>
-          
-          <div class="rg">
-            <label>Rotation</label>
-            <input id="rotationSlider" type="range" min="-180" max="180" value="0" 
-                   oninput="updateVal(this, 'rotationVal'); applyTransform()"/>
-            <span class="val" id="rotationVal">0°</span>
-          </div>
-          
-          <div class="rg">
-            <label>Position X</label>
-            <input id="posXSlider" type="range" min="-50" max="50" value="0" 
-                   oninput="updateVal(this, 'posXVal'); applyTransform()"/>
-            <span class="val" id="posXVal">0</span>
-          </div>
-          
-          <div class="rg">
-            <label>Position Y</label>
-            <input id="posYSlider" type="range" min="-50" max="50" value="0" 
-                   oninput="updateVal(this, 'posYVal'); applyTransform()"/>
-            <span class="val" id="posYVal">0</span>
-          </div>
+          <div class="rg"><label>Scale</label><input id="scaleSlider" type="range" min="10" max="200" value="100" oninput="updateVal(this,'scaleVal');applyTransform()"/><span class="val" id="scaleVal">100%</span></div>
+          <div class="rg"><label>Rotation</label><input id="rotationSlider" type="range" min="-180" max="180" value="0" oninput="updateVal(this,'rotationVal');applyTransform()"/><span class="val" id="rotationVal">0°</span></div>
+          <div class="rg"><label>Position X</label><input id="posXSlider" type="range" min="-50" max="50" value="0" oninput="updateVal(this,'posXVal');applyTransform()"/><span class="val" id="posXVal">0</span></div>
+          <div class="rg"><label>Position Y</label><input id="posYSlider" type="range" min="-50" max="50" value="0" oninput="updateVal(this,'posYVal');applyTransform()"/><span class="val" id="posYVal">0</span></div>
         </div>
 
-        <!-- Selection Tools -->
         <div class="section">
           <div class="title"><i class="fa-solid fa-crop"></i> Selection</div>
-          
           <div class="tool-grid">
-            <div class="tool-btn" onclick="selectAll()">
-              <i class="fa-solid fa-expand"></i>
-              Select All
-            </div>
-            <div class="tool-btn" onclick="deselectAll()">
-              <i class="fa-solid fa-times"></i>
-              Deselect
-            </div>
-            <div class="tool-btn" onclick="invertSelection()">
-              <i class="fa-solid fa-exchange-alt"></i>
-              Invert
-            </div>
+            <div class="tool-btn" onclick="selectAll()"><i class="fa-solid fa-expand"></i>Select All</div>
+            <div class="tool-btn" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i>Deselect</div>
+            <div class="tool-btn" onclick="invertSelection()"><i class="fa-solid fa-arrows-left-right"></i>Invert</div>
           </div>
-          
-          <div style="margin-top: 10px;">
-            <button class="btn ghost" onclick="cropToSelection()" style="width: 100%;">
-              <i class="fa-solid fa-crop"></i> Crop to Selection
-            </button>
-          </div>
+          <button class="btn ghost" onclick="cropToSelection()" style="width:100%;margin-top:8px"><i class="fa-solid fa-crop"></i> Crop to Selection</button>
         </div>
 
-        <!-- NSFW Advanced Tools -->
         <div class="section nsfw-only nsfw-section">
           <div class="title"><i class="fa-solid fa-user-secret"></i> NSFW Tools</div>
-          
-          <div class="rg">
-            <label>Skin Tone</label>
-            <input id="skinTone" type="range" min="0" max="100" value="50" 
-                   oninput="updateVal(this, 'skinToneVal'); applySkinTone(this.value)"/>
-            <span class="val" id="skinToneVal">50%</span>
-          </div>
-          
-          <div class="rg">
-            <label>Body Enhancement</label>
-            <input id="bodyEnhance" type="range" min="0" max="100" value="0" 
-                   oninput="updateVal(this, 'bodyEnhanceVal'); applyBodyEnhancement(this.value)"/>
-            <span class="val" id="bodyEnhanceVal">0%</span>
-          </div>
-          
+          <div class="rg"><label>Skin Tone</label><input id="skinTone" type="range" min="0" max="100" value="50" oninput="updateVal(this,'skinToneVal');applySkinTone(this.value)"/><span class="val" id="skinToneVal">50%</span></div>
+          <div class="rg"><label>Body Enhancement</label><input id="bodyEnhance" type="range" min="0" max="100" value="0" oninput="updateVal(this,'bodyEnhanceVal');applyBodyEnhancement(this.value)"/><span class="val" id="bodyEnhanceVal">0%</span></div>
           <div class="tool-grid">
-            <div class="tool-btn" onclick="removeClothing('top')">
-              <i class="fa-solid fa-tshirt"></i>
-              Remove Top
-            </div>
-            <div class="tool-btn" onclick="removeClothing('bottom')">
-              <i class="fa-solid fa-person"></i>
-              Remove Bottom
-            </div>
-            <div class="tool-btn" onclick="addCensor()">
-              <i class="fa-solid fa-eye-slash"></i>
-              Add Censor
-            </div>
+            <div class="tool-btn" onclick="apiRemoveClothing('top')"><i class="fa-solid fa-shirt"></i> Remove Top</div>
+            <div class="tool-btn" onclick="apiRemoveClothing('bottom')"><i class="fa-solid fa-person"></i> Remove Bottom</div>
+            <div class="tool-btn" onclick="addCensor()"><i class="fa-solid fa-eye-slash"></i> Add Censor</div>
           </div>
-          
-          <div class="rg">
-            <label>Privacy Level</label>
-            <input id="privacyLevel" type="range" min="0" max="100" value="80" 
-                   oninput="updateVal(this, 'privacyLevelVal'); applyPrivacyLevel(this.value)"/>
-            <span class="val" id="privacyLevelVal">80%</span>
-          </div>
+          <div class="rg"><label>Privacy Level</label><input id="privacyLevel" type="range" min="0" max="100" value="80" oninput="updateVal(this,'privacyLevelVal');applyPrivacyLevel(this.value)"/><span class="val" id="privacyLevelVal">80%</span></div>
         </div>
 
-        <!-- Filter & Effects -->
         <div class="section">
-          <div class="title"><i class="fa-solid fa-magic"></i> Effects</div>
-          
-          <div class="rg">
-            <label>Brightness</label>
-            <input id="brightness" type="range" min="-50" max="50" value="0" 
-                   oninput="updateVal(this, 'brightnessVal'); applyFilters()"/>
-            <span class="val" id="brightnessVal">0</span>
-          </div>
-          
-          <div class="rg">
-            <label>Contrast</label>
-            <input id="contrast" type="range" min="-50" max="50" value="0" 
-                   oninput="updateVal(this, 'contrastVal'); applyFilters()"/>
-            <span class="val" id="contrastVal">0</span>
-          </div>
-          
-          <div class="rg">
-            <label>Saturation</label>
-            <input id="saturation" type="range" min="-50" max="50" value="0" 
-                   oninput="updateVal(this, 'saturationVal'); applyFilters()"/>
-            <span class="val" id="saturationVal">0</span>
-          </div>
-          
-          <div class="rg">
-            <label>Blur</label>
-            <input id="blur" type="range" min="0" max="20" value="0" 
-                   oninput="updateVal(this, 'blurVal'); applyFilters()"/>
-            <span class="val" id="blurVal">0px</span>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="section">
-          <div class="title"><i class="fa-solid fa-cogs"></i> Actions</div>
-          
-          <button class="btn danger" onclick="resetAll()" style="width: 100%; margin-bottom: 8px;">
-            <i class="fa-solid fa-refresh"></i> Reset All
-          </button>
-          
-          <button class="btn ghost" onclick="exportImage()" style="width: 100%;">
-            <i class="fa-solid fa-download"></i> Export Image
-          </button>
+          <div class="title"><i class="fa-solid fa-wand-magic-sparkles"></i> Effects</div>
+          <div class="rg"><label>Brightness</label><input id="brightness" type="range" min="-50" max="50" value="0" oninput="updateVal(this,'brightnessVal');applyFilters()"/><span class="val" id="brightnessVal">0</span></div>
+          <div class="rg"><label>Contrast</label><input id="contrast" type="range" min="-50" max="50" value="0" oninput="updateVal(this,'contrastVal');applyFilters()"/><span class="val" id="contrastVal">0</span></div>
+          <div class="rg"><label>Saturation</label><input id="saturation" type="range" min="-50" max="50" value="0" oninput="updateVal(this,'saturationVal');applyFilters()"/><span class="val" id="saturationVal">0</span></div>
+          <div class="rg"><label>Blur</label><input id="blur" type="range" min="0" max="20" value="0" oninput="updateVal(this,'blurVal');applyFilters()"/><span class="val" id="blurVal">0px</span></div>
         </div>
       </aside>
     </div>
   </div>
 
-  <!-- Status Bar -->
-  <div class="status-bar" id="statusBar">
-    Ready
+  <!-- Status & Job Toast -->
+  <div class="status-bar" id="statusBar">Ready</div>
+  <div id="jobToast" class="job-toast" aria-live="polite" aria-atomic="true">
+    <div class="job-head"><span id="jobTitle">Verarbeite…</span><button id="jobCancel" type="button" title="Abbrechen">✕</button></div>
+    <div class="job-body" id="jobMessage">initializing</div>
+    <div class="job-progress"><div class="job-bar" id="jobBar" style="width:0%"></div></div>
   </div>
 
   <script>
-    // ===== CORE VARIABLES =====
-    let currentTool = 'select';
+    // --------- CONFIG ---------
+    const API_BASE = '/api/wardrobe';
+
+    // --------- CORE STATE ---------
+    let currentTool='select';
     let currentMode = localStorage.getItem('andio_mode') || 'sfw';
-    let avatar = null;
-    let canvasContext = null;
-    let overlayContext = null;
-    let isDrawing = false;
-    let selections = [];
-    let pins = [];
-    let actionHistory = [];
-    let historyIndex = -1;
+    let avatar=null; // DataURL ODER Serverbildpfad
+    let canvasContext=null, overlayContext=null;
+    let isDrawing=false, selections=[], pins=[];
+    let actionHistory=[], historyIndex=-1;
+    let selectionStart=null, currentSelection=null;
+    let currentTransform={scale:1, rotation:0, translateX:0, translateY:0};
 
-    // Selection variables
-    let selectionStart = null;
-    let currentSelection = null;
-    
-    // Transform variables
-    let currentTransform = {
-      scale: 1,
-      rotation: 0,
-      translateX: 0,
-      translateY: 0
-    };
-
-    // ===== INITIALIZATION =====
-    document.addEventListener('DOMContentLoaded', function() {
+    // --------- INIT ---------
+    document.addEventListener('DOMContentLoaded', () => {
       applyModeUI();
-      initializeEventListeners();
-      showStatus('Wardrobe Studio bereit');
+      initEvents();
+      refreshGallery();
+      showStatus('Wardrobe bereit');
     });
 
-    function applyModeUI() {
+    function applyModeUI(){
       document.documentElement.setAttribute('data-mode', currentMode);
       document.body.setAttribute('data-mode', currentMode);
-      
-      const toggle = document.getElementById('modeToggle');
-      const label = document.getElementById('modeLabel');
-      
-      if (toggle) toggle.checked = (currentMode === 'nsfw');
-      if (label) label.textContent = currentMode.toUpperCase();
+      const t=document.getElementById('modeToggle'), l=document.getElementById('modeLabel');
+      if(t) t.checked = (currentMode==='nsfw'); if(l) l.textContent=currentMode.toUpperCase();
     }
-
-    function initializeEventListeners() {
-      const modeToggle = document.getElementById('modeToggle');
-      if (modeToggle) {
-        modeToggle.addEventListener('change', function() {
-          currentMode = this.checked ? 'nsfw' : 'sfw';
-          localStorage.setItem('andio_mode', currentMode);
-          applyModeUI();
-          showStatus(`Modus gewechselt zu ${currentMode.toUpperCase()}`);
-        });
+    function initEvents(){
+      const t=document.getElementById('modeToggle');
+      if(t){ t.addEventListener('change',function(){
+        currentMode = this.checked?'nsfw':'sfw';
+        localStorage.setItem('andio_mode', currentMode);
+        applyModeUI(); showStatus('Modus: '+currentMode.toUpperCase());
+      });}
+      const stage=document.getElementById('stage');
+      if(stage){
+        stage.addEventListener('mousedown',handleMouseDown);
+        stage.addEventListener('mousemove',handleMouseMove);
+        stage.addEventListener('mouseup',handleMouseUp);
+        stage.addEventListener('contextmenu',e=>e.preventDefault());
+        stage.addEventListener('mouseleave', ()=>{ document.querySelectorAll('.brush-cursor').forEach(el=>el.remove()); });
       }
+      // Upload (Server)
+      document.getElementById('btnSrvUpload').addEventListener('click',()=>document.getElementById('multiInput').click());
+      document.getElementById('multiInput').addEventListener('change', onServerUpload);
+      // Resize -> Canvas neu dimensionieren
+      window.addEventListener('resize', ()=>{ if(document.getElementById('avatarImg')) setupCanvas(); });
+    }
 
-      // Stage event listeners
-      const stage = document.getElementById('stage');
-      if (stage) {
-        stage.addEventListener('mousedown', handleMouseDown);
-        stage.addEventListener('mousemove', handleMouseMove);
-        stage.addEventListener('mouseup', handleMouseUp);
-        stage.addEventListener('contextmenu', e => e.preventDefault());
+    // --------- UPLOAD: LOCAL PREVIEW ---------
+    function dragOver(e){e.preventDefault();e.currentTarget.classList.add('dragover')}
+    function dragLeave(e){e.currentTarget.classList.remove('dragover')}
+    function dropFile(e){e.preventDefault();e.currentTarget.classList.remove('dragover');loadFile(e.dataTransfer.files?.[0]);}
+    function loadAvatar(e){loadFile(e.target.files?.[0]);}
+    function loadFile(file){
+      if(!file || !file.type.startsWith('image/')) return showStatus('Bitte gültiges Bild wählen','error');
+      const r=new FileReader();
+      r.onload=(e)=>{ avatar=e.target.result; setupCanvas(); showStatus('Vorschau geladen'); };
+      r.readAsDataURL(file);
+    }
+
+    // --------- UPLOAD: SERVER + GALERIE ---------
+    const galleryEl = document.getElementById('gallery');
+    async function onServerUpload(e){
+      const files = Array.from(e.target.files||[]);
+      if(!files.length) return;
+      const fd = new FormData();
+      files.forEach(f=>fd.append('files', f));
+      showStatus('Upload…');
+      try{
+        const r = await fetch(`${API_BASE}/upload`, { method:'POST', body: fd });
+        if(!r.ok){ throw new Error(await r.text()); }
+        const j = await r.json();
+        if(j.files?.length){
+          const first = j.files[0];
+          document.getElementById('serverPath').value = first.path;
+          avatar = first.path; setupCanvas();
+          await refreshGallery();
+          showStatus(`Hochgeladen: ${j.files.length} Datei(en)`);
+        }
+      }catch(err){ showStatus('Upload-Fehler: '+err,'error'); }
+      e.target.value='';
+    }
+    async function refreshGallery(){
+      try{
+        const r = await fetch(`${API_BASE}/uploads`);
+        const j = await r.json();
+        galleryEl.innerHTML='';
+        for(const f of (j.files||[])){
+          const btn = document.createElement('button');
+          btn.className='tile'; btn.title=f.name;
+          btn.innerHTML = `<img src="${f.path}" alt="${f.name}">`;
+          btn.onclick = ()=>{
+            document.getElementById('serverPath').value = f.path;
+            avatar = f.path; setupCanvas(); showStatus(`Ausgewählt: ${f.name}`);
+          };
+          galleryEl.appendChild(btn);
+        }
+      }catch(e){ showStatus('Galerie-Fehler: '+e,'error'); }
+    }
+
+    // --------- CANVAS (stabil) ---------
+    function setupCanvas(){
+      const stage=document.getElementById('stage'); if(!stage || !avatar) return;
+      // einmalig DOM anlegen
+      if(!document.getElementById('avatarImg')){
+        const wrap=document.createElement('div');
+        wrap.innerHTML=`
+          <img id="avatarImg" class="model" alt="Avatar" style="position:relative;z-index:1;">
+          <canvas id="overlayCanvas" class="overlay-layer interactive" style="z-index:2;"></canvas>
+          <canvas id="workCanvas"    class="overlay-layer"            style="z-index:3;"></canvas>`;
+        stage.innerHTML=''; stage.appendChild(wrap);
       }
-    }
+      const img=document.getElementById('avatarImg');
+      const overlay=document.getElementById('overlayCanvas');
+      const work=document.getElementById('workCanvas');
 
-    // ===== TOOL MANAGEMENT =====
-    function setTool(tool) {
-      // Remove active class from all tools
-      document.querySelectorAll('.tool-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
-      // Add active class to selected tool
-      const toolBtn = document.getElementById(`tool-${tool}`);
-      if (toolBtn) toolBtn.classList.add('active');
-      
-      currentTool = tool;
-      updateCursor();
-      showStatus(`Tool gewechselt zu: ${tool}`);
-    }
-
-    function updateCursor() {
-      const stage = document.getElementById('stage');
-      if (!stage) return;
-
-      const cursors = {
-        'select': 'default',
-        'brush': 'crosshair',
-        'eraser': 'crosshair',
-        'pin': 'crosshair',
-        'mask': 'crosshair',
-        'clone': 'crosshair'
-      };
-
-      stage.style.cursor = cursors[currentTool] || 'default';
-    }
-
-    // ===== AVATAR LOADING =====
-    function dragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
-    function dragLeave(e) { e.currentTarget.classList.remove('dragover'); }
-    function dropFile(e) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); loadFile(e.dataTransfer.files?.[0]); }
-    function loadAvatar(e) { loadFile(e.target.files?.[0]); }
-
-    function loadFile(file) {
-      if (!file || !file.type.startsWith('image/')) {
-        showStatus('Bitte eine gültige Bilddatei wählen', 'error');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        avatar = e.target.result;
-        setupCanvas();
-        showStatus('Avatar geladen');
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function setupCanvas() {
-      const stage = document.getElementById('stage');
-      if (!stage || !avatar) return;
-
-      stage.innerHTML = `
-        <img id="avatarImg" class="model" src="${avatar}" alt="Avatar" style="position: relative; z-index: 1;">
-        <canvas id="overlayCanvas" class="overlay-layer interactive" style="z-index: 2;"></canvas>
-        <canvas id="workCanvas" class="overlay-layer" style="z-index: 3;"></canvas>
-      `;
-
-      const img = document.getElementById('avatarImg');
-      const overlay = document.getElementById('overlayCanvas');
-      const work = document.getElementById('workCanvas');
-
-      img.onload = function() {
-        const rect = stage.getBoundingClientRect();
-        overlay.width = work.width = rect.width;
-        overlay.height = work.height = rect.height;
-        
+      img.onload=()=>{
+        const w = stage.clientWidth  || stage.getBoundingClientRect().width  || 800;
+        const h = stage.clientHeight || stage.getBoundingClientRect().height || 600;
+        overlay.width = work.width = Math.round(w);
+        overlay.height = work.height = Math.round(h);
         overlayContext = overlay.getContext('2d');
-        canvasContext = work.getContext('2d');
-        
-        // Apply initial transform
+        canvasContext  = work.getContext('2d');
         applyTransform();
-        showStatus('Canvas initialisiert');
       };
+      img.src = avatar;
     }
 
-    // ===== MOUSE HANDLING =====
-    function handleMouseDown(e) {
-      if (!avatar) return;
+    // --------- TOOLING / DRAW ---------
+    function setTool(t){ document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+      const el=document.getElementById('tool-'+t); if(el) el.classList.add('active');
+      currentTool=t; updateCursor(); showStatus('Tool: '+t); }
+    function updateCursor(){ const st=document.getElementById('stage'); if(!st) return;
+      const c={select:'default',brush:'crosshair',eraser:'crosshair',pin:'crosshair',mask:'crosshair',clone:'crosshair'}; st.style.cursor=c[currentTool]||'default'; }
 
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      switch(currentTool) {
-        case 'select':
-          startSelection(x, y);
-          break;
-        case 'brush':
-          startDrawing(x, y);
-          break;
-        case 'eraser':
-          startErasing(x, y);
-          break;
-        case 'pin':
-          addPin(x, y);
-          break;
-        case 'mask':
-          startMasking(x, y);
-          break;
-        case 'clone':
-          startCloning(x, y);
-          break;
-      }
-    }
-
-    function handleMouseMove(e) {
-      if (!avatar) return;
-
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      updateBrushPreview(x, y);
-
-      if (isDrawing) {
-        switch(currentTool) {
-          case 'select':
-            updateSelection(x, y);
-            break;
-          case 'brush':
-            continueBrush(x, y);
-            break;
-          case 'eraser':
-            continueErasing(x, y);
-            break;
-          case 'mask':
-            continueMasking(x, y);
-            break;
+    function handleMouseDown(e){ if(!avatar) return;
+      const r=e.currentTarget.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+      switch(currentTool){
+        case 'select': startSelection(x,y); break;
+        case 'brush':  startDrawing(x,y); break;
+        case 'eraser': startErasing(x,y); break;
+        case 'pin':    addPin(x,y); break;
+        case 'mask':   startMasking(x,y); break;
+        case 'clone':  showStatus('Clone-Quelle wählen'); break;
+      }}
+    function handleMouseMove(e){ if(!avatar) return;
+      const r=e.currentTarget.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+      updateBrushPreview(x,y);
+      if(isDrawing){
+        switch(currentTool){
+          case 'select': updateSelection(x,y); break;
+          case 'brush':  continueBrush(x,y); break;
+          case 'eraser': continueErasing(x,y); break;
+          case 'mask':   continueMasking(x,y); break;
         }
-      }
+      }}
+    function handleMouseUp(){ if(isDrawing) endDrawing(); }
+
+    // Selection
+    function startSelection(x,y){ selectionStart={x,y}; isDrawing=true; }
+    function updateSelection(x,y){ if(!selectionStart||!overlayContext) return;
+      overlayContext.clearRect(0,0,overlayContext.canvas.width,overlayContext.canvas.height);
+      const w=x-selectionStart.x,h=y-selectionStart.y;
+      overlayContext.strokeStyle='#667eea'; overlayContext.lineWidth=2; overlayContext.setLineDash([5,5]);
+      overlayContext.strokeRect(selectionStart.x,selectionStart.y,w,h);
+      overlayContext.fillStyle='rgba(102,126,234,.1)'; overlayContext.fillRect(selectionStart.x,selectionStart.y,w,h);
+      currentSelection={ x:Math.min(selectionStart.x,x), y:Math.min(selectionStart.y,y), width:Math.abs(w), height:Math.abs(h) };
+    }
+    function selectAll(){ if(!overlayContext) return;
+      currentSelection={x:0,y:0,width:overlayContext.canvas.width,height:overlayContext.canvas.height};
+      overlayContext.clearRect(0,0,overlayContext.canvas.width,overlayContext.canvas.height);
+      overlayContext.setLineDash([5,5]); overlayContext.strokeStyle='#667eea'; overlayContext.lineWidth=2;
+      overlayContext.strokeRect(0,0,overlayContext.canvas.width,overlayContext.canvas.height);
+      showStatus('Alles ausgewählt'); }
+    function deselectAll(){ currentSelection=null; if(overlayContext) overlayContext.clearRect(0,0,overlayContext.canvas.width,overlayContext.canvas.height); showStatus('Auswahl aufgehoben'); }
+    function invertSelection(){ showStatus('Invert (in Arbeit)'); }
+    function cropToSelection(){ if(!currentSelection) return showStatus('Keine Auswahl','error'); showStatus('Crop…'); saveAction(); }
+
+    // Brush/Mask/Eraser
+    function startDrawing(x,y){ isDrawing=true; if(canvasContext){ canvasContext.beginPath(); canvasContext.moveTo(x,y);
+      canvasContext.strokeStyle='rgba(102,126,234,.85)'; canvasContext.lineWidth=document.getElementById('brushSize').value;
+      canvasContext.lineCap='round'; canvasContext.globalAlpha=document.getElementById('brushOpacity').value/100; } }
+    function continueBrush(x,y){ if(canvasContext&&isDrawing){ canvasContext.lineTo(x,y); canvasContext.stroke(); } }
+    function startErasing(x,y){ isDrawing=true; if(canvasContext){ canvasContext.globalCompositeOperation='destination-out';
+      canvasContext.beginPath(); canvasContext.moveTo(x,y); canvasContext.lineWidth=document.getElementById('brushSize').value; canvasContext.lineCap='round'; } }
+    function continueErasing(x,y){ if(canvasContext&&isDrawing){ canvasContext.lineTo(x,y); canvasContext.stroke(); } }
+    function startMasking(x,y){ isDrawing=true; if(canvasContext){ canvasContext.globalCompositeOperation='source-over';
+      canvasContext.beginPath(); canvasContext.moveTo(x,y); canvasContext.strokeStyle='rgba(229,57,53,.65)';
+      canvasContext.lineWidth=document.getElementById('brushSize').value; canvasContext.lineCap='round'; } }
+    function continueMasking(x,y){ if(canvasContext&&isDrawing){ canvasContext.lineTo(x,y); canvasContext.stroke(); } }
+    function endDrawing(){ isDrawing=false; if(canvasContext){ canvasContext.globalCompositeOperation='source-over'; canvasContext.globalAlpha=1; } saveAction(); }
+
+    // Pins
+    function addPin(x,y){ const pin={x,y,id:Date.now()}; pins.push(pin);
+      const el=document.createElement('div'); el.className='pin'; el.style.left=(x-4)+'px'; el.style.top=(y-4)+'px';
+      el.onclick=()=>{ pins=pins.filter(p=>p.id!==pin.id); el.remove(); showStatus('Pin entfernt'); };
+      document.getElementById('stage').appendChild(el); showStatus('Pin hinzugefügt'); }
+
+    // Brush preview
+    function updateBrushPreview(x,y){ if(currentTool!=='brush' && currentTool!=='eraser') return;
+      document.querySelectorAll('.brush-cursor').forEach(el=>el.remove());
+      const size=document.getElementById('brushSize').value;
+      const c=document.createElement('div'); c.className='brush-cursor';
+      c.style.width=size+'px'; c.style.height=size+'px'; c.style.left=(x-size/2)+'px'; c.style.top=(y-size/2)+'px';
+      if(currentTool==='eraser'){ c.style.borderColor='#e53935'; c.style.background='rgba(229,57,53,.12)'; }
+      document.getElementById('stage').appendChild(c);
+    }
+    function updateBrushSize(v){ showStatus('Brush: '+v+'px'); }
+    function updateBrushOpacity(v){ showStatus('Opacity: '+v+'%'); }
+
+    // Transform & Filters
+    function applyTransform(){
+      const img=document.getElementById('avatarImg'); if(!img) return;
+      const scale=document.getElementById('scaleSlider').value/100;
+      const rotation=document.getElementById('rotationSlider').value;
+      const posX=document.getElementById('posXSlider').value;
+      const posY=document.getElementById('posYSlider').value;
+      currentTransform={scale,rotation,translateX:posX,translateY:posY};
+      img.style.transform=`scale(${scale}) rotate(${rotation}deg) translateX(${posX}px) translateY(${posY}px)`;
+    }
+    function applyFilters(){
+      const img=document.getElementById('avatarImg'); if(!img) return;
+      const b=+document.getElementById('brightness').value, c=+document.getElementById('contrast').value,
+            s=+document.getElementById('saturation').value, blur=+document.getElementById('blur').value;
+      img.style.filter=[`brightness(${100+b}%)`,`contrast(${100+c}%)`,`saturate(${100+s}%)`,`blur(${blur}px)`].join(' ');
     }
 
-    function handleMouseUp(e) {
-      if (isDrawing) {
-        endDrawing();
-      }
+    // NSFW helpers
+    function applySkinTone(v){ if(currentMode!=='nsfw') return; const img=document.getElementById('avatarImg'); if(img){
+      const hue=(v-50)*0.6; img.style.filter=(img.style.filter||'')+` hue-rotate(${hue}deg)`; } showStatus('Skin Tone: '+v+'%'); }
+    function applyBodyEnhancement(v){ if(currentMode!=='nsfw') return; showStatus('Body Enhance '+v+'% (AI spezifisch)'); }
+    function addCensor(){ if(!canvasContext) return; const c=canvasContext.canvas, x=c.width/2, y=c.height/2;
+      canvasContext.fillStyle='rgba(0,0,0,.92)'; canvasContext.fillRect(x-80,y-60,160,30); canvasContext.fillRect(x-80,y+30,160,30);
+      saveAction(); showStatus('Zensur hinzugefügt'); }
+    function applyPrivacyLevel(v){ document.querySelectorAll('.censor-overlay').forEach(el=>el.style.opacity=(+v/100)); showStatus('Privacy: '+v+'%'); }
+
+    // --------- JOB UI ---------
+    const jobUI = {
+      el:null,title:null,msg:null,bar:null,cancel:null,timer:null,jobId:null,
+      init(){ if(this.el) return; this.el=document.getElementById('jobToast'); this.title=document.getElementById('jobTitle');
+        this.msg=document.getElementById('jobMessage'); this.bar=document.getElementById('jobBar'); this.cancel=document.getElementById('jobCancel');
+        this.cancel.addEventListener('click',()=>this.hide()); },
+      show(title){ this.init(); this.title.textContent=title||'Verarbeite…'; this.msg.textContent='initializing'; this.bar.style.width='0%'; this.el.classList.add('job-show'); },
+      update(p,m){ this.bar.style.width=Math.max(1,Math.floor((p||0)*100))+'%'; if(m) this.msg.textContent=m; },
+      hide(){ if(this.timer){clearInterval(this.timer); this.timer=null;} this.jobId=null; this.el.classList.remove('job-show'); }
+    };
+    async function startJob(url, body, onDone){
+      jobUI.show('KI-Processing…');
+      try{
+        const start=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(!start.ok) throw new Error(await start.text());
+        const s=await start.json(); jobUI.jobId=s.job_id;
+        jobUI.timer=setInterval(async ()=>{
+          try{
+            const r=await fetch(`${API_BASE}/job/${jobUI.jobId}`); const j=await r.json();
+            jobUI.update(j.progress, j.message);
+            if(j.status==='done'){ clearInterval(jobUI.timer); jobUI.timer=null; jobUI.hide(); onDone && onDone(j.results||j.result||{}); }
+            if(j.status==='error'){ clearInterval(jobUI.timer); jobUI.timer=null; jobUI.hide(); showStatus('Fehler: '+(j.error||'unknown'),'error'); }
+          }catch(e){ clearInterval(jobUI.timer); jobUI.timer=null; jobUI.hide(); showStatus('Polling-Fehler: '+e,'error'); }
+        },800);
+      }catch(e){ jobUI.hide(); showStatus('Job-Start fehlgeschlagen: '+e,'error'); }
     }
 
-    // ===== SELECTION TOOLS =====
-    function startSelection(x, y) {
-      selectionStart = {x, y};
-      isDrawing = true;
+    // --------- REAL API CALLS ---------
+    function getServerPath(){
+      const p=(document.getElementById('serverPath').value||'').trim();
+      if(!p) showStatus('Serverpfad fehlt (workspace/uploads/… )','error');
+      return p;
     }
+    function replaceAvatarFromServer(p){ const img=document.getElementById('avatarImg'); if(img) img.src=p; else { avatar=p; setupCanvas(); } }
 
-    function updateSelection(x, y) {
-      if (!selectionStart || !overlayContext) return;
-
-      overlayContext.clearRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
-      
-      const width = x - selectionStart.x;
-      const height = y - selectionStart.y;
-
-      // Draw selection rectangle
-      overlayContext.strokeStyle = '#667eea';
-      overlayContext.lineWidth = 2;
-      overlayContext.setLineDash([5, 5]);
-      overlayContext.strokeRect(selectionStart.x, selectionStart.y, width, height);
-      
-      // Fill with transparent blue
-      overlayContext.fillStyle = 'rgba(102, 126, 234, 0.1)';
-      overlayContext.fillRect(selectionStart.x, selectionStart.y, width, height);
-
-      currentSelection = {
-        x: Math.min(selectionStart.x, x),
-        y: Math.min(selectionStart.y, y),
-        width: Math.abs(width),
-        height: Math.abs(height)
-      };
-    }
-
-    function selectAll() {
-      if (!overlayContext) return;
-      
-      currentSelection = {
-        x: 0, y: 0,
-        width: overlayContext.canvas.width,
-        height: overlayContext.canvas.height
-      };
-      
-      overlayContext.clearRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
-      overlayContext.strokeStyle = '#667eea';
-      overlayContext.lineWidth = 2;
-      overlayContext.setLineDash([5, 5]);
-      overlayContext.strokeRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
-      
-      showStatus('Alles ausgewählt');
-    }
-
-    function deselectAll() {
-      currentSelection = null;
-      if (overlayContext) {
-        overlayContext.clearRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
-      }
-      showStatus('Auswahl aufgehoben');
-    }
-
-    function invertSelection() {
-      // Implementation für Auswahl umkehren
-      showStatus('Auswahl umgekehrt (in Entwicklung)');
-    }
-
-    function cropToSelection() {
-      if (!currentSelection) {
-        showStatus('Keine Auswahl aktiv', 'error');
-        return;
-      }
-      showStatus('Cropping zur Auswahl...');
-      saveAction();
-    }
-
-    // ===== DRAWING TOOLS =====
-    function startDrawing(x, y) {
-      isDrawing = true;
-      if (canvasContext) {
-        canvasContext.beginPath();
-        canvasContext.moveTo(x, y);
-        canvasContext.strokeStyle = 'rgba(102, 126, 234, 0.8)';
-        canvasContext.lineWidth = document.getElementById('brushSize').value;
-        canvasContext.lineCap = 'round';
-        canvasContext.globalAlpha = document.getElementById('brushOpacity').value / 100;
-      }
-    }
-
-    function continueBrush(x, y) {
-      if (canvasContext && isDrawing) {
-        canvasContext.lineTo(x, y);
-        canvasContext.stroke();
-      }
-    }
-
-    function startErasing(x, y) {
-      isDrawing = true;
-      if (canvasContext) {
-        canvasContext.globalCompositeOperation = 'destination-out';
-        canvasContext.beginPath();
-        canvasContext.moveTo(x, y);
-        canvasContext.lineWidth = document.getElementById('brushSize').value;
-        canvasContext.lineCap = 'round';
-      }
-    }
-
-    function continueErasing(x, y) {
-      if (canvasContext && isDrawing) {
-        canvasContext.lineTo(x, y);
-        canvasContext.stroke();
-      }
-    }
-
-    function startMasking(x, y) {
-      isDrawing = true;
-      if (canvasContext) {
-        canvasContext.globalCompositeOperation = 'source-over';
-        canvasContext.beginPath();
-        canvasContext.moveTo(x, y);
-        canvasContext.strokeStyle = 'rgba(244, 67, 54, 0.6)';
-        canvasContext.lineWidth = document.getElementById('brushSize').value;
-        canvasContext.lineCap = 'round';
-      }
-    }
-
-    function continueMasking(x, y) {
-      if (canvasContext && isDrawing) {
-        canvasContext.lineTo(x, y);
-        canvasContext.stroke();
-      }
-    }
-
-    function startCloning(x, y) {
-      // Implementierung für Clone-Tool
-      showStatus('Clone-Tool aktiv - Quelle definieren');
-    }
-
-    function endDrawing() {
-      isDrawing = false;
-      if (canvasContext) {
-        canvasContext.globalCompositeOperation = 'source-over';
-        canvasContext.globalAlpha = 1;
-      }
-      saveAction();
-    }
-
-    // ===== PIN SYSTEM =====
-    function addPin(x, y) {
-      const pin = { x, y, id: Date.now() };
-      pins.push(pin);
-      
-      const pinElement = document.createElement('div');
-      pinElement.className = 'pin';
-      pinElement.style.left = (x - 4) + 'px';
-      pinElement.style.top = (y - 4) + 'px';
-      pinElement.onclick = () => removePin(pin.id);
-      
-      document.getElementById('stage').appendChild(pinElement);
-      showStatus(`Pin hinzugefügt (${pins.length} aktiv)`);
-    }
-
-    function removePin(pinId) {
-      pins = pins.filter(p => p.id !== pinId);
-      // Remove DOM element
-      document.querySelectorAll('.pin').forEach(el => {
-        if (el.onclick.toString().includes(pinId)) {
-          el.remove();
-        }
+    async function apiRemoveClothing(which){
+      if(currentMode!=='nsfw') return showStatus('NSFW-Modus erforderlich','error');
+      const image=getServerPath(); if(!image) return;
+      const map={top:'shirt', bottom:'pants'}; const clothing_type=map[which]||'shirt';
+      startJob(`${API_BASE}/remove/job`, { image, clothing_type, preserve_anatomy:true }, (result)=>{
+        const data = result.results?.[clothing_type] || Object.values(result.results||{})[0];
+        if(data?.output_path){ replaceAvatarFromServer(data.output_path); showStatus('Fertig: '+data.output_path,'info'); }
+        else showStatus('Keine Ausgabe erhalten.','error');
       });
-      showStatus(`Pin entfernt (${pins.length} verbleibend)`);
     }
-
-    // ===== BRUSH PREVIEW =====
-    function updateBrushPreview(x, y) {
-      if (currentTool !== 'brush' && currentTool !== 'eraser') return;
-      
-      // Remove existing brush cursor
-      document.querySelectorAll('.brush-cursor').forEach(el => el.remove());
-      
-      const size = document.getElementById('brushSize').value;
-      const cursor = document.createElement('div');
-      cursor.className = 'brush-cursor';
-      cursor.style.width = size + 'px';
-      cursor.style.height = size + 'px';
-      cursor.style.left = (x - size/2) + 'px';
-      cursor.style.top = (y - size/2) + 'px';
-      
-      if (currentTool === 'eraser') {
-        cursor.style.borderColor = '#F44336';
-        cursor.style.background = 'rgba(244, 67, 54, 0.1)';
-      }
-      
-      document.getElementById('stage').appendChild(cursor);
-    }
-
-    function updateBrushSize(value) {
-      showStatus(`Brush-Größe: ${value}px`);
-    }
-
-    function updateBrushOpacity(value) {
-      showStatus(`Brush-Deckkraft: ${value}%`);
-    }
-
-    // ===== TRANSFORM CONTROLS =====
-    function applyTransform() {
-      const img = document.getElementById('avatarImg');
-      if (!img) return;
-
-      const scale = document.getElementById('scaleSlider').value / 100;
-      const rotation = document.getElementById('rotationSlider').value;
-      const posX = document.getElementById('posXSlider').value;
-      const posY = document.getElementById('posYSlider').value;
-
-      currentTransform = { scale, rotation, translateX: posX, translateY: posY };
-
-      const transform = `
-        scale(${scale}) 
-        rotate(${rotation}deg) 
-        translateX(${posX}px) 
-        translateY(${posY}px)
-      `;
-
-      img.style.transform = transform;
-    }
-
-    // ===== NSFW FUNCTIONS =====
-    function applySkinTone(value) {
-      if (currentMode !== 'nsfw') return;
-      
-      const img = document.getElementById('avatarImg');
-      if (img) {
-        const hue = (value - 50) * 0.6; // -30 to +30 degrees
-        img.style.filter = (img.style.filter || '') + ` hue-rotate(${hue}deg)`;
-      }
-      showStatus(`Hautton angepasst: ${value}%`);
-    }
-
-    function applyBodyEnhancement(value) {
-      if (currentMode !== 'nsfw') return;
-      showStatus(`Body Enhancement: ${value}% (AI-Processing erforderlich)`);
-    }
-
-    function removeClothing(type) {
-      if (currentMode !== 'nsfw') {
-        showStatus('NSFW-Modus erforderlich', 'error');
-        return;
-      }
-      
-      showStatus(`Entferne ${type}... (AI-Processing wird gestartet)`);
-      
-      // Hier würde die echte AI-Integration stattfinden
-      setTimeout(() => {
-        showStatus(`${type} entfernt (Demo-Modus)`);
-      }, 2000);
-    }
-
-    function addCensor() {
-      if (!canvasContext) return;
-      
-      const canvas = canvasContext.canvas;
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      
-      // Add censor bars
-      canvasContext.fillStyle = 'rgba(0, 0, 0, 0.9)';
-      canvasContext.fillRect(centerX - 80, centerY - 60, 160, 30); // Top bar
-      canvasContext.fillRect(centerX - 80, centerY + 30, 160, 30); // Bottom bar
-      
-      showStatus('Zensur hinzugefügt');
-      saveAction();
-    }
-
-    function applyPrivacyLevel(value) {
-      if (currentMode !== 'nsfw') return;
-      
-      const opacity = value / 100;
-      const censorElements = document.querySelectorAll('.censor-overlay');
-      censorElements.forEach(el => {
-        el.style.opacity = opacity;
+    async function apiChangeClothing(prompt, clothing_type, style='realistic'){
+      const image=getServerPath(); if(!image) return;
+      startJob(`${API_BASE}/change/job`, { image, clothing_type, prompt, style }, (result)=>{
+        if(result.output_path){ replaceAvatarFromServer(result.output_path); showStatus('Fertig: '+result.output_path,'info'); }
+        else showStatus('Keine Ausgabe erhalten.','error');
       });
-      
-      showStatus(`Privacy Level: ${value}%`);
     }
 
-    // ===== FILTER EFFECTS =====
-    function applyFilters() {
-      const img = document.getElementById('avatarImg');
-      if (!img) return;
-
-      const brightness = parseInt(document.getElementById('brightness').value);
-      const contrast = parseInt(document.getElementById('contrast').value);
-      const saturation = parseInt(document.getElementById('saturation').value);
-      const blur = parseInt(document.getElementById('blur').value);
-
-      const filters = [
-        `brightness(${100 + brightness}%)`,
-        `contrast(${100 + contrast}%)`,
-        `saturate(${100 + saturation}%)`,
-        `blur(${blur}px)`
-      ];
-
-      img.style.filter = filters.join(' ');
+    // --------- ACTIONS / HISTORY / UTIL ---------
+    function applyChanges(){ if(!avatar) return showStatus('Kein Avatar','error'); showStatus('Änderungen angewendet'); }
+    function exportImage(){
+      if(!avatar) return showStatus('Kein Avatar','error');
+      const exportCanvas=document.createElement('canvas'), ctx=exportCanvas.getContext('2d'), img=document.getElementById('avatarImg');
+      exportCanvas.width=img.naturalWidth||img.width; exportCanvas.height=img.naturalHeight||img.height; ctx.drawImage(img,0,0);
+      if(canvasContext) ctx.drawImage(canvasContext.canvas,0,0,exportCanvas.width,exportCanvas.height);
+      exportCanvas.toBlob(b=>{ const url=URL.createObjectURL(b); const a=document.createElement('a'); a.href=url; a.download=`wardrobe_${Date.now()}.png`; a.click(); URL.revokeObjectURL(url); showStatus('Exportiert'); });
     }
-
-    // ===== ACTION HISTORY =====
-    function saveAction() {
-      if (!canvasContext) return;
-      
-      const imageData = canvasContext.getImageData(0, 0, canvasContext.canvas.width, canvasContext.canvas.height);
-      actionHistory = actionHistory.slice(0, historyIndex + 1);
-      actionHistory.push(imageData);
-      historyIndex++;
-      
-      // Limit history size
-      if (actionHistory.length > 20) {
-        actionHistory.shift();
-        historyIndex--;
-      }
+    function resetAll(){
+      if(!confirm('Alle Einstellungen zurücksetzen?')) return;
+      const sliders=['scaleSlider','rotationSlider','posXSlider','posYSlider','brightness','contrast','saturation','blur','brushSize','brushOpacity'];
+      const defs={scaleSlider:100,rotationSlider:0,posXSlider:0,posYSlider:0,brightness:0,contrast:0,saturation:0,blur:0,brushSize:20,brushOpacity:80};
+      sliders.forEach(id=>{ const s=document.getElementById(id); if(s){ s.value=defs[id]||0; const v=document.getElementById(id.replace('Slider','Val'))||document.getElementById(id+'Val'); if(v) updateVal(s,v.id); }});
+      if(overlayContext) overlayContext.clearRect(0,0,overlayContext.canvas.width,overlayContext.canvas.height);
+      if(canvasContext)  canvasContext.clearRect(0,0,canvasContext.canvas.width,canvasContext.canvas.height);
+      pins=[]; document.querySelectorAll('.pin').forEach(el=>el.remove());
+      const img=document.getElementById('avatarImg'); if(img){ img.style.transform=''; img.style.filter=''; }
+      currentSelection=null; actionHistory=[]; historyIndex=-1; showStatus('Reset durchgeführt');
     }
-
-    function undoAction() {
-      if (historyIndex > 0 && canvasContext) {
-        historyIndex--;
-        const imageData = actionHistory[historyIndex];
-        canvasContext.putImageData(imageData, 0, 0);
-        showStatus('Rückgängig gemacht');
-      } else {
-        showStatus('Nichts zum Rückgängig machen', 'error');
-      }
+    function saveAction(){
+      if(!canvasContext) return;
+      const snap=canvasContext.getImageData(0,0,canvasContext.canvas.width,canvasContext.canvas.height);
+      actionHistory=actionHistory.slice(0,historyIndex+1); actionHistory.push(snap); historyIndex++;
+      if(actionHistory.length>20){ actionHistory.shift(); historyIndex--; }
     }
+    function undoAction(){ if(historyIndex>0 && canvasContext){ historyIndex--; canvasContext.putImageData(actionHistory[historyIndex],0,0); showStatus('Undo'); } else showStatus('Nichts zum Rückgängig','error'); }
+    function redoAction(){ if(historyIndex<actionHistory.length-1 && canvasContext){ historyIndex++; canvasContext.putImageData(actionHistory[historyIndex],0,0); showStatus('Redo'); } else showStatus('Nichts zum Wiederherstellen','error'); }
+    function updateVal(slider, spanId){ const span=document.getElementById(spanId); if(!span) return;
+      let v=slider.value,u=''; if(slider.id.includes('rotation')) u='°'; else if(slider.id.includes('scale')||slider.id.includes('opacity')) u='%';
+      else if(slider.id.includes('blur')||slider.id.includes('Size')) u='px'; span.textContent=v+u; }
+    function showStatus(msg,type='info'){ const s=document.getElementById('statusBar'); s.textContent=msg; s.className=`status-bar show ${type}`;
+      setTimeout(()=>s.classList.remove('show'),2800); }
 
-    function redoAction() {
-      if (historyIndex < actionHistory.length - 1 && canvasContext) {
-        historyIndex++;
-        const imageData = actionHistory[historyIndex];
-        canvasContext.putImageData(imageData, 0, 0);
-        showStatus('Wiederhergestellt');
-      } else {
-        showStatus('Nichts zum Wiederherstellen', 'error');
-      }
-    }
-
-    // ===== MAIN ACTIONS =====
-    function applyChanges() {
-      if (!avatar) {
-        showStatus('Kein Avatar geladen', 'error');
-        return;
-      }
-      
-      showStatus('Änderungen werden angewendet...');
-      
-      // Simulate AI processing
-      setTimeout(() => {
-        showStatus('Änderungen erfolgreich angewendet!');
-      }, 1500);
-    }
-
-    function saveResult() {
-      if (!avatar) {
-        showStatus('Kein Avatar zum Speichern', 'error');
-        return;
-      }
-      
-      const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `avatar_${timestamp}_${currentMode}.png`;
-      
-      showStatus(`Avatar gespeichert: ${filename}`);
-    }
-
-    function resetAll() {
-      if (confirm('Alle Änderungen zurücksetzen?')) {
-        // Reset all sliders
-        const sliders = ['scaleSlider', 'rotationSlider', 'posXSlider', 'posYSlider', 
-                        'brightness', 'contrast', 'saturation', 'blur', 'brushSize', 'brushOpacity'];
-        
-        const defaults = {
-          'scaleSlider': 100, 'rotationSlider': 0, 'posXSlider': 0, 'posYSlider': 0,
-          'brightness': 0, 'contrast': 0, 'saturation': 0, 'blur': 0,
-          'brushSize': 20, 'brushOpacity': 80
-        };
-        
-        sliders.forEach(id => {
-          const slider = document.getElementById(id);
-          if (slider) {
-            slider.value = defaults[id] || 0;
-            const valSpan = document.getElementById(id.replace('Slider', 'Val') + 'Val');
-            if (valSpan) {
-              updateVal(slider, valSpan.id);
-            }
-          }
-        });
-        
-        // Clear canvases
-        if (overlayContext) overlayContext.clearRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
-        if (canvasContext) canvasContext.clearRect(0, 0, canvasContext.canvas.width, canvasContext.canvas.height);
-        
-        // Remove pins
-        pins = [];
-        document.querySelectorAll('.pin').forEach(el => el.remove());
-        
-        // Reset transforms
-        const img = document.getElementById('avatarImg');
-        if (img) {
-          img.style.transform = '';
-          img.style.filter = '';
-        }
-        
-        // Clear selections
-        currentSelection = null;
-        
-        // Reset history
-        actionHistory = [];
-        historyIndex = -1;
-        
-        showStatus('Alle Einstellungen zurückgesetzt');
-      }
-    }
-
-    function exportImage() {
-      if (!avatar) {
-        showStatus('Kein Avatar zum Exportieren', 'error');
-        return;
-      }
-      
-      // Create export canvas
-      const exportCanvas = document.createElement('canvas');
-      const exportCtx = exportCanvas.getContext('2d');
-      const img = document.getElementById('avatarImg');
-      
-      if (img) {
-        exportCanvas.width = img.naturalWidth;
-        exportCanvas.height = img.naturalHeight;
-        exportCtx.drawImage(img, 0, 0);
-        
-        // Add overlay if exists
-        if (canvasContext) {
-          exportCtx.drawImage(canvasContext.canvas, 0, 0, exportCanvas.width, exportCanvas.height);
-        }
-        
-        // Download
-        exportCanvas.toBlob(blob => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `wardrobe_export_${Date.now()}.png`;
-          a.click();
-          URL.revokeObjectURL(url);
-          showStatus('Bild exportiert');
-        });
-      }
-    }
-
-    // ===== UTILITY FUNCTIONS =====
-    function updateVal(slider, spanId) {
-      const span = document.getElementById(spanId);
-      if (span) {
-        let value = slider.value;
-        let unit = '';
-        
-        if (slider.id.includes('rotation')) unit = '°';
-        else if (slider.id.includes('scale') || slider.id.includes('opacity') || slider.id.includes('Opacity')) unit = '%';
-        else if (slider.id.includes('blur') || slider.id.includes('Size')) unit = 'px';
-        
-        span.textContent = value + unit;
-      }
-    }
-
-    function showStatus(message, type = 'info') {
-      const statusBar = document.getElementById('statusBar');
-      if (statusBar) {
-        statusBar.textContent = message;
-        statusBar.className = `status-bar show ${type}`;
-        
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-          statusBar.classList.remove('show');
-        }, 3000);
-      }
-    }
-
-    // ===== CLEANUP =====
-    document.addEventListener('mouseup', () => {
-      if (isDrawing) {
-        endDrawing();
-      }
-    });
-
-    // Remove brush cursor when mouse leaves stage
-    document.getElementById('stage')?.addEventListener('mouseleave', () => {
-      document.querySelectorAll('.brush-cursor').forEach(el => el.remove());
-    });
+    // --------- EXPOSE (für inline onclick) ---------
+    window.setTool=setTool; window.loadAvatar=loadAvatar; window.dragOver=dragOver; window.dragLeave=dragLeave; window.dropFile=dropFile;
+    window.undoAction=undoAction; window.redoAction=redoAction; window.applyChanges=applyChanges; window.exportImage=exportImage; window.resetAll=resetAll;
+    window.selectAll=selectAll; window.deselectAll=deselectAll; window.invertSelection=invertSelection; window.cropToSelection=cropToSelection;
+    window.applyFilters=applyFilters; window.applyTransform=applyTransform;
+    window.applySkinTone=applySkinTone; window.applyBodyEnhancement=applyBodyEnhancement; window.addCensor=addCensor; window.applyPrivacyLevel=applyPrivacyLevel;
+    window.apiRemoveClothing=apiRemoveClothing; window.apiChangeClothing=apiChangeClothing; window.refreshGallery=refreshGallery;
   </script>
 </body>
 </html>
