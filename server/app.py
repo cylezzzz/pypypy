@@ -6,8 +6,10 @@ from fastapi.staticfiles import StaticFiles
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 import time, uuid, json, threading
+from server.api.video_fixed_endpoints import router as video_fixed_router
 
 app = FastAPI(title="AndioMediaStudio API")
+app.include_router(video_fixed_router)
 
 # --- CORS ---
 app.add_middleware(
