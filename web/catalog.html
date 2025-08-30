@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
-<head>
+<head>`r`n  <link rel="stylesheet" href="assets/ui.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AndioMediaStudio - Catalog</title>
@@ -406,7 +406,7 @@
         }
     </style>
 </head>
-<body>
+<body>`r`n  <div data-include="navbar"></div>
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-th-large"></i> Catalog</h1>
@@ -432,7 +432,7 @@
                     </div>
                     <div class="filter-options">
                         <label class="filter-option">
-                            <input type="checkbox" checked> Verfügbar
+                            <input type="checkbox" checked> VerfÃ¼gbar
                         </label>
                         <label class="filter-option">
                             <input type="checkbox"> Wird heruntergeladen
@@ -475,20 +475,20 @@
                     </div>
                     <div class="filter-options">
                         <label class="filter-option">
-                            <input type="checkbox"> ⭐⭐⭐⭐⭐ 5 Sterne
+                            <input type="checkbox"> â­â­â­â­â­ 5 Sterne
                         </label>
                         <label class="filter-option">
-                            <input type="checkbox"> ⭐⭐⭐⭐ 4+ Sterne
+                            <input type="checkbox"> â­â­â­â­ 4+ Sterne
                         </label>
                         <label class="filter-option">
-                            <input type="checkbox"> ⭐⭐⭐ 3+ Sterne
+                            <input type="checkbox"> â­â­â­ 3+ Sterne
                         </label>
                     </div>
                 </div>
             </div>
             
             <div class="main-catalog">
-                <input type="text" class="search-bar" placeholder="🔍 Modelle, LoRAs, Assets durchsuchen...">
+                <input type="text" class="search-bar" placeholder="ðŸ” Modelle, LoRAs, Assets durchsuchen...">
                 
                 <div class="upload-section" onclick="document.getElementById('uploadInput').click()">
                     <i class="fas fa-cloud-upload-alt"></i>
@@ -526,7 +526,7 @@
                         <div class="model-info">
                             <div class="model-name">Stable Diffusion XL Base</div>
                             <div class="model-type">Bildgenerierung</div>
-                            <div class="model-description">Hochqualitative Bildgenerierung mit verbesserter Prompt-Verständnis</div>
+                            <div class="model-description">Hochqualitative Bildgenerierung mit verbesserter Prompt-VerstÃ¤ndnis</div>
                             <div class="model-stats">
                                 <div class="stat-item">
                                     <i class="fas fa-download"></i> 2.3M
@@ -555,7 +555,7 @@
                         <div class="model-info">
                             <div class="model-name">Stable Video Diffusion</div>
                             <div class="model-type">Video</div>
-                            <div class="model-description">Text und Bild zu Video Generierung mit hoher Qualität</div>
+                            <div class="model-description">Text und Bild zu Video Generierung mit hoher QualitÃ¤t</div>
                             <div class="model-stats">
                                 <div class="stat-item">
                                     <i class="fas fa-download"></i> 856K
@@ -584,7 +584,7 @@
                         <div class="model-info">
                             <div class="model-name">FLUX.1 [dev]</div>
                             <div class="model-type">Bildgenerierung</div>
-                            <div class="model-description">Cutting-edge Bildgenerierung mit überlegener Qualität</div>
+                            <div class="model-description">Cutting-edge Bildgenerierung mit Ã¼berlegener QualitÃ¤t</div>
                             <div class="model-stats">
                                 <div class="stat-item">
                                     <i class="fas fa-download"></i> 1.1M
@@ -613,7 +613,7 @@
                         <div class="model-info">
                             <div class="model-name">Wav2Lip</div>
                             <div class="model-type">Audio/Video</div>
-                            <div class="model-description">Präzise Audio-zu-Video Lip-Synchronisation</div>
+                            <div class="model-description">PrÃ¤zise Audio-zu-Video Lip-Synchronisation</div>
                             <div class="model-stats">
                                 <div class="stat-item">
                                     <i class="fas fa-download"></i> 543K
@@ -642,7 +642,7 @@
                         <div class="model-info">
                             <div class="model-name">Real-ESRGAN x4</div>
                             <div class="model-type">Upscaler</div>
-                            <div class="model-description">KI-Upscaling für hochauflösende Bildverbesserung</div>
+                            <div class="model-description">KI-Upscaling fÃ¼r hochauflÃ¶sende Bildverbesserung</div>
                             <div class="model-stats">
                                 <div class="stat-item">
                                     <i class="fas fa-download"></i> 789K
@@ -670,7 +670,7 @@
                         <div class="model-info">
                             <div class="model-name">ControlNet OpenPose</div>
                             <div class="model-type">ControlNet</div>
-                            <div class="model-description">Pose-gesteuerte Bildgenerierung für präzise Körperhaltungen</div>
+                            <div class="model-description">Pose-gesteuerte Bildgenerierung fÃ¼r prÃ¤zise KÃ¶rperhaltungen</div>
                             <div class="model-stats">
                                 <div class="stat-item">
                                     <i class="fas fa-download"></i> 634K
@@ -726,7 +726,7 @@
             const btn = event.currentTarget;
             const indicator = btn.querySelector('.status-indicator');
             
-            btn.innerHTML = '<span class="status-indicator status-downloading"></span>Lädt herunter...';
+            btn.innerHTML = '<span class="status-indicator status-downloading"></span>LÃ¤dt herunter...';
             btn.style.pointerEvents = 'none';
             
             // Simulate download
@@ -738,7 +738,7 @@
         }
         
         function openModelDetails(modelId) {
-            alert(`Modell-Details für ${modelId} werden geöffnet...`);
+            alert(`Modell-Details fÃ¼r ${modelId} werden geÃ¶ffnet...`);
         }
         
         // Search functionality
@@ -762,7 +762,7 @@
         document.getElementById('uploadInput').addEventListener('change', function(e) {
             const files = e.target.files;
             if (files.length > 0) {
-                alert(`${files.length} Datei(en) zum Upload ausgewählt`);
+                alert(`${files.length} Datei(en) zum Upload ausgewÃ¤hlt`);
                 // Upload logic would go here
             }
         });
@@ -785,11 +785,17 @@
             e.preventDefault();
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                alert(`${files.length} Datei(en) per Drag & Drop hinzugefügt`);
+                alert(`${files.length} Datei(en) per Drag & Drop hinzugefÃ¼gt`);
             }
             uploadSection.style.borderColor = 'rgba(102, 126, 234, 0.3)';
             uploadSection.style.background = 'rgba(102, 126, 234, 0.05)';
         });
     </script>
+  <script src="assets/include.js"></script>
+  <script src="assets/overlay-player.js"></script>
 </body>
 </html>
+
+
+
+

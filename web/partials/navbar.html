@@ -1,108 +1,16 @@
-<!-- /partials/navbar.html -->
-<header class="ams-navbar">
-  <div class="ams-nav-inner">
-    <a class="brand" href="/index.html" aria-label="Startseite">
-      <img src="/assets/logo/logo.png" alt="" class="brand-logo" />
-      <span class="brand-text">AndioMediaStudio</span>
-    </a>
-
-    <button class="hamburger" id="amsNavToggle" aria-label="Menü umschalten" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-
-    <nav class="nav" id="amsMainNav" aria-label="Hauptnavigation">
-      <ul>
-        <li><a class="nav-link" href="/images.html">Images</a></li>
-        <li><a class="nav-link" href="/video-gen.html">Video</a></li>
-        <li><a class="nav-link" href="/motion.html">Motion</a></li>
-        <li><a class="nav-link" href="/editor.html">Editor</a></li>
-        <li><a class="nav-link" href="/gallery.html">Gallery</a></li>
-
-        <!-- NEU -->
-        <li><a class="nav-link" href="/wandrobe.html">Wardrobe</a></li>
-        <li><a class="nav-link" href="/avatar.html">Avatar</a></li>
-        <li><a class="nav-link" href="/catalog.html">Store</a></li>
-
-        <!-- Mehr / Dev -->
-        <li class="dropdown">
-          <button class="nav-link dropdown-toggle" id="amsMoreBtn" aria-haspopup="true" aria-expanded="false">⋯ Mehr</button>
-          <ul class="dropdown-menu" aria-labelledby="amsMoreBtn">
-            <li><a class="nav-link" href="/agent_test.html">Agent Test</a></li>
-          </ul>
-        </li>
-      </ul>
-    </nav>
-  </div>
-
-  <style>
-    /* Minimal-Styles nur für die Navbar (kollidiert nicht mit deiner ui.css) */
-    .ams-navbar{position:sticky;top:0;z-index:50;background:#0f1220;color:#fff;border-bottom:1px solid #262a3b}
-    .ams-nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:10px 16px}
-    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
-    .brand-logo{height:28px;width:auto}
-    .brand-text{font-weight:700}
-    .hamburger{display:none;flex-direction:column;gap:4px;border:0;background:transparent;cursor:pointer}
-    .hamburger span{width:22px;height:2px;background:#fff;display:block}
-    .nav ul{list-style:none;display:flex;gap:10px;margin:0;padding:0;align-items:center}
-    .nav-link{display:inline-block;padding:8px 12px;border-radius:8px;text-decoration:none;color:#e6e7ee}
-    .nav-link:hover{background:#1a1e30}
-    .nav-link.active{color:#fff;background:#5e4ccf}
-    .dropdown{position:relative}
-    .dropdown-toggle::after{content:"▾";margin-left:6px;font-size:.8em}
-    .dropdown-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);min-width:180px;background:#0f1220;border:1px solid #262a3b;border-radius:12px;padding:6px}
-    .dropdown-menu a{display:block}
-    .dropdown.open .dropdown-menu{display:block}
-
-    /* Responsive */
-    @media (max-width: 900px){
-      .hamburger{display:flex}
-      .nav{display:none;width:100%}
-      .nav.open{display:block}
-      .nav ul{flex-direction:column;align-items:flex-start;padding:8px 0}
-      .dropdown-menu{position:static;width:100%;border:0;padding:0;margin:0;display:none;background:transparent}
-      .dropdown.open .dropdown-menu{display:block}
-    }
-  </style>
-
-  <script>
-    // Aktiv-Link markieren & Dropdown/Burger steuern
-    (function(){
-      const path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-
-      document.querySelectorAll('a.nav-link').forEach(a=>{
-        const href = (a.getAttribute('href')||'').toLowerCase();
-        if(href.endsWith(path)) {
-          a.classList.add('active');
-          a.setAttribute('aria-current','page');
-        }
-      });
-
-      // Dropdown (Mehr)
-      const moreBtn = document.getElementById('amsMoreBtn');
-      const dropdownLi = moreBtn ? moreBtn.closest('.dropdown') : null;
-      if(moreBtn && dropdownLi){
-        moreBtn.addEventListener('click', (e)=>{
-          e.stopPropagation();
-          const open = dropdownLi.classList.toggle('open');
-          moreBtn.setAttribute('aria-expanded', String(open));
-        });
-        document.addEventListener('click', (e)=>{
-          if(!dropdownLi.contains(e.target)){
-            dropdownLi.classList.remove('open');
-            moreBtn.setAttribute('aria-expanded','false');
-          }
-        });
-      }
-
-      // Burger / Mobile
-      const toggle = document.getElementById('amsNavToggle');
-      const nav = document.getElementById('amsMainNav');
-      if(toggle && nav){
-        toggle.addEventListener('click', ()=>{
-          const nowOpen = nav.classList.toggle('open');
-          toggle.setAttribute('aria-expanded', String(nowOpen));
-        });
-      }
-    })();
-  </script>
-</header>
+<nav class="topbar card" style="display:flex;align-items:center;gap:16px;padding:10px 14px;margin:14px;">
+  <a href="index.html" class="logo" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+    <img src="assets/logo/logo.png" alt="Andio" style="height:28px">
+    <strong style="color:#333">AndioMediaStudio</strong>
+  </a>
+  <ul class="menu" style="display:flex;gap:10px;list-style:none;margin-left:auto">
+    <li><a class="tab" href="index.html"><i class="fas fa-gauge"></i> Dashboard</a></li>
+    <li><a class="tab" href="images.html"><i class="fas fa-image"></i> Bilder</a></li>
+    <li><a class="tab" href="video-gen.html"><i class="fas fa-video"></i> Video</a></li>
+    <li><a class="tab" href="wandrobe.html"><i class="fas fa-shirt"></i> Wandrobe</a></li>
+    <li><a class="tab" href="editor.html"><i class="fas fa-edit"></i> Editor</a></li>
+    <li><a class="tab" href="motion.html"><i class="fas fa-person-running"></i> Motion</a></li>
+    <li><a class="tab" href="avatar.html"><i class="fas fa-user"></i> Avatar</a></li>
+    <li><a class="tab" href="catalog.html"><i class="fas fa-store"></i> Store</a></li>
+  </ul>
+</nav>

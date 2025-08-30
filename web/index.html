@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
-<head>
+<head>`r`n  <link rel="stylesheet" href="assets/ui.css">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AndioMediaStudio - Dashboard</title>
@@ -211,7 +211,7 @@
     .card, .model, .job, .thumb { transition: transform .35s, box-shadow .35s; }
   </style>
 </head>
-<body>
+<body>`r`n  <div data-include="navbar"></div>
   <!-- NEW NAVBAR -->
   <div class="navbar" role="banner" aria-label="Hauptnavigation">
     <div class="row">
@@ -237,7 +237,7 @@
 
       <div class="search" role="search">
         <i class="fa-solid fa-search" aria-hidden="true"></i>
-        <input id="qSearch" type="search" placeholder="Outputs durchsuchen…">
+        <input id="qSearch" type="search" placeholder="Outputs durchsuchenâ€¦">
       </div>
 
       <span class="badge-18" title="Ab 18"><i class="fa-solid fa-triangle-exclamation"></i> 18+</span>
@@ -264,36 +264,36 @@
       <!-- Left: System -->
       <section class="card" aria-labelledby="sys-title">
         <h3 id="sys-title"><i class="fas fa-server"></i> System Status <span id="sys-dot" class="status-dot" aria-hidden="true"></span></h3>
-        <p class="sub" id="uptime">–</p>
+        <p class="sub" id="uptime">â€“</p>
 
         <div class="metric">
           <span class="metric-label">GPU Auslastung</span>
-          <span class="metric-value" id="gpuVal">–</span>
+          <span class="metric-value" id="gpuVal">â€“</span>
         </div>
         <div class="progress"><i id="gpuBar" style="width:0%"></i></div>
 
         <div class="metric">
           <span class="metric-label">RAM Verbrauch</span>
-          <span class="metric-value" id="ramVal">–</span>
+          <span class="metric-value" id="ramVal">â€“</span>
         </div>
         <div class="progress"><i id="ramBar" style="width:0%"></i></div>
 
         <div class="metric">
           <span class="metric-label">VRAM Verbrauch</span>
-          <span class="metric-value" id="vramVal">–</span>
+          <span class="metric-value" id="vramVal">â€“</span>
         </div>
         <div class="progress"><i id="vramBar" style="width:0%"></i></div>
 
         <div class="metric">
           <span class="metric-label">Queue Tiefe</span>
-          <span class="metric-value" id="queueVal">–</span>
+          <span class="metric-value" id="queueVal">â€“</span>
         </div>
       </section>
 
       <!-- Middle: Jobs -->
       <section class="card" aria-labelledby="jobs-title">
         <h3 id="jobs-title"><i class="fas fa-tasks"></i> Aktive Jobs</h3>
-        <p class="sub">Steuern & überwachen. Nur echte Daten – keine Simu.</p>
+        <p class="sub">Steuern & Ã¼berwachen. Nur echte Daten â€“ keine Simu.</p>
 
         <div class="filters" role="tablist" aria-label="Jobfilter">
           <button class="chip active" data-filter="all">Alle</button>
@@ -315,7 +315,7 @@
       <!-- Right: Models -->
       <aside class="card" aria-labelledby="models-title">
         <h3 id="models-title"><i class="fas fa-brain"></i> Geladene Modelle</h3>
-        <p class="sub">Status & Größe (VRAM-Footprint, falls verfügbar).</p>
+        <p class="sub">Status & GrÃ¶ÃŸe (VRAM-Footprint, falls verfÃ¼gbar).</p>
         <div id="models" class="models">
           <!-- Modelle dynamisch -->
         </div>
@@ -348,12 +348,12 @@
   <!-- Overlay Player (enhanced) -->
   <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Player">
     <div class="player">
-      <header>
+      <header>`r`n  <link rel="stylesheet" href="assets/ui.css">
         <strong id="plTitle">Player</strong>
         <div style="display:flex; gap:8px;">
           <button class="btn" id="plFit"><i class="fas fa-maximize"></i> Fit/Fill</button>
           <a class="btn" id="plDownload" download><i class="fas fa-download"></i> Download</a>
-          <button class="btn" id="plClose"><i class="fas fa-xmark"></i> Schließen</button>
+          <button class="btn" id="plClose"><i class="fas fa-xmark"></i> SchlieÃŸen</button>
         </div>
       </header>
       <div class="body">
@@ -364,36 +364,36 @@
             <button class="ov-btn" id="plZoomOut" title="Zoom -"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
             <button class="ov-btn" id="plReset" title="Reset"><i class="fa-solid fa-arrows-rotate"></i></button>
           </div>
-          <button class="ov-nav ov-prev" id="plPrev" title="Vorherige (←)"><i class="fa-solid fa-chevron-left"></i></button>
-          <button class="ov-nav ov-next" id="plNext" title="Nächste (→)"><i class="fa-solid fa-chevron-right"></i></button>
+          <button class="ov-nav ov-prev" id="plPrev" title="Vorherige (â†)"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="ov-nav ov-next" id="plNext" title="NÃ¤chste (â†’)"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <div class="tags" id="plTags"></div>
       </div>
       <footer>
-        <div id="plMeta">–</div>
+        <div id="plMeta">â€“</div>
         <div style="display:flex; gap:8px;">
           <a class="btn" id="plOpenFolder" target="_blank"><i class="fas fa-folder-open"></i> Im Ordner</a>
-          <a class="btn" id="plOpenFile" target="_blank"><i class="fas fa-arrow-up-right-from-square"></i> Datei öffnen</a>
+          <a class="btn" id="plOpenFile" target="_blank"><i class="fas fa-arrow-up-right-from-square"></i> Datei Ã¶ffnen</a>
         </div>
       </footer>
     </div>
   </div>
 
   <!-- 18+ Consent Modal -->
-  <div id="consent" class="modal" role="dialog" aria-modal="true" aria-label="Altersbestätigung">
+  <div id="consent" class="modal" role="dialog" aria-modal="true" aria-label="AltersbestÃ¤tigung">
     <div class="box">
-      <h2><i class="fa-solid fa-triangle-exclamation"></i> Alters- & Inhalts­hinweis (ab 18)</h2>
-      <p>Dieses Programm kann Inhalte generieren oder anzeigen, die nur für Volljährige geeignet sind (NSFW). Mit “Bestätigen” erklärst du, dass du mindestens 18 Jahre alt bist und die Verantwortung für die Verwendung übernimmst.</p>
+      <h2><i class="fa-solid fa-triangle-exclamation"></i> Alters- & InhaltsÂ­hinweis (ab 18)</h2>
+      <p>Dieses Programm kann Inhalte generieren oder anzeigen, die nur fÃ¼r VolljÃ¤hrige geeignet sind (NSFW). Mit â€œBestÃ¤tigenâ€ erklÃ¤rst du, dass du mindestens 18 Jahre alt bist und die Verantwortung fÃ¼r die Verwendung Ã¼bernimmst.</p>
       <div class="consent-row">
         <input type="checkbox" id="chk18"> <label for="chk18">Ich bin mindestens 18 Jahre alt.</label>
       </div>
       <div class="consent-row">
         <input type="checkbox" id="chkNSFWPref"> <label for="chkNSFWPref">NSFW-Inhalte im Interface sichtbar machen.</label>
       </div>
-      <p class="sub">Du kannst die NSFW-Sichtbarkeit später jederzeit über den SFW/NSFW-Schalter ändern. Dieser Hinweis erscheint stündlich erneut (einstellbar).</p>
+      <p class="sub">Du kannst die NSFW-Sichtbarkeit spÃ¤ter jederzeit Ã¼ber den SFW/NSFW-Schalter Ã¤ndern. Dieser Hinweis erscheint stÃ¼ndlich erneut (einstellbar).</p>
       <div class="consent-actions">
         <button class="btn danger" id="btnCancelConsent"><i class="fas fa-door-open"></i> Beenden</button>
-        <button class="btn primary" id="btnConfirmConsent"><i class="fas fa-check"></i> Bestätigen</button>
+        <button class="btn primary" id="btnConfirmConsent"><i class="fas fa-check"></i> BestÃ¤tigen</button>
       </div>
     </div>
   </div>
@@ -430,7 +430,7 @@
         t.style.display = t.innerText.toLowerCase().includes(q) ? '' : 'none';
       });
     });
-    document.getElementById('btnTheme')?.addEventListener('click', ()=>alert('Theme-Umschalter: (Stub) – globales Theme folgt.'));
+    document.getElementById('btnTheme')?.addEventListener('click', ()=>alert('Theme-Umschalter: (Stub) â€“ globales Theme folgt.'));
 
     /*****************
      * SFW/NSFW UI   *
@@ -474,9 +474,9 @@
     const consentEl = document.getElementById('consent');
     const chk18 = document.getElementById('chk18');
     const chkNSFWPref = document.getElementById('chkNSFWPref');
-    document.getElementById('btnCancelConsent').onclick = ()=>{ window.close?.(); consentEl.classList.remove('active'); alert('Ohne Altersbestätigung wird NSFW deaktiviert.'); setMode('sfw'); };
+    document.getElementById('btnCancelConsent').onclick = ()=>{ window.close?.(); consentEl.classList.remove('active'); alert('Ohne AltersbestÃ¤tigung wird NSFW deaktiviert.'); setMode('sfw'); };
     document.getElementById('btnConfirmConsent').onclick = ()=>{
-      if(!chk18.checked){ alert('Bitte bestätige, dass du mindestens 18 bist.'); return; }
+      if(!chk18.checked){ alert('Bitte bestÃ¤tige, dass du mindestens 18 bist.'); return; }
       store.setConsent({ok:true, ts:Date.now()});
       consentEl.classList.remove('active');
       if(chkNSFWPref.checked) setMode('nsfw'); else setMode('sfw');
@@ -506,7 +506,7 @@
     /*****************
      * System Panel  *
      *****************/
-    function fmtPercent(n){ if(n==null) return '–'; return `${Math.round(n)}%`; }
+    function fmtPercent(n){ if(n==null) return 'â€“'; return `${Math.round(n)}%`; }
     function updateBar(el, pct){ if(!el) return; el.style.width = Math.max(0, Math.min(100, Math.round(pct||0))) + '%'; }
 
     async function loadSystem(){
@@ -516,17 +516,17 @@
       document.getElementById('sys-dot').style.background = ok ? 'var(--ok)' : 'var(--err)';
       if(!ok){
         document.getElementById('uptime').textContent = 'Server nicht erreichbar.';
-        ['gpuVal','ramVal','vramVal','queueVal'].forEach(id=>document.getElementById(id).textContent='–');
+        ['gpuVal','ramVal','vramVal','queueVal'].forEach(id=>document.getElementById(id).textContent='â€“');
         updateBar(document.getElementById('gpuBar'),0);
         updateBar(document.getElementById('ramBar'),0);
         updateBar(document.getElementById('vramBar'),0);
         return;
       }
-      document.getElementById('uptime').textContent = `Uptime: ${data.uptime_h || '–'}h`;
+      document.getElementById('uptime').textContent = `Uptime: ${data.uptime_h || 'â€“'}h`;
       document.getElementById('gpuVal').textContent  = fmtPercent(data.gpu?.util);
-      document.getElementById('ramVal').textContent  = `${data.ram?.used_gb ?? '–'} / ${data.ram?.total_gb ?? '–'} GB`;
-      document.getElementById('vramVal').textContent = `${data.vram?.used_gb ?? '–'} / ${data.vram?.total_gb ?? '–'} GB`;
-      document.getElementById('queueVal').textContent= data.queue_depth ?? '–';
+      document.getElementById('ramVal').textContent  = `${data.ram?.used_gb ?? 'â€“'} / ${data.ram?.total_gb ?? 'â€“'} GB`;
+      document.getElementById('vramVal').textContent = `${data.vram?.used_gb ?? 'â€“'} / ${data.vram?.total_gb ?? 'â€“'} GB`;
+      document.getElementById('queueVal').textContent= data.queue_depth ?? 'â€“';
       updateBar(document.getElementById('gpuBar'), data.gpu?.util);
       const ramPct = data.ram && data.ram.total_gb ? (100*data.ram.used_gb/data.ram.total_gb) : 0;
       updateBar(document.getElementById('ramBar'), ramPct);
@@ -565,24 +565,24 @@
         return;
       }
       for(const j of filt){
-        const id = j.id || '—';
+        const id = j.id || 'â€”';
         const name = j.name || (j.type ? j.type.replace('_',' ') : 'Job');
         const model = j.model || '';
         const status = (j.status||'').toLowerCase();
         const pct = Math.max(0, Math.min(100, Math.round(j.progress||0)));
-        const eta = j.eta_s ? `${Math.round(j.eta_s)}s` : '—';
+        const eta = j.eta_s ? `${Math.round(j.eta_s)}s` : 'â€”';
 
         const row = document.createElement('div');
         row.className = 'job';
         row.innerHTML = `
           <div>
             <h4>${name}</h4>
-            <small>${model} • ETA: ${eta}</small>
+            <small>${model} â€¢ ETA: ${eta}</small>
             <div class="bar"><i style="width:${pct}%"></i></div>
           </div>
           <div>
             <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
-              <span class="pill ${status}">${status||'—'}</span>
+              <span class="pill ${status}">${status||'â€”'}</span>
               <div class="actions">
                 ${(status==='queued'||status==='running') ? `<button class="btn" data-act="cancel" data-id="${id}"><i class="fas fa-ban"></i></button>`:''}
                 ${(status==='failed') ? `<button class="btn" data-act="retry" data-id="${id}"><i class="fas fa-rotate-right"></i></button>`:''}
@@ -625,7 +625,7 @@
       for(const m of cache.models){
         const state = (m.status||'available').toLowerCase();
         const type = m.type || '';
-        const vram = m.vram_gb ? ` • VRAM: ${m.vram_gb} GB` : '';
+        const vram = m.vram_gb ? ` â€¢ VRAM: ${m.vram_gb} GB` : '';
         const div = document.createElement('div');
         div.className = 'model';
         div.innerHTML = `
@@ -633,7 +633,7 @@
             <div class="name">${m.name||'Modell'}</div>
             <div class="type">${type}${vram}</div>
           </div>
-          <span class="state ${state}">${state==='loaded'?'Geladen':'Verfügbar'}</span>
+          <span class="state ${state}">${state==='loaded'?'Geladen':'VerfÃ¼gbar'}</span>
         `;
         box.appendChild(div);
       }
@@ -739,7 +739,7 @@
       (item.tags||[]).forEach(t=>{
         const s = document.createElement('span'); s.textContent = t; plTags.appendChild(s);
       });
-      plMeta.textContent = `${item.model||''} • ${item.when||''}`;
+      plMeta.textContent = `${item.model||''} â€¢ ${item.when||''}`;
       plOpenFile.href = item.path;
       plOpenFolder.href = item.folder_url || '#';
       plDownload.href = item.path;
@@ -836,5 +836,12 @@
       });
     });
   </script>
+  <script src="assets/include.js"></script>
+  <script src="assets/overlay-player.js"></script>
 </body>
 </html>
+
+
+
+
+

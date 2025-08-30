@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8"/>
@@ -29,7 +29,7 @@
     }
     .container{max-width:1600px;margin:0 auto;padding:20px}
 
-    /* ===== (Seiteninterne) Header Reste für Karten etc. ===== */
+    /* ===== (Seiteninterne) Header Reste fÃ¼r Karten etc. ===== */
     .header{
       background:var(--glass); backdrop-filter: blur(10px);
       border-radius:var(--radius); padding:18px 22px; margin-bottom:20px;
@@ -130,7 +130,7 @@
       <!-- LEFT: Genre Panel -->
       <aside class="panel">
         <h3><i class="fas fa-list"></i> Genre</h3>
-        <p class="sub">Wähle ein Genre – die passenden Szenenfelder erscheinen darunter.</p>
+        <p class="sub">WÃ¤hle ein Genre â€“ die passenden Szenenfelder erscheinen darunter.</p>
 
         <div class="genre-list" id="genreList">
           <button class="genre-btn active" data-genre="portrait"><i class="fa-solid fa-user"></i> Portrait / Character</button>
@@ -138,14 +138,14 @@
           <button class="genre-btn" data-genre="product"><i class="fa-solid fa-box-open"></i> Product / Ad</button>
           <button class="genre-btn" data-genre="landscape"><i class="fa-solid fa-mountain"></i> Landscape / Establishing</button>
           <button class="genre-btn" data-genre="toon"><i class="fa-solid fa-wand-magic-sparkles"></i> Animation / Toon</button>
-          <button class="genre-btn nsfw-only" data-genre="nsfw"><i class="fa-solid fa-eye-slash"></i> NSFW – Body / Posing</button>
+          <button class="genre-btn nsfw-only" data-genre="nsfw"><i class="fa-solid fa-eye-slash"></i> NSFW â€“ Body / Posing</button>
         </div>
 
         <!-- Portrait -->
         <div class="genre-section active" data-section="portrait">
           <div class="grid-2">
             <div>
-              <label>„Talking pose“</label>
+              <label>â€žTalking poseâ€œ</label>
               <select id="por_talking">
                 <option value="off">Aus (stille Pose)</option>
                 <option value="subtle">Leichte Mikro-Bewegungen</option>
@@ -156,7 +156,7 @@
               <select id="por_cam">
                 <option value="orbit_slow">Orbit (slow)</option>
                 <option value="dolly_in">Dolly-In</option>
-                <option value="crane_up">Kranfahrt ↑</option>
+                <option value="crane_up">Kranfahrt â†‘</option>
               </select>
             </div>
           </div>
@@ -192,7 +192,7 @@
               </select>
             </div>
             <div>
-              <label>Stoff-Sim Intensität</label>
+              <label>Stoff-Sim IntensitÃ¤t</label>
               <select id="fas_fabric">
                 <option value="low">Niedrig</option>
                 <option value="med">Mittel</option>
@@ -205,7 +205,7 @@
             <select id="fas_cuts">
               <option value="none">Keine</option>
               <option value="subtle">Dezent</option>
-              <option value="frequent">Häufig</option>
+              <option value="frequent">HÃ¤ufig</option>
             </select>
           </div>
         </div>
@@ -216,7 +216,7 @@
             <div>
               <label>Shots-Liste</label>
               <select id="pro_shots">
-                <option value="wide_medium_macro">Wide → Medium → Macro</option>
+                <option value="wide_medium_macro">Wide â†’ Medium â†’ Macro</option>
                 <option value="macro_showcase">Macro Showcase</option>
               </select>
             </div>
@@ -259,7 +259,7 @@
             </div>
           </div>
           <div style="margin-top:8px">
-            <label>Wetter/Atmosphäre</label>
+            <label>Wetter/AtmosphÃ¤re</label>
             <input type="text" id="lan_weather" placeholder="Fog, volumetric light, rain">
           </div>
         </div>
@@ -285,7 +285,7 @@
             </div>
           </div>
           <div style="margin-top:8px">
-            <label>Übergänge</label>
+            <label>ÃœbergÃ¤nge</label>
             <select id="toon_trans">
               <option value="cut">Cut</option>
               <option value="wipe">Wipe</option>
@@ -346,7 +346,7 @@
         <div class="upload" id="upload" onclick="refInput.click()">
           <i class="fas fa-cloud-upload-alt"></i>
           <div><strong>Referenz hochladen (optional)</strong></div>
-          <small class="sub">Für Motion Transfer (Video/Pose) oder Bild-zu-Video. MP4/WebM/PNG/JPG.</small>
+          <small class="sub">FÃ¼r Motion Transfer (Video/Pose) oder Bild-zu-Video. MP4/WebM/PNG/JPG.</small>
           <input type="file" id="refInput" accept="video/*,image/*" style="display:none">
         </div>
 
@@ -354,7 +354,7 @@
           <header>
             <strong id="plTitle">Kein Clip</strong>
             <div class="actions">
-              <button class="btn" id="btnOpenFile" disabled><i class="fas fa-arrow-up-right-from-square"></i> Datei öffnen</button>
+              <button class="btn" id="btnOpenFile" disabled><i class="fas fa-arrow-up-right-from-square"></i> Datei Ã¶ffnen</button>
               <button class="btn" id="btnOpenFolder" disabled><i class="fas fa-folder-open"></i> Ordner</button>
             </div>
           </header>
@@ -362,8 +362,8 @@
             <div class="sub">Das generierte Video erscheint hier, Uploads dienen nur als Referenz.</div>
           </div>
           <footer>
-            <span id="plMeta" class="sub">—</span>
-            <span id="plTags" class="sub">—</span>
+            <span id="plMeta" class="sub">â€”</span>
+            <span id="plTags" class="sub">â€”</span>
           </footer>
         </div>
 
@@ -379,7 +379,7 @@
         </div>
 
         <div class="progress" id="progressBox">
-          <div><strong>Status:</strong> <span id="statusTxt">–</span></div>
+          <div><strong>Status:</strong> <span id="statusTxt">â€“</span></div>
           <div class="bar"><i id="bar"></i></div>
         </div>
 
@@ -426,7 +426,7 @@
             <input type="number" id="w" value="576" min="256" step="64">
           </div>
           <div>
-            <label>Höhe</label>
+            <label>HÃ¶he</label>
             <input type="number" id="h" value="1024" min="256" step="64">
           </div>
         </div>
@@ -438,7 +438,7 @@
         </div>
 
         <div style="margin-top:8px">
-          <label>Übergänge</label>
+          <label>ÃœbergÃ¤nge</label>
           <select id="trans">
             <option value="cut">Cut</option>
             <option value="cross">Crossfade</option>
@@ -459,7 +459,7 @@
           </div>
 
           <div class="opt-section" data-opt="transfer">
-            <div class="sub">Bewegung aus Referenz-Video übernehmen (optional). Lade oben ein Video hoch.</div>
+            <div class="sub">Bewegung aus Referenz-Video Ã¼bernehmen (optional). Lade oben ein Video hoch.</div>
             <div class="grid-3">
               <div>
                 <label>Dichte</label>
@@ -480,10 +480,10 @@
           </div>
 
           <div class="opt-section" data-opt="lipsync">
-            <div class="sub">Audio + Bild → Talking Head. Lade oben Audio (WAV/MP3) und ein Referenzbild hoch.</div>
+            <div class="sub">Audio + Bild â†’ Talking Head. Lade oben Audio (WAV/MP3) und ein Referenzbild hoch.</div>
             <div class="grid-3">
               <div>
-                <label>Viseme-Glättung</label>
+                <label>Viseme-GlÃ¤ttung</label>
                 <input type="number" id="ls_smooth" value="0.6" min="0" max="1" step="0.05">
               </div>
               <div>
@@ -553,7 +553,7 @@
       document.querySelectorAll('.nsfw-only').forEach(el=>{ el.style.display = (mode==='nsfw') ? '' : 'none'; });
       const nsfwGenreBtn = document.querySelector('.genre-btn[data-genre="nsfw"]');
       if(nsfwGenreBtn) nsfwGenreBtn.style.display = (mode==='nsfw') ? '' : 'none';
-      // Falls aktives Genre nsfw ist und wir in sfw wechseln → auf portrait zurück
+      // Falls aktives Genre nsfw ist und wir in sfw wechseln â†’ auf portrait zurÃ¼ck
       const activeGenreBtn = document.querySelector('.genre-btn.active');
       if(activeGenreBtn?.dataset.genre==='nsfw' && mode!=='nsfw'){
         document.querySelector('.genre-btn[data-genre="portrait"]')?.click();
@@ -561,7 +561,7 @@
       if(mode==='nsfw' && !store.consentOK()){ store.setMode('sfw'); applyModeUI('sfw'); }
     }
     btnSFW?.addEventListener('click', ()=>{ store.setMode('sfw'); applyModeUI('sfw'); });
-    btnNSFW?.addEventListener('click', ()=>{ if(store.consentOK()){ store.setMode('nsfw'); applyModeUI('nsfw'); } else { alert('NSFW erfordert Altersbestätigung im Dashboard.'); } });
+    btnNSFW?.addEventListener('click', ()=>{ if(store.consentOK()){ store.setMode('nsfw'); applyModeUI('nsfw'); } else { alert('NSFW erfordert AltersbestÃ¤tigung im Dashboard.'); } });
 
     /**************
      * Genre logic
@@ -649,7 +649,7 @@
     btnGenerate.addEventListener('click', async ()=>{
       if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
       btnGenerate.disabled=true; btnCancel.disabled=false; btnSave.disabled=true;
-      progressBox.style.display='block'; bar.style.width='0%'; statusTxt.textContent='Starte …';
+      progressBox.style.display='block'; bar.style.width='0%'; statusTxt.textContent='Starte â€¦';
 
       const payload = buildPayload();
       const form = new FormData();
@@ -671,7 +671,7 @@
         statusTxt.textContent='Keine Job-ID erhalten.';
         btnGenerate.disabled=false; btnCancel.disabled=true; return;
       }
-      statusTxt.textContent='Wird generiert …';
+      statusTxt.textContent='Wird generiert â€¦';
       pollTimer = setInterval(pollJob, 1000);
     });
 
@@ -684,7 +684,7 @@
 
     async function pollJob(){
       const j = await api(`/api/jobs/${currentJobId}`);
-      if(!j){ statusTxt.textContent='Warte auf Server …'; return; }
+      if(!j){ statusTxt.textContent='Warte auf Server â€¦'; return; }
       const pct = Math.max(0, Math.min(100, Math.round(j.progress||0)));
       bar.style.width = pct + '%';
       statusTxt.textContent = (j.status||'running');
@@ -696,13 +696,13 @@
         if(item && item.path){
           screen.innerHTML = `<video controls src="${item.path}"></video>`;
           plTitle.textContent = item.title || 'Clip';
-          plMeta.textContent = `${item.model||''} • ${item.duration? Math.round(item.duration)+'s':''}`;
+          plMeta.textContent = `${item.model||''} â€¢ ${item.duration? Math.round(item.duration)+'s':''}`;
           btnOpenFile.disabled=false; btnOpenFolder.disabled=false;
           btnOpenFile.onclick = ()=> window.open(item.path, '_blank');
           btnOpenFolder.onclick= ()=> item.folder_url ? window.open(item.folder_url, '_blank') : null;
           lastItem = item; btnSave.disabled=false; statusTxt.textContent='Fertig';
 
-          /* ⬇️ Globale Overlay-Vorschau (einheitlicher Player) */
+          /* â¬‡ï¸ Globale Overlay-Vorschau (einheitlicher Player) */
           openOverlay({
             kind: 'video',
             src: item.path,
@@ -713,7 +713,7 @@
             gen: item.model || 'Video Studio'
           });
         } else {
-          statusTxt.textContent='Fertig – kein Output gefunden.';
+          statusTxt.textContent='Fertig â€“ kein Output gefunden.';
         }
         btnGenerate.disabled=false; btnCancel.disabled=true;
       }
@@ -836,9 +836,14 @@
     });
   </script>
 
-  <!-- Loader für Partials (lädt partials/navbar.html) -->
+  <!-- Loader fÃ¼r Partials (lÃ¤dt partials/navbar.html) -->
   <script src="assets/include.js"></script>
-  <!-- Globaler Overlay-Player (einheitlich für alle Seiten) -->
+  <!-- Globaler Overlay-Player (einheitlich fÃ¼r alle Seiten) -->
   <script src="assets/overlay-player.js"></script>
 </body>
 </html>
+
+
+
+
+

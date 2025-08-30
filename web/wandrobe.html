@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de" data-mode="sfw">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AndioMediaStudio – Wardrobe</title>
+  <title>AndioMediaStudio â€“ Wardrobe</title>
 
   <!-- Einheitliche Topbar (global) -->
   <link rel="stylesheet" href="assets/ui.css">
@@ -48,7 +48,7 @@
       border:1px solid rgba(0,0,0,.08); padding:8px 12px;border-radius:999px;font-weight:700;
     }
     .workspace{display:grid;grid-template-columns:300px 1fr 360px; gap:22px; align-items:start}
-    /* Left – slots */
+    /* Left â€“ slots */
     .slots{padding:18px}
     .slots h3{font-size:1.05rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
     .pillgrp{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
@@ -61,7 +61,7 @@
     .item:hover{transform:translateY(-1px);background:rgba(102,126,234,.16)}
     .item i{color:var(--brand1);margin-bottom:6px}
     .item .name{font-size:.8rem;font-weight:600}
-    /* Middle – canvas */
+    /* Middle â€“ canvas */
     .canvas{padding:18px}
     .drop{border:2px dashed #ddd; border-radius:16px; padding:24px; text-align:center; cursor:pointer; transition:.2s;margin-bottom:14px}
     .drop:hover,.drop.dragover{border-color:var(--brand1); background:rgba(102,126,234,.06)}
@@ -76,7 +76,7 @@
       border-radius:16px; min-height:520px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;
     }
     .model{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px}
-    .overlay-layer{position:absolute;inset:0;pointer-events:none;width:100%;height:100%} /* <- wichtig für Canvas */
+    .overlay-layer{position:absolute;inset:0;pointer-events:none;width:100%;height:100%} /* <- wichtig fÃ¼r Canvas */
     .canvas-hint{color:#666;text-align:center}
     .btnrow{display:flex;gap:10px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
     .btn{
@@ -85,7 +85,7 @@
     .btn.primary{color:#fff;background:linear-gradient(135deg,var(--bg1),var(--bg2))}
     .btn.ghost{background:rgba(102,126,234,.08);color:var(--brand1);border:1px solid rgba(102,126,234,.3)}
     .btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(102,126,234,.25)}
-    /* Right – tools */
+    /* Right â€“ tools */
     .tools{padding:18px;max-height:calc(100vh - 200px);overflow:auto}
     .section{background:rgba(102,126,234,.06);border-radius:14px;padding:16px;margin-bottom:14px}
     .title{font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
@@ -108,14 +108,14 @@
     }
   </style>
 </head>
-<body data-page="wardrobe" data-mode="sfw">
+<body data-page="wardrobe" data-mode="sfw">`r`n  <div data-include="navbar"></div>
   <!-- Globale Navbar per Include -->
   <div data-include="partials/navbar.html"></div>
 
   <div class="container">
     <div class="header card">
       <h1><i class="fa-solid fa-shirt"></i> Wardrobe</h1>
-      <p style="color:var(--muted)">Virtual Try-On · Style-Transfer · Seam-Aware Compositing</p>
+      <p style="color:var(--muted)">Virtual Try-On Â· Style-Transfer Â· Seam-Aware Compositing</p>
     </div>
 
     <!-- lokale Tabs (optional) -->
@@ -218,15 +218,15 @@
              ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
           <i class="fa-solid fa-user-plus"></i>
           <h3>Personen-Foto hochladen</h3>
-          <p class="canvas-hint">PNG/JPG – Für Try-On mit Slot-Outfits</p>
+          <p class="canvas-hint">PNG/JPG â€“ FÃ¼r Try-On mit Slot-Outfits</p>
           <input id="modelInput" type="file" accept="image/*" style="display:none" onchange="loadModel(event)"/>
         </div>
 
         <div class="stage" id="stage">
           <div class="canvas-hint" id="canvasHint">
             <i class="fa-solid fa-user-circle" style="font-size:3rem;color:#ccc"></i>
-            <p style="margin-top:8px;color:#666">Lege ein Foto ab – dann: Slot wählen → Item klicken → Tools rechts einstellen.</p>
-            <p class="nsfw-only" style="margin-top:6px;color:#666;font-size:.9rem">Tipp: <em>Coverage</em> & <em>Seam-Blend</em> für saubere Übergänge bei Lingerie/Underlay.</p>
+            <p style="margin-top:8px;color:#666">Lege ein Foto ab â€“ dann: Slot wÃ¤hlen â†’ Item klicken â†’ Tools rechts einstellen.</p>
+            <p class="nsfw-only" style="margin-top:6px;color:#666;font-size:.9rem">Tipp: <em>Coverage</em> & <em>Seam-Blend</em> fÃ¼r saubere ÃœbergÃ¤nge bei Lingerie/Underlay.</p>
           </div>
           <!-- Layers werden per JS eingesetzt -->
         </div>
@@ -240,8 +240,8 @@
       <!-- RIGHT: Tools -->
       <aside class="card tools">
         <div class="section">
-          <div class="title"><i class="fa-solid fa-wand-magic-sparkles"></i> Qualitäts-Optionen</div>
-          <label class="opt"><input type="checkbox" id="seam" checked/>Naht-Übergänge</label>
+          <div class="title"><i class="fa-solid fa-wand-magic-sparkles"></i> QualitÃ¤ts-Optionen</div>
+          <label class="opt"><input type="checkbox" id="seam" checked/>Naht-ÃœbergÃ¤nge</label>
           <label class="opt"><input type="checkbox" id="edge" checked/>Kanten/Haare-Refine</label>
           <label class="opt"><input type="checkbox" id="shadow" checked/>Kontakt-Schatten</label>
           <label class="opt"><input type="checkbox" id="halo" checked/>Artefakt-Schutz</label>
@@ -251,14 +251,14 @@
         <div class="section">
           <div class="title"><i class="fa-solid fa-ruler-combined"></i> Passform</div>
           <div class="rg">
-            <label class="chip">Größe</label>
+            <label class="chip">GrÃ¶ÃŸe</label>
             <input id="scale" type="range" min="50" max="200" value="100" oninput="bindVal(this,'scaleVal');setScale(this.value)"/>
             <span class="val" id="scaleVal">100%</span>
           </div>
           <div class="rg">
             <label class="chip">Rotation</label>
             <input id="rot" type="range" min="-30" max="30" value="0" oninput="bindVal(this,'rotVal');setRotation(this.value)"/>
-            <span class="val" id="rotVal">0°</span>
+            <span class="val" id="rotVal">0Â°</span>
           </div>
           <div class="rg">
             <label class="chip">Deckkraft</label>
@@ -267,7 +267,7 @@
           </div>
           <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
             <button class="toolbtn" onclick="pinMode(true)"><i class="fa-solid fa-thumbtack"></i><br/>Pin-&-Drape</button>
-            <button class="toolbtn" onclick="clearPins()"><i class="fa-solid fa-eraser"></i><br/>Pins löschen</button>
+            <button class="toolbtn" onclick="clearPins()"><i class="fa-solid fa-eraser"></i><br/>Pins lÃ¶schen</button>
             <button class="toolbtn" onclick="autoPins()"><i class="fa-solid fa-wand-magic-sparkles"></i><br/>Auto-Pins</button>
           </div>
         </div>
@@ -292,9 +292,9 @@
 
         <!-- Skin / Flecken / Tan / Sheen -->
         <div class="section">
-          <div class="title"><i class="fa-solid fa-droplet"></i> Hautton & „Flecken“</div>
+          <div class="title"><i class="fa-solid fa-droplet"></i> Hautton & â€žFleckenâ€œ</div>
           <div class="rg">
-            <label class="chip">Hautton-Blend (Übergang)</label>
+            <label class="chip">Hautton-Blend (Ãœbergang)</label>
             <input id="skinBlend" type="range" min="0" max="100" value="35" oninput="bindVal(this,'skinBlendVal');setSkinBlend(this.value)"/>
             <span class="val" id="skinBlendVal">35%</span>
           </div>
@@ -354,7 +354,7 @@
 
   <!-- Navbar-Loader (muss nach <div data-include="..."> kommen) -->
   <script src="assets/include.js"></script>
-  <!-- Globaler Overlay-Player für Bilder/Videos -->
+  <!-- Globaler Overlay-Player fÃ¼r Bilder/Videos -->
   <script src="assets/overlay-player.js"></script>
 
   <script>
@@ -428,7 +428,7 @@
 
     /* ---------- Tools (Bindings) ---------- */
     function bindVal(r, spanId){
-      const v = r.id==='rot'? `${r.value}°` : `${r.value}${(r.id==='alpha'||r.id==='scale')?'%':''}`;
+      const v = r.id==='rot'? `${r.value}Â°` : `${r.value}${(r.id==='alpha'||r.id==='scale')?'%':''}`;
       const s = el(spanId); if(s) s.textContent = v;
     }
     function setScale(v){ const img=el('modelImg'); if(img) img.style.transform = `scale(${v/100}) rotate(${el('rot').value}deg)`; }
@@ -439,7 +439,7 @@
     function pinMode(on){ /* enable pin interactions */ }
     function clearPins(){} function autoPins(){}
 
-    // Skin / „Flecken“
+    // Skin / â€žFleckenâ€œ
     function setSkinBlend(v){} function setFreckles(v){} function setTan(v){} function setSheen(v){} function setBlemish(v){}
 
     // NSFW
@@ -468,11 +468,11 @@
     // Vorschau nutzt den globalen Overlay-Player
     function previewTryOn(){
       if(!currentModel){ alert('Bitte Foto laden.'); return; }
-      if(!currentItem){ alert('Bitte Outfit wählen.'); return; }
+      if(!currentItem){ alert('Bitte Outfit wÃ¤hlen.'); return; }
       openOverlay({
         kind:'image',
         src: currentModel,
-        name: 'Preview · ' + currentItem,
+        name: 'Preview Â· ' + currentItem,
         date: new Date().toISOString(),
         format: 'PNG',
         nsfw: (nsfwMode==='nsfw'),
@@ -481,7 +481,7 @@
     }
 
     function applyTryOn(){
-      if(!currentModel || !currentItem){ alert('Bitte Foto & Outfit wählen.'); return; }
+      if(!currentModel || !currentItem){ alert('Bitte Foto & Outfit wÃ¤hlen.'); return; }
       alert('Try-On angewendet (Demo).');
     }
 
@@ -496,7 +496,7 @@
       const img=el('modelImg'); if(img){ img.style.transform=''; img.style.opacity='1'; }
     }
 
-    // Speichern/Export – pfadabhängig SFW/NSFW
+    // Speichern/Export â€“ pfadabhÃ¤ngig SFW/NSFW
     function saveOutfit(){
       if(!currentModel){ alert('Kein Bild.'); return; }
       const path = `${outputBase}/wardrobe/${Date.now()}_tryon.png`;
@@ -510,3 +510,8 @@
   </script>
 </body>
 </html>
+
+
+
+
+

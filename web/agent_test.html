@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
-<head>
+<head>`r`n  <link rel="stylesheet" href="assets/ui.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AndioMediaStudio - Agent Test</title>
@@ -426,7 +426,7 @@
         }
     </style>
 </head>
-<body>
+<body>`r`n  <div data-include="navbar"></div>
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-robot"></i> Agent Test</h1>
@@ -446,7 +446,7 @@
         <div class="test-workspace">
             <div class="agent-panel">
                 <div class="section-title">
-                    <i class="fas fa-robot"></i> Verfügbare Agenten
+                    <i class="fas fa-robot"></i> VerfÃ¼gbare Agenten
                 </div>
                 
                 <div class="agent-list">
@@ -508,7 +508,7 @@
                     
                     <div class="scenario-item" onclick="loadScenario('quality')">
                         <div class="scenario-name">Quality Check</div>
-                        <div class="scenario-desc">Ausgabequalität bewerten</div>
+                        <div class="scenario-desc">AusgabequalitÃ¤t bewerten</div>
                     </div>
                     
                     <div class="scenario-item" onclick="loadScenario('stress')">
@@ -518,7 +518,7 @@
                     
                     <div class="scenario-item" onclick="loadScenario('integration')">
                         <div class="scenario-name">Integration Test</div>
-                        <div class="scenario-desc">Pipeline-Kompatibilität</div>
+                        <div class="scenario-desc">Pipeline-KompatibilitÃ¤t</div>
                     </div>
                 </div>
             </div>
@@ -553,9 +553,9 @@
                 
                 <div class="test-console" id="testConsole">
                     <div class="console-line console-input">$ AndioMediaStudio Agent Test Console v1.0</div>
-                    <div class="console-line console-output">System bereit. Wählen Sie einen Agent zum Testen.</div>
-                    <div class="console-line console-output">GPU: NVIDIA RTX 4090 - VRAM: 24GB verfügbar</div>
-                    <div class="console-line console-output">RAM: 32GB System Memory verfügbar</div>
+                    <div class="console-line console-output">System bereit. WÃ¤hlen Sie einen Agent zum Testen.</div>
+                    <div class="console-line console-output">GPU: NVIDIA RTX 4090 - VRAM: 24GB verfÃ¼gbar</div>
+                    <div class="console-line console-output">RAM: 32GB System Memory verfÃ¼gbar</div>
                     <div class="console-line console-output">Agenten geladen: 4/5 online</div>
                 </div>
             </div>
@@ -651,12 +651,12 @@
             
             setTimeout(() => {
                 addConsoleMessage('Verarbeitung abgeschlossen', 'output');
-                addConsoleMessage('✓ Test erfolgreich', 'output');
+                addConsoleMessage('âœ“ Test erfolgreich', 'output');
                 testRunning = false;
                 updateTestButton(false);
                 
                 // Add to log
-                addLogEntry('SUCCESS', `Test für ${getAgentName(currentAgent)} abgeschlossen`);
+                addLogEntry('SUCCESS', `Test fÃ¼r ${getAgentName(currentAgent)} abgeschlossen`);
             }, 3000);
         }
         
@@ -668,7 +668,7 @@
             if (running) {
                 btn.disabled = true;
                 icon.className = 'fas fa-spinner fa-spin';
-                text.textContent = 'Läuft...';
+                text.textContent = 'LÃ¤uft...';
             } else {
                 btn.disabled = false;
                 icon.className = 'fas fa-play';
@@ -761,5 +761,11 @@
             }, 5000);
         });
     </script>
+  <script src="assets/include.js"></script>
+  <script src="assets/overlay-player.js"></script>
 </body>
 </html>
+
+
+
+

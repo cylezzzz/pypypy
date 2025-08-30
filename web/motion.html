@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AndioMediaStudio – Motion</title>
+  <title>AndioMediaStudio â€“ Motion</title>
 
   <!-- Einheitliche Topbar (global) -->
   <link rel="stylesheet" href="assets/ui.css">
@@ -12,7 +12,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
   <style>
-    /* ==== Seitenstil für Motion (unverändert gelassen, wo möglich) ==== */
+    /* ==== Seitenstil fÃ¼r Motion (unverÃ¤ndert gelassen, wo mÃ¶glich) ==== */
     *{margin:0;padding:0;box-sizing:border-box}
     :root{--g1:#667eea;--g2:#764ba2;--glass:rgba(255,255,255,.95);--glass2:rgba(255,255,255,.9);--stroke:rgba(255,255,255,.2);--ink:#333;--muted:#666;--shadow:0 8px 32px rgba(0,0,0,.12);--radius:20px}
     body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,var(--g1),var(--g2));min-height:100vh;color:var(--ink)}
@@ -59,7 +59,7 @@
     .playhead{position:absolute;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--g1),var(--g2))}
     .kf{position:absolute;top:50%;width:10px;height:10px;background:#667eea;border-radius:50%;transform:translate(-50%,-50%);border:2px solid #fff;cursor:pointer}
 
-    /* Player (Seitenplayer – zusätzlich zum globalen Overlay-Player) */
+    /* Player (Seitenplayer â€“ zusÃ¤tzlich zum globalen Overlay-Player) */
     .player{display:none;background:#111;color:#fff;border-radius:12px;overflow:hidden;border:1px solid #222;margin-top:10px}
     .player header,.player footer{background:#1a1a1a;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
     .player video{width:100%;height:100%;max-height:60vh;object-fit:contain;background:#000}
@@ -73,7 +73,7 @@
     .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   </style>
 </head>
-<body>
+<body>`r`n  <div data-include="navbar"></div>
   <!-- Globale Navbar -->
   <header class="andio-navbar" role="banner">
     <nav class="andio-nav" role="navigation" aria-label="Hauptnavigation">
@@ -85,7 +85,7 @@
 
       <!-- Links -->
       <div class="nav-links" role="menubar">
-        <a role="menuitem" href="index.html"      data-link="index">Übersicht</a>
+        <a role="menuitem" href="index.html"      data-link="index">Ãœbersicht</a>
         <a role="menuitem" href="images.html"     data-link="images">Image Studio</a>
         <a role="menuitem" href="video-gen.html"  data-link="video-gen">Video Studio</a>
         <a role="menuitem" href="wandrobe.html"   data-link="wardrobe">Wardrobe</a>
@@ -169,26 +169,26 @@
               <button class="btn" id="btnKF"><i class="fas fa-plus-circle"></i> Keyframe</button>
               <button class="btn" id="btnPreview"><i class="fas fa-eye"></i> Preview</button>
               <button class="btn primary" id="btnRender"><i class="fas fa-play"></i> Render</button>
-              <button class="btn" id="btnOverlay" disabled><i class="fa-solid fa-up-right-from-square"></i> Im Overlay öffnen</button>
+              <button class="btn" id="btnOverlay" disabled><i class="fa-solid fa-up-right-from-square"></i> Im Overlay Ã¶ffnen</button>
             </div>
 
             <div class="progress" id="progressBox">
-              <div><strong>Status:</strong> <span id="statusTxt">–</span></div>
+              <div><strong>Status:</strong> <span id="statusTxt">â€“</span></div>
               <div class="bar"><i id="bar"></i></div>
             </div>
 
-            <!-- Seitenplayer (bleibt bestehen); globales Overlay kommt zusätzlich über assets/overlay-player.js -->
+            <!-- Seitenplayer (bleibt bestehen); globales Overlay kommt zusÃ¤tzlich Ã¼ber assets/overlay-player.js -->
             <div class="player" id="playerBox" aria-label="Player">
               <header>
                 <strong id="plTitle">Generierter Clip</strong>
                 <div>
-                  <button class="btn" id="btnOpenFile" disabled><i class="fas fa-arrow-up-right-from-square"></i> Öffnen</button>
+                  <button class="btn" id="btnOpenFile" disabled><i class="fas fa-arrow-up-right-from-square"></i> Ã–ffnen</button>
                   <button class="btn" id="btnOpenFolder" disabled><i class="fas fa-folder-open"></i> Ordner</button>
                 </div>
               </header>
               <video id="video" controls></video>
               <footer>
-                <span id="plMeta" class="sub">—</span>
+                <span id="plMeta" class="sub">â€”</span>
                 <button class="btn" id="btnSave" disabled><i class="fas fa-floppy-disk"></i> In Galerie</button>
               </footer>
             </div>
@@ -206,7 +206,7 @@
           </div>
           <div class="row" style="margin-top:8px">
             <div><label>Breite</label><input type="number" id="w" value="576" min="256" step="64"></div>
-            <div><label>Höhe</label><input type="number" id="h" value="1024" min="256" step="64"></div>
+            <div><label>HÃ¶he</label><input type="number" id="h" value="1024" min="256" step="64"></div>
           </div>
           <div class="row" style="margin-top:8px">
             <div><label>Seed</label><input type="number" id="seed" placeholder="Random"></div>
@@ -216,7 +216,7 @@
 
         <div class="box">
           <h3 style="margin:0 0 6px 0"><i class="fa-solid fa-microphone"></i> Audio & Lip-Sync</h3>
-          <div class="sub">Optional: Audio hochladen, Lip-Sync aktivieren – funktioniert mit allen Bewegungen.</div>
+          <div class="sub">Optional: Audio hochladen, Lip-Sync aktivieren â€“ funktioniert mit allen Bewegungen.</div>
           <input type="file" id="audioInput" accept="audio/*" />
           <div class="row" style="margin-top:8px">
             <div><label><input type="checkbox" id="lipEnable"> Lip-Sync aktivieren</label></div>
@@ -225,7 +225,7 @@
             </div>
           </div>
           <div class="row" style="margin-top:8px">
-            <div><label>Viseme-Glättung</label><input type="number" id="lipSmooth" value="0.6" min="0" max="1" step="0.05"></div>
+            <div><label>Viseme-GlÃ¤ttung</label><input type="number" id="lipSmooth" value="0.6" min="0" max="1" step="0.05"></div>
             <div><label>Latenz (ms)</label><input type="number" id="lipLatency" value="80" min="0" max="300" step="10"></div>
           </div>
         </div>
@@ -233,7 +233,7 @@
     </div>
   </div>
 
-  <!-- Globaler Overlay-Player für Bilder/Videos -->
+  <!-- Globaler Overlay-Player fÃ¼r Bilder/Videos -->
   <script src="assets/overlay-player.js"></script>
 
   <script>
@@ -273,7 +273,7 @@
             <select id="act_type">
               <option value="idle">Idle</option>
               <option value="walk">Walk</option>
-              <option value="dance_hiphop">Dance – Hip-Hop</option>
+              <option value="dance_hiphop">Dance â€“ Hip-Hop</option>
               <option value="turn">Turn</option>
               <option value="spin">Spin</option>
               <option value="kneel">Kneel</option>
@@ -281,7 +281,7 @@
               <option class="nsfw-only" value="shirt_open">Shirt-Open</option>
             </select>
           </div>
-          <div><label>Intensität</label><input type="number" id="act_int" value="0.7" min="0" max="1" step="0.05"></div>
+          <div><label>IntensitÃ¤t</label><input type="number" id="act_int" value="0.7" min="0" max="1" step="0.05"></div>
         </div>
         <div class="tool-row">
           <div><label>Speed</label><input type="number" id="act_speed" value="1.0" min="0.1" max="3" step="0.1"></div>
@@ -341,7 +341,7 @@
         row.innerHTML = `<div><strong>${labelMove(i.type)}</strong> <small>(${i.dur.toFixed(1)}s)</small></div>
                          <div style="display:flex;gap:6px;align-items:center">
                            <input type="number" step="0.1" min="0.2" value="${i.dur}" aria-label="Dauer">
-                           <button class="btn" data-act="del">✕</button>
+                           <button class="btn" data-act="del">âœ•</button>
                          </div>`;
         row.querySelector('input').oninput=(e)=>{ i.dur=Number(e.target.value||i.dur); row.querySelector('small').textContent=`(${i.dur.toFixed(1)}s)`; updateTime(); };
         row.querySelector('[data-act="del"]').onclick=()=>{ sequence=sequence.filter(x=>x.id!==i.id); drawSeq(); updateTime(); };
@@ -408,7 +408,7 @@
       const r=new FileReader(); r.onload=ev=>{ audioData=ev.target.result }; r.readAsDataURL(f);
     });
 
-    // Preview (lokal – Playhead)
+    // Preview (lokal â€“ Playhead)
     let previewTimer=null; document.getElementById('btnPreview').onclick=()=>{
       if(previewTimer){ clearInterval(previewTimer); }
       const tot=totalDuration(); let t=0;
@@ -441,7 +441,7 @@
 
     document.getElementById('btnRender').onclick=async ()=>{
       if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
-      progressBox.style.display='block'; statusTxt.textContent='Starte …'; bar.style.width='0%';
+      progressBox.style.display='block'; statusTxt.textContent='Starte â€¦'; bar.style.width='0%';
       const payload=buildPayload();
       const form=new FormData();
       form.append('params',new Blob([JSON.stringify(payload)],{type:'application/json'}));
@@ -457,7 +457,7 @@
 
     async function pollJob(){
       const j=await api(`/api/jobs/${currentJobId}`);
-      if(!j){ statusTxt.textContent='Warte auf Server …'; return; }
+      if(!j){ statusTxt.textContent='Warte auf Server â€¦'; return; }
       const pct=Math.max(0,Math.min(100,Math.round(j.progress||0)));
       bar.style.width=pct+'%'; statusTxt.textContent=j.status||'running';
       if(j.status==='completed'||pct>=100){
@@ -469,13 +469,13 @@
           videoEl.src=item.path;
           lastPath=item.path;
           plTitle.textContent=item.title||'Clip';
-          plMeta.textContent=`${item.model||''} • ${item.duration?Math.round(item.duration)+'s':''}`;
+          plMeta.textContent=`${item.model||''} â€¢ ${item.duration?Math.round(item.duration)+'s':''}`;
           btnOpenFile.disabled=false; btnOpenFolder.disabled=false; btnSave.disabled=false; btnOverlay.disabled=false;
           btnOpenFile.onclick=()=>window.open(item.path,'_blank');
           btnOpenFolder.onclick=()=> item.folder_url ? window.open(item.folder_url,'_blank') : null;
           lastItem=item; statusTxt.textContent='Fertig';
         } else {
-          statusTxt.textContent='Fertig – kein Output.';
+          statusTxt.textContent='Fertig â€“ kein Output.';
         }
       }
       if(j.status==='failed'){ clearInterval(pollTimer); pollTimer=null; statusTxt.textContent='Fehlgeschlagen'; }
@@ -514,5 +514,11 @@
       document.querySelectorAll('.nsfw-only').forEach(el=>{ el.style.display = (mode==='nsfw') ? '' : 'none'; });
     });
   </script>
+  <script src="assets/include.js"></script>
 </body>
 </html>
+
+
+
+
+

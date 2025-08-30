@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
-<head>
+<head>`r`n  <link rel="stylesheet" href="assets/ui.css">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AndioMediaStudio - Editor</title>
@@ -128,11 +128,11 @@
     }
   </style>
 </head>
-<body>
+<body>`r`n  <div data-include="navbar"></div>
   <div class="container">
     <div class="header">
       <h1><i class="fas fa-edit"></i> Media Editor</h1>
-      <p>Professioneller Editor für Bild-/Video-/Audio-Bearbeitung mit KI-Integration</p>
+      <p>Professioneller Editor fÃ¼r Bild-/Video-/Audio-Bearbeitung mit KI-Integration</p>
       <div class="mode-bar" style="margin-top:10px">
         <span class="note"><i class="fa-solid fa-shield-heart"></i> Inhaltsmodus:</span>
         <button class="mode-pill" id="sfwBtn" onclick="setMode('sfw')" aria-pressed="true">SFW</button>
@@ -158,7 +158,7 @@
           <span class="group-label">Auswahl/Transform</span>
           <div class="tool-group" role="group" aria-label="Auswahl und Transform">
             <button class="tool-btn" title="Verschieben (M)" onclick="selectTool('move',event)" aria-pressed="false"><i class="fas fa-arrows-alt"></i></button>
-            <button class="tool-btn active" title="Auswählen (V)" onclick="selectTool('select',event)" aria-pressed="true"><i class="fas fa-mouse-pointer"></i></button>
+            <button class="tool-btn active" title="AuswÃ¤hlen (V)" onclick="selectTool('select',event)" aria-pressed="true"><i class="fas fa-mouse-pointer"></i></button>
             <button class="tool-btn" title="Zuschneiden (C)" onclick="selectTool('crop',event)"><i class="fas fa-crop"></i></button>
             <button class="tool-btn" title="Formen" onclick="selectTool('shape',event)"><i class="fa-regular fa-square"></i></button>
           </div>
@@ -178,7 +178,7 @@
 
           <span class="group-label">Historie</span>
           <div class="tool-group" role="group" aria-label="Historie">
-            <button class="tool-btn" title="Rückgängig" onclick="undo()"><i class="fas fa-undo"></i></button>
+            <button class="tool-btn" title="RÃ¼ckgÃ¤ngig" onclick="undo()"><i class="fas fa-undo"></i></button>
             <button class="tool-btn" title="Wiederholen" onclick="redo()"><i class="fas fa-redo"></i></button>
           </div>
 
@@ -225,8 +225,8 @@
 
           <div class="group-head">Verbessern</div>
           <div class="tools-list">
-            <button class="tool-item" onclick="runAITool('upscale')" id="tool-upscale"><i class="fas fa-expand-arrows-alt"></i><span>Upscaling (x2/x4)</span><span class="hint">Qualität</span></button>
-            <button class="tool-item" onclick="runAITool('enhance')" id="tool-enhance"><i class="fas fa-sparkles"></i><span>Details & Schärfe</span></button>
+            <button class="tool-item" onclick="runAITool('upscale')" id="tool-upscale"><i class="fas fa-expand-arrows-alt"></i><span>Upscaling (x2/x4)</span><span class="hint">QualitÃ¤t</span></button>
+            <button class="tool-item" onclick="runAITool('enhance')" id="tool-enhance"><i class="fas fa-sparkles"></i><span>Details & SchÃ¤rfe</span></button>
             <button class="tool-item" onclick="runAITool('colorize')" id="tool-colorize"><i class="fas fa-palette"></i><span>Kolorierung</span></button>
           </div>
 
@@ -235,7 +235,7 @@
             <button class="tool-item" onclick="runAITool('style-transfer')" id="tool-style"><i class="fas fa-paint-brush"></i><span>Style Transfer</span></button>
           </div>
 
-          <div class="group-head nsfw-only" style="display:none">NSFW Spezial (lokal – Bild)</div>
+          <div class="group-head nsfw-only" style="display:none">NSFW Spezial (lokal â€“ Bild)</div>
           <div class="tools-list nsfw-only" style="display:none">
             <button class="tool-item" onclick="nsfwAnnotatorEnable()" id="tool-nsfw-annot"><i class="fa-solid fa-vector-square"></i><span>Region-Annotator</span><span class="hint">Boxen zeichnen</span></button>
             <button class="tool-item" onclick="nsfwApply('mosaic')" id="tool-nsfw-mosaic"><i class="fa-solid fa-grip"></i><span>Mosaic/Pixelate</span><span class="hint">Bild lokal</span></button>
@@ -243,7 +243,7 @@
             <button class="tool-item" onclick="nsfwAutoDetect()" id="tool-nsfw-detect"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Auto-NSFW-Detect</span><span class="hint">Backend</span></button>
           </div>
 
-          <p class="subtle" style="margin-top:8px">Hinweis: KI-Tools für Video/Audio & Auto-Detect erfordern ein Backend. Lokale NSFW-Bearbeitung (Mosaic/Bar) funktioniert sofort für Bilder.</p>
+          <p class="subtle" style="margin-top:8px">Hinweis: KI-Tools fÃ¼r Video/Audio & Auto-Detect erfordern ein Backend. Lokale NSFW-Bearbeitung (Mosaic/Bar) funktioniert sofort fÃ¼r Bilder.</p>
         </div>
 
         <div class="panel">
@@ -265,11 +265,11 @@
 
       <!-- Canvas center -->
       <div class="canvas-area">
-        <div class="canvas-workspace" id="canvas" aria-label="Arbeitsfläche">
+        <div class="canvas-workspace" id="canvas" aria-label="ArbeitsflÃ¤che">
           <div class="canvas-placeholder" id="canvasPlaceholder">
             <i class="fas fa-image"></i>
             <h3>Laden Sie Medien hoch</h3>
-            <p>Drag & Drop oder klicken Sie auf „Medien hochladen“</p>
+            <p>Drag & Drop oder klicken Sie auf â€žMedien hochladenâ€œ</p>
           </div>
           <div class="hud" id="hud"></div>
           <!-- Region Annotator Layer -->
@@ -283,12 +283,12 @@
 
         <div class="property-group">
           <div class="property-label">Transformationen</div>
-          <div class="slider-control"><label style="font-size:.8rem">Größe</label>
+          <div class="slider-control"><label style="font-size:.8rem">GrÃ¶ÃŸe</label>
             <input type="range" min="10" max="200" value="100" class="slider" id="scaleSlider" oninput="updateProperty('scale',this.value)">
             <span class="slider-value" id="scaleValue">100%</span></div>
           <div class="slider-control"><label style="font-size:.8rem">Rotation</label>
             <input type="range" min="-180" max="180" value="0" class="slider" id="rotationSlider" oninput="updateProperty('rotation',this.value)">
-            <span class="slider-value" id="rotationValue">0°</span></div>
+            <span class="slider-value" id="rotationValue">0Â°</span></div>
         </div>
 
         <div class="property-group">
@@ -299,14 +299,14 @@
           <div class="slider-control"><label style="font-size:.8rem">Kontrast</label>
             <input type="range" min="0" max="200" value="100" class="slider" id="contrastSlider" oninput="updateProperty('contrast',this.value)">
             <span class="slider-value" id="contrastValue">100%</span></div>
-          <div class="slider-control"><label style="font-size:.8rem">Sättigung</label>
+          <div class="slider-control"><label style="font-size:.8rem">SÃ¤ttigung</label>
             <input type="range" min="0" max="200" value="100" class="slider" id="saturationSlider" oninput="updateProperty('saturation',this.value)">
             <span class="slider-value" id="saturationValue">100%</span></div>
         </div>
 
         <div class="property-group">
           <div class="property-label">Effekte</div>
-          <div class="slider-control"><label style="font-size:.8rem">Unschärfe</label>
+          <div class="slider-control"><label style="font-size:.8rem">UnschÃ¤rfe</label>
             <input type="range" min="0" max="20" value="0" class="slider" id="blurSlider" oninput="updateProperty('blur',this.value)">
             <span class="slider-value" id="blurValue">0px</span></div>
           <div class="slider-control"><label style="font-size:.8rem">Transparenz</label>
@@ -322,26 +322,26 @@
             <button class="filter-item" onclick="applyFilter('vintage')">Vintage</button>
             <button class="filter-item" onclick="applyFilter('dramatic')">Dramatisch</button>
             <button class="filter-item" onclick="applyFilter('warm')">Warm</button>
-            <button class="filter-item" onclick="applyFilter('cool')">Kühl</button>
+            <button class="filter-item" onclick="applyFilter('cool')">KÃ¼hl</button>
           </div>
         </div>
 
         <div class="property-group">
           <div class="property-label">Schnelle Aktionen</div>
           <div class="switch-row"><span>Auto-Tonwert</span><input type="checkbox" onchange="quickAction('autotone',this.checked)"></div>
-          <div class="switch-row"><span>Auto-Weißabgleich</span><input type="checkbox" onchange="quickAction('autowb',this.checked)"></div>
+          <div class="switch-row"><span>Auto-WeiÃŸabgleich</span><input type="checkbox" onchange="quickAction('autowb',this.checked)"></div>
           <div class="switch-row nsfw-only" style="display:none"><span>Sensorik-Overlay</span><input type="checkbox" onchange="quickAction('censor',this.checked)"></div>
         </div>
 
         <div class="property-group nsfw-only" id="nsfwProp" style="display:none">
           <div class="panel-title" style="border-bottom:none;padding:0;margin:0 0 8px 0"><i class="fa-solid fa-user-shield"></i> NSFW Spezial</div>
           <div class="switch-row"><span>Annotator aktiv</span><input type="checkbox" id="annotatorToggle" onchange="nsfwAnnotatorToggle(this.checked)"></div>
-          <div class="slider-control"><label style="font-size:.8rem">Mosaic Stärke</label>
+          <div class="slider-control"><label style="font-size:.8rem">Mosaic StÃ¤rke</label>
             <input type="range" min="8" max="80" value="24" class="slider" id="mosaicSlider">
             <span class="slider-value" id="mosaicValue">24px</span></div>
           <div class="switch-row"><span>Regionen auf Bild backen</span><input type="checkbox" id="bakeCheckbox" checked></div>
-          <div class="switch-row"><button class="btn ghost" onclick="nsfwClearRegions()"><i class="fa-solid fa-broom"></i> Regionen löschen</button><button class="btn primary" onclick="nsfwApply('mosaic')"><i class="fa-solid fa-grip"></i> Mosaik anwenden</button></div>
-          <p class="subtle">Für Video/Audio ist eine Server-Pipeline erforderlich (z. B. ffmpeg + Filter). Lokal werden nur Bilder bearbeitet.</p>
+          <div class="switch-row"><button class="btn ghost" onclick="nsfwClearRegions()"><i class="fa-solid fa-broom"></i> Regionen lÃ¶schen</button><button class="btn primary" onclick="nsfwApply('mosaic')"><i class="fa-solid fa-grip"></i> Mosaik anwenden</button></div>
+          <p class="subtle">FÃ¼r Video/Audio ist eine Server-Pipeline erforderlich (z. B. ffmpeg + Filter). Lokal werden nur Bilder bearbeitet.</p>
         </div>
       </div>
 
@@ -352,7 +352,7 @@
           <button class="playback-btn" onclick="playPause()" title="Play/Pause"><i class="fas fa-play" id="playIcon"></i></button>
           <button class="playback-btn" onclick="stop()" title="Stop"><i class="fas fa-stop"></i></button>
           <button class="playback-btn" onclick="previousFrame()" title="Vorheriger Frame"><i class="fas fa-step-backward"></i></button>
-          <button class="playback-btn" onclick="nextFrame()" title="Nächster Frame"><i class="fas fa-step-forward"></i></button>
+          <button class="playback-btn" onclick="nextFrame()" title="NÃ¤chster Frame"><i class="fas fa-step-forward"></i></button>
           <span style="margin-left:12px;font-size:.9rem;color:var(--muted)"><span id="currentTime">00:00</span> / <span id="totalTime">00:00</span></span>
         </div>
         <div class="timeline-tracks">
@@ -385,7 +385,7 @@
       document.querySelectorAll('.nsfw-only').forEach(el=>el.style.display=mode==='nsfw'?'':'none');
       document.getElementById('modeHint').textContent = mode==='sfw'
         ? 'Sichere Werkzeuge aktiviert. Empfindliche Tools sind ausgeblendet.'
-        : 'NSFW-Modus: zusätzliche Tools sichtbar.';
+        : 'NSFW-Modus: zusÃ¤tzliche Tools sichtbar.';
       document.getElementById('nsfwProp').style.display = (mode==='nsfw') ? '' : 'none';
     }
 
@@ -461,14 +461,14 @@
         <div class="layer-controls">
           <button class="layer-control" title="Sichtbar" onclick="toggleLayerVisibility(this)"><i class="fas fa-eye"></i></button>
           <button class="layer-control" title="Gesperrt" onclick="toggleLayerLock(this)"><i class="fas fa-lock-open"></i></button>
-          <button class="layer-control" title="Löschen" onclick="deleteLayer(this)"><i class="fas fa-trash"></i></button>
+          <button class="layer-control" title="LÃ¶schen" onclick="deleteLayer(this)"><i class="fas fa-trash"></i></button>
         </div>`;
       list.appendChild(item)
     }
 
     function toggleLayerVisibility(btn){const i=btn.querySelector('i');if(i.classList.contains('fa-eye')){i.className='fas fa-eye-slash';btn.title='Ausgeblendet'}else{i.className='fas fa-eye';btn.title='Sichtbar'}}
     function toggleLayerLock(btn){const i=btn.querySelector('i');if(i.classList.contains('fa-lock-open')){i.className='fas fa-lock';btn.title='Gesperrt'}else{i.className='fas fa-lock-open';btn.title='Entsperrt'}}
-    function deleteLayer(btn){if(confirm('Layer löschen?')) btn.closest('.layer-item').remove()}
+    function deleteLayer(btn){if(confirm('Layer lÃ¶schen?')) btn.closest('.layer-item').remove()}
 
     // -------- Properties / Filters --------
     function updateProperty(prop,val){
@@ -481,7 +481,7 @@
           m.style.transform = (prev.replace(/scale\([^)]*\)/,'').trim() + ` scale(${val/100})`).trim();
           break;
         case 'rotation':
-          span.textContent=val+'°';
+          span.textContent=val+'Â°';
           m.style.transform = (prev.replace(/rotate\([^)]*\)/,'').trim() + ` rotate(${val}deg)`).trim();
           break;
         case 'brightness':
@@ -547,12 +547,12 @@
       const m=document.getElementById('currentMedia');
       if(!m){ showHud('Bitte zuerst ein Medium laden.', 'error'); return; }
       if((m.tagName==='VIDEO'||m.tagName==='AUDIO') && (name==='background-remove'||name==='style-transfer'||name==='upscale'||name==='denoise'||name==='deband'||name==='enhance'||name==='colorize')){
-        if(!backendOK){ showHud('Backend nötig für Video/Audio. /api/health nicht erreichbar.', 'error'); return; }
+        if(!backendOK){ showHud('Backend nÃ¶tig fÃ¼r Video/Audio. /api/health nicht erreichbar.', 'error'); return; }
       }
       const payload = { tool: name, mode: contentMode, mime: detectMime(m), dataURL: captureSource(m) };
 
       setToolsDisabled(true);
-      showHud('KI-Verarbeitung läuft …');
+      showHud('KI-Verarbeitung lÃ¤uft â€¦');
 
       try{
         const res = await fetch('/api/editor/tools', {
@@ -657,7 +657,7 @@
     function nsfwApply(kind){
       const m=document.getElementById('currentMedia');
       if(!m){ showHud('Kein Medium geladen.', 'error'); return; }
-      if(m.tagName!=='IMG'){ showHud('Lokale NSFW-Bearbeitung unterstützt aktuell nur Bilder. Für Video bitte Backend nutzen.', 'error'); return; }
+      if(m.tagName!=='IMG'){ showHud('Lokale NSFW-Bearbeitung unterstÃ¼tzt aktuell nur Bilder. FÃ¼r Video bitte Backend nutzen.', 'error'); return; }
       if(regions.length===0){ showHud('Keine Regionen markiert.', 'error'); return; }
 
       if(kind==='mosaic') return bakeMosaic();
@@ -667,8 +667,8 @@
     function nsfwAutoDetect(){
       const m=document.getElementById('currentMedia');
       if(!m){ showHud('Kein Medium geladen.', 'error'); return; }
-      if(!backendOK){ showHud('Backend für Auto-Detect nicht erreichbar (/api/health).', 'error'); return; }
-      showHud('Auto-Detect läuft …');
+      if(!backendOK){ showHud('Backend fÃ¼r Auto-Detect nicht erreichbar (/api/health).', 'error'); return; }
+      showHud('Auto-Detect lÃ¤uft â€¦');
       fetch('/api/nsfw/detect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dataURL:captureSource(m)})})
         .then(r=>r.json())
         .then(out=>{
@@ -692,7 +692,7 @@
       if(!media) return {x:0,y:0,w:0,h:0};
       const cb = canvas.getBoundingClientRect();
       const mb = media.getBoundingClientRect();
-      // Arbeitsfläche = sichtbarer Media-Bereich (zentriert im Canvas)
+      // ArbeitsflÃ¤che = sichtbarer Media-Bereich (zentriert im Canvas)
       const x = mb.left - cb.left, y = mb.top - cb.top, w = mb.width, h = mb.height;
       return {x,y,w,h};
     }
@@ -709,7 +709,7 @@
       const rect = layer.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
 
-      // Prüfen ob auf Handle geklickt
+      // PrÃ¼fen ob auf Handle geklickt
       const target = e.target;
       if(target.classList.contains('handle')){
         const id = target.parentElement.dataset.id;
@@ -835,7 +835,7 @@
       // Offscreen Canvas
       const off = document.createElement('canvas');
       const ctx = off.getContext('2d');
-      // Erzeuge Canvas in tatsächlicher Bildgröße
+      // Erzeuge Canvas in tatsÃ¤chlicher BildgrÃ¶ÃŸe
       const source = new Image();
       source.onload = ()=>{
         off.width = source.width; off.height = source.height;
@@ -857,7 +857,7 @@
           tctx.imageSmoothingEnabled = false;
           // Ausschnitt klein zeichnen
           tctx.drawImage(off, sx, sy, sw, sh, 0, 0, dw, dh);
-          // zurück groß zeichnen
+          // zurÃ¼ck groÃŸ zeichnen
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(tmp, 0, 0, dw, dh, sx, sy, sw, sh);
         });
@@ -866,7 +866,7 @@
         img.src = outURL;
         showHud('Mosaik angewendet.', null, 1200);
         if(!document.getElementById('bakeCheckbox').checked){
-          // Falls nicht backen gewünscht war, könnte man stattdessen Overlays behalten.
+          // Falls nicht backen gewÃ¼nscht war, kÃ¶nnte man stattdessen Overlays behalten.
         }
       };
       source.src = img.src;
@@ -929,10 +929,17 @@
     });
 
     // -------- Placeholders klar deklariert --------
-    function undo(){ alert('Rückgängig: History-Stack implementieren (transparent).'); }
+    function undo(){ alert('RÃ¼ckgÃ¤ngig: History-Stack implementieren (transparent).'); }
     function redo(){ alert('Wiederholen: History-Stack implementieren.'); }
     function fitToScreen(){ const m=document.getElementById('currentMedia'); if(m){ m.style.maxWidth='100%'; m.style.maxHeight='100%'; } }
     function zoom100(){ const m=document.getElementById('currentMedia'); if(m){ m.style.transform=(m.style.transform||'').replace(/scale\\([^)]*\\)/,'').trim(); } }
   </script>
+  <script src="assets/include.js"></script>
+  <script src="assets/overlay-player.js"></script>
 </body>
 </html>
+
+
+
+
+

@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
-<head>
+<head>`r`n  <link rel="stylesheet" href="assets/ui.css">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AndioMediaStudio - Image Studio</title>
@@ -147,7 +147,7 @@
     .ov-nav:hover{ background:rgba(0,0,0,.65) }
   </style>
 </head>
-<body>
+<body>`r`n  <div data-include="navbar"></div>
   <!-- ===== NAVBAR ===== -->
   <div class="navbar" role="banner" aria-label="Hauptnavigation">
     <div class="row">
@@ -193,7 +193,7 @@
       <!-- LEFT: Genre Panel -->
       <aside class="panel">
         <h3><i class="fas fa-list"></i> Genre</h3>
-        <p class="sub">Wähle ein Genre – die passenden Eingaben erscheinen darunter.</p>
+        <p class="sub">WÃ¤hle ein Genre â€“ die passenden Eingaben erscheinen darunter.</p>
 
         <div class="genre-list" id="genreList">
           <button class="genre-btn active" data-genre="portrait"><i class="fa-solid fa-user"></i> Portrait / Character</button>
@@ -201,19 +201,19 @@
           <button class="genre-btn" data-genre="product"><i class="fa-solid fa-box-open"></i> Product / Packshot</button>
           <button class="genre-btn" data-genre="landscape"><i class="fa-solid fa-mountain"></i> Landscape / Environment</button>
           <button class="genre-btn" data-genre="toon"><i class="fa-solid fa-wand-magic-sparkles"></i> Animation / Toon</button>
-          <button class="genre-btn nsfw-only" data-genre="nsfw"><i class="fa-solid fa-eye-slash"></i> NSFW – Body / Pose / Akt</button>
+          <button class="genre-btn nsfw-only" data-genre="nsfw"><i class="fa-solid fa-eye-slash"></i> NSFW â€“ Body / Pose / Akt</button>
         </div>
 
-        <!-- (sections unverändert aus deiner Vorlage) -->
+        <!-- (sections unverÃ¤ndert aus deiner Vorlage) -->
         <!-- Portrait -->
         <div class="genre-section active" data-section="portrait">
           <div class="grid-2">
             <div>
               <label>Gesichtsfokus</label>
               <select id="por_face">
-                <option value="upper_body">Oberkörper</option>
+                <option value="upper_body">OberkÃ¶rper</option>
                 <option value="headshot">Headshot / Close-Up</option>
-                <option value="full_body">Ganzkörper</option>
+                <option value="full_body">GanzkÃ¶rper</option>
               </select>
             </div>
             <div>
@@ -222,7 +222,7 @@
                 <option value="">Neutral</option>
                 <option value="fair">Hell</option>
                 <option value="medium">Mittel</option>
-                <option value="tan">Gebräunt</option>
+                <option value="tan">GebrÃ¤unt</option>
                 <option value="dark">Dunkel</option>
               </select>
             </div>
@@ -319,7 +319,7 @@
             </div>
             <div>
               <label>Material/Shader</label>
-              <input type="text" id="pro_mat" placeholder="Metallisch, matt, raue Oberfläche">
+              <input type="text" id="pro_mat" placeholder="Metallisch, matt, raue OberflÃ¤che">
             </div>
           </div>
           <div style="margin-top:8px">
@@ -341,21 +341,21 @@
                 <option value="sunset">Sonnenuntergang</option>
                 <option value="sunrise">Sonnenaufgang</option>
                 <option value="golden">Golden Hour</option>
-                <option value="overcast">Bewölkt</option>
+                <option value="overcast">BewÃ¶lkt</option>
                 <option value="storm">Sturm</option>
               </select>
             </div>
             <div>
               <label>Perspektive</label>
               <select id="lan_persp">
-                <option value="eye_level">Augenhöhe</option>
+                <option value="eye_level">AugenhÃ¶he</option>
                 <option value="high">Vogelperspektive</option>
                 <option value="low">Froschperspektive</option>
               </select>
             </div>
           </div>
           <div style="margin-top:8px">
-            <label>Atmosphäre/Tiefe</label>
+            <label>AtmosphÃ¤re/Tiefe</label>
             <input type="text" id="lan_atmo" placeholder="Dunst, Nebel, volumetrisches Licht">
           </div>
         </div>
@@ -368,7 +368,7 @@
               <select id="toon_lines">
                 <option value="fine">Fein</option>
                 <option value="medium">Mittel</option>
-                <option value="bold">Kräftig</option>
+                <option value="bold">KrÃ¤ftig</option>
               </select>
             </div>
             <div>
@@ -381,7 +381,7 @@
             </div>
           </div>
           <div style="margin-top:8px">
-            <label>Körnung/Grain</label>
+            <label>KÃ¶rnung/Grain</label>
             <select id="toon_grain">
               <option value="none">Keine</option>
               <option value="light">Leicht</option>
@@ -400,7 +400,7 @@
                 <option value="teilakt_bottomless">Teilakt (bottomless)</option>
                 <option value="vollakt">Vollakt</option>
                 <option value="boudoir">Boudoir</option>
-                <option value="erotisch_dezent">Erotisch – dezent</option>
+                <option value="erotisch_dezent">Erotisch â€“ dezent</option>
               </select>
             </div>
             <div>
@@ -414,7 +414,7 @@
           </div>
           <div class="grid-2" style="margin-top:8px">
             <div>
-              <label>Körperfokus</label>
+              <label>KÃ¶rperfokus</label>
               <select id="nsfw_focus">
                 <option value="">Neutral</option>
                 <option value="brust">Brust</option>
@@ -426,15 +426,15 @@
             <div>
               <label>Pose / Positionen</label>
               <select id="nsfw_pose">
-                <option value="stehend_frontal">Stehend – frontal</option>
-                <option value="stehend_seitlich">Stehend – seitlich</option>
-                <option value="rueckenansicht">Rückenansicht</option>
+                <option value="stehend_frontal">Stehend â€“ frontal</option>
+                <option value="stehend_seitlich">Stehend â€“ seitlich</option>
+                <option value="rueckenansicht">RÃ¼ckenansicht</option>
                 <option value="kniend">Kniend</option>
                 <option value="liegend">Liegend</option>
-                <option value="gebeugter_ruecken">Gebeugter Rücken / Hohlkreuz</option>
+                <option value="gebeugter_ruecken">Gebeugter RÃ¼cken / Hohlkreuz</option>
                 <option value="po_betont">Po-betont (arch back)</option>
-                <option value="beinposition_leicht_geoeffnet">Beinposition: leicht geöffnet</option>
-                <option value="beinposition_weit_geoeffnet">Beinposition: weit geöffnet</option>
+                <option value="beinposition_leicht_geoeffnet">Beinposition: leicht geÃ¶ffnet</option>
+                <option value="beinposition_weit_geoeffnet">Beinposition: weit geÃ¶ffnet</option>
               </select>
               <div class="hint">Professionelle Akt-Posen; keine expliziten Handlungen.</div>
             </div>
@@ -443,9 +443,9 @@
             <div>
               <label>Kamerawinkel</label>
               <select id="nsfw_cam">
-                <option value="eye">Augenhöhe</option>
+                <option value="eye">AugenhÃ¶he</option>
                 <option value="low">Low-Angle (betont)</option>
-                <option value="high">High-Angle (verkürzt)</option>
+                <option value="high">High-Angle (verkÃ¼rzt)</option>
                 <option value="closeup">Close-Up</option>
               </select>
             </div>
@@ -472,27 +472,27 @@
         <div class="upload" id="upload" onclick="fileInput.click()">
           <i class="fas fa-cloud-upload-alt"></i>
           <div><strong>Referenzbild hochladen (optional)</strong></div>
-          <small class="sub">Für Bild-zu-Bild oder Pose-Guides. PNG/JPG.</small>
+          <small class="sub">FÃ¼r Bild-zu-Bild oder Pose-Guides. PNG/JPG.</small>
           <input type="file" id="fileInput" accept="image/*" style="display:none">
         </div>
-        <div class="preview" id="preview" title="Zum Öffnen in den Viewer klicken">
+        <div class="preview" id="preview" title="Zum Ã–ffnen in den Viewer klicken">
           <div class="sub">Zuerst erscheint hier dein Upload (falls vorhanden), danach das generierte Bild.</div>
         </div>
 
         <div style="margin-top:12px">
           <label>Prompt (Beschreibung)</label>
-          <textarea id="prompt" placeholder="Beschreibe das gewünschte Bild … z. B. 'realistic studio portrait, soft rim light, detailed skin'"></textarea>
+          <textarea id="prompt" placeholder="Beschreibe das gewÃ¼nschte Bild â€¦ z. B. 'realistic studio portrait, soft rim light, detailed skin'"></textarea>
           <div class="chips" id="promptPresets">
             <span class="chip" data-add="hyperrealistic, 8k, detailed textures">Hyperrealistisch</span>
             <span class="chip" data-add="cinematic lighting, film still">Cinematisch</span>
-            <span class="chip" data-add="oil painting, classic, rich brushwork">Ölgemälde</span>
+            <span class="chip" data-add="oil painting, classic, rich brushwork">Ã–lgemÃ¤lde</span>
             <span class="chip" data-add="anime style, vibrant colors">Anime-Stil</span>
             <span class="chip" data-add="studio backdrop, seamless paper">Studio-Hintergrund</span>
           </div>
         </div>
 
         <div class="progress" id="progressBox">
-          <div><strong>Status:</strong> <span id="statusTxt">–</span></div>
+          <div><strong>Status:</strong> <span id="statusTxt">â€“</span></div>
           <div class="bar"><i id="bar"></i></div>
         </div>
 
@@ -526,13 +526,13 @@
               <input type="number" id="w" value="1024" min="256" step="64">
             </div>
             <div>
-              <label>Höhe</label>
+              <label>HÃ¶he</label>
               <input type="number" id="h" value="1024" min="256" step="64">
             </div>
           </div>
 
           <div>
-            <label>Seitenverhältnis</label>
+            <label>SeitenverhÃ¤ltnis</label>
             <div class="chips" id="ratios">
               <span class="chip active" data-w="1024" data-h="1024">1:1</span>
               <span class="chip" data-w="1024" data-h="1344">3:4</span>
@@ -602,14 +602,14 @@
               </select>
             </div>
             <div class="opt-section" data-opt="controlnet">
-              <div class="sub">Pose/Edges/Depth als Steuerung. Für <strong>Pose</strong> bitte ein Referenzbild mit sichtbarer Person laden.</div>
+              <div class="sub">Pose/Edges/Depth als Steuerung. FÃ¼r <strong>Pose</strong> bitte ein Referenzbild mit sichtbarer Person laden.</div>
               <label>Control-Typ</label>
               <select id="cn_type">
                 <option value="pose">Pose (OpenPose)</option>
                 <option value="canny">Kanten (Canny)</option>
                 <option value="depth">Tiefenkarte</option>
               </select>
-              <label style="margin-top:6px">Control-Stärke</label>
+              <label style="margin-top:6px">Control-StÃ¤rke</label>
               <input type="number" id="cn_strength" value="0.65" min="0" max="1" step="0.05">
             </div>
           </div>
@@ -621,12 +621,12 @@
   <!-- ===== Overlay Viewer ===== -->
   <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Bildviewer">
     <div class="viewer">
-      <header>
+      <header>`r`n  <link rel="stylesheet" href="assets/ui.css">
         <strong id="vwTitle">Viewer</strong>
         <div style="display:flex; gap:8px;">
           <button class="btn" id="vwFit"><i class="fas fa-maximize"></i> Fit/Fill</button>
           <a class="btn" id="vwDownload" download><i class="fas fa-download"></i> Download</a>
-          <button class="btn" id="vwClose"><i class="fas fa-xmark"></i> Schließen</button>
+          <button class="btn" id="vwClose"><i class="fas fa-xmark"></i> SchlieÃŸen</button>
         </div>
       </header>
       <div class="body">
@@ -636,13 +636,13 @@
             <button class="ov-btn" id="vwZoomOut" title="Zoom -"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
             <button class="ov-btn" id="vwReset" title="Reset"><i class="fa-solid fa-arrows-rotate"></i></button>
           </div>
-          <button class="ov-nav ov-prev" id="vwPrev" title="Vorherige (←)"><i class="fa-solid fa-chevron-left"></i></button>
-          <button class="ov-nav ov-next" id="vwNext" title="Nächste (→)"><i class="fa-solid fa-chevron-right"></i></button>
+          <button class="ov-nav ov-prev" id="vwPrev" title="Vorherige (â†)"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="ov-nav ov-next" id="vwNext" title="NÃ¤chste (â†’)"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <div id="vwMeta" class="sub">–</div>
+        <div id="vwMeta" class="sub">â€“</div>
       </div>
       <footer>
-        <div class="sub">Tipp: Mausrad = Zoom, Drag = Pan, ESC/Backdrop = schließen</div>
+        <div class="sub">Tipp: Mausrad = Zoom, Drag = Pan, ESC/Backdrop = schlieÃŸen</div>
         <div></div>
       </footer>
     </div>
@@ -658,7 +658,7 @@
       profileMenu.querySelector('button').setAttribute('aria-expanded', String(open));
     });
     document.addEventListener('click',(e)=>{ if(!profileMenu.contains(e.target)) profileMenu.classList.remove('open'); });
-    document.getElementById('btnTheme')?.addEventListener('click', ()=>alert('Theme-Umschalter: (Stub) – globales Theme folgt.'));
+    document.getElementById('btnTheme')?.addEventListener('click', ()=>alert('Theme-Umschalter: (Stub) â€“ globales Theme folgt.'));
 
     /**************
      * Persistence / Mode
@@ -682,7 +682,7 @@
       if(mode==='nsfw' && !store.consentOK()){ store.setMode('sfw'); applyModeUI('sfw'); }
     }
     btnSFW.onclick = ()=>{ store.setMode('sfw'); applyModeUI('sfw'); };
-    btnNSFW.onclick = ()=>{ if(store.consentOK()){ store.setMode('nsfw'); applyModeUI('nsfw'); } else { alert('NSFW erfordert Altersbestätigung im Dashboard.'); } };
+    btnNSFW.onclick = ()=>{ if(store.consentOK()){ store.setMode('nsfw'); applyModeUI('nsfw'); } else { alert('NSFW erfordert AltersbestÃ¤tigung im Dashboard.'); } };
 
     /**************
      * Genre logic
@@ -731,7 +731,7 @@
     });
 
     /**************
-     * Upload → preview
+     * Upload â†’ preview
      **************/
     const fileInput = document.getElementById('fileInput');
     const upload = document.getElementById('upload');
@@ -780,7 +780,7 @@
     btnGenerate.addEventListener('click', async ()=>{
       if(pollTimer) { clearInterval(pollTimer); pollTimer=null; }
       btnGenerate.disabled = true; btnCancel.disabled=false; btnVariant.disabled = true; btnSave.disabled=true;
-      progressBox.style.display='block'; bar.style.width='0%'; statusTxt.textContent='Starte …';
+      progressBox.style.display='block'; bar.style.width='0%'; statusTxt.textContent='Starte â€¦';
 
       const mode = store.getMode(); // sfw|nsfw
       const genre = document.querySelector('.genre-btn.active')?.dataset.genre || 'portrait';
@@ -803,7 +803,7 @@
       if(!currentJobId){
         statusTxt.textContent='Kein Job-ID erhalten.'; btnGenerate.disabled=false; btnCancel.disabled=true; return;
       }
-      statusTxt.textContent='Wird generiert …';
+      statusTxt.textContent='Wird generiert â€¦';
       pollTimer = setInterval(pollJob, 1000);
     });
 
@@ -822,7 +822,7 @@
 
     async function pollJob(){
       const j = await api(`/api/jobs/${currentJobId}`);
-      if(!j){ statusTxt.textContent='Warte auf Server …'; return; }
+      if(!j){ statusTxt.textContent='Warte auf Server â€¦'; return; }
       const pct = Math.max(0, Math.min(100, Math.round(j.progress||0)));
       bar.style.width = pct + '%';
       statusTxt.textContent = (j.status||'running');
@@ -839,7 +839,7 @@
           btnVariant.disabled=false; btnSave.disabled=false;
           statusTxt.textContent='Fertig';
         } else {
-          statusTxt.textContent='Fertig – kein Output gefunden.';
+          statusTxt.textContent='Fertig â€“ kein Output gefunden.';
         }
         btnGenerate.disabled=false; btnCancel.disabled=true;
       }
@@ -1008,7 +1008,7 @@
       img.style.cursor='grab';
       vwMedia.appendChild(img);
       vwDownload.href = item.src;
-      vwMeta.textContent = `${item.title||'Bild'} • ${currentIdx+1}/${imageList.length}`;
+      vwMeta.textContent = `${item.title||'Bild'} â€¢ ${currentIdx+1}/${imageList.length}`;
 
       imgState = { zoom:1, panX:0, panY:0, dragging:false, startX:0, startY:0 };
 
@@ -1076,5 +1076,12 @@
       if(nsfwSection) nsfwSection.style.display = (store.getMode()==='nsfw') ? '' : 'none';
     });
   </script>
+  <script src="assets/include.js"></script>
+  <script src="assets/overlay-player.js"></script>
 </body>
 </html>
+
+
+
+
+

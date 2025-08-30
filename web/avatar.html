@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
-<head>
+<head>`r`n  <link rel="stylesheet" href="assets/ui.css">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Andio Media Studio — Avatar Builder</title>
+  <title>Andio Media Studio â€” Avatar Builder</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -142,14 +142,14 @@
     .overlay .left:hover,.overlay .right:hover{filter:brightness(1.07)}
   </style>
 </head>
-<body>
+<body>`r`n  <div data-include="navbar"></div>
   <!-- NAV -->
-  <header class="header" role="banner">
+  <header class="header" role="banner">`r`n  <link rel="stylesheet" href="assets/ui.css">
     <div class="nav" role="navigation" aria-label="Hauptnavigation">
       <div class="brand"><div class="dot"></div><span class="wordmark">Andio Media Studio</span></div>
 
       <nav class="links" aria-label="Seiten">
-        <a href="index.html" data-link="index">Übersicht</a>
+        <a href="index.html" data-link="index">Ãœbersicht</a>
         <a href="images.html" data-link="images">Image Studio</a>
         <a href="video-gen.html" data-link="video-gen">Video Studio</a>
         <a href="editor.html" data-link="editor">Editor</a>
@@ -163,7 +163,7 @@
       <div class="nav-tools">
         <div class="search" role="search">
           <i class="fa-solid fa-search" aria-hidden="true"></i>
-          <input id="quickSearch" type="search" placeholder="Suchen… (Slots/Avatare)">
+          <input id="quickSearch" type="search" placeholder="Suchenâ€¦ (Slots/Avatare)">
         </div>
 
         <div class="nsfw-switch" title="SFW/NSFW Umschaltung">
@@ -199,7 +199,7 @@
             </label>
             <label class="drop" data-field="pose">
               <input type="file" accept="image/*"><div class="preview"><img alt="Pose"></div>
-              <div class="title">Pose (optional)</div><div class="hint">z.B. Ganzkörper</div>
+              <div class="title">Pose (optional)</div><div class="hint">z.B. GanzkÃ¶rper</div>
             </label>
             <label class="drop" data-field="background">
               <input type="file" accept="image/*"><div class="preview"><img alt="Background"></div>
@@ -284,7 +284,7 @@
           <!-- IMAGE -->
           <div class="section" data-section="image" hidden>
             <textarea id="customPrompt" rows="6" class="btn grow" style="width:100%;background:#111521;border:1px solid var(--line)" placeholder="Optionaler Custom Prompt (Stil, Licht, Kamera, Pose-Hinweise...)"></textarea>
-            <p class="note" style="margin-top:8px">Der Prompt wird mit den ausgewählten Attributen zusammengeführt.</p>
+            <p class="note" style="margin-top:8px">Der Prompt wird mit den ausgewÃ¤hlten Attributen zusammengefÃ¼hrt.</p>
           </div>
         </div>
       </section>
@@ -293,7 +293,7 @@
       <section class="panel">
         <h2><i class="fa-solid fa-eye"></i> Vorschau & Slots</h2>
         <div class="panel-body">
-          <div class="preview" id="livePreview" role="button" title="Klicken für Overlay-Player">
+          <div class="preview" id="livePreview" role="button" title="Klicken fÃ¼r Overlay-Player">
             <img id="liveImg" alt="preview" src="assets/bilderprompt/custom.webp" onerror="this.src='assets/bilderprompt/custom.webp'">
             <div class="color-badge" id="colorBadge">
               <div class="color-dot" id="dotEye"></div>
@@ -304,10 +304,10 @@
           <div class="hardline"></div>
           <div class="toolbar" style="margin-bottom:8px">
             <button id="btnSaveMain" class="btn accent"><i class="fa-solid fa-floppy-disk"></i> In Haupt-Slot speichern</button>
-            <button id="btnCopyToGallery" class="btn secondary"><i class="fa-solid fa-clone"></i> Kopie → Gallery</button>
-            <button id="btnReset" class="btn ghost"><i class="fa-solid fa-rotate-left"></i> Zurücksetzen</button>
+            <button id="btnCopyToGallery" class="btn secondary"><i class="fa-solid fa-clone"></i> Kopie â†’ Gallery</button>
+            <button id="btnReset" class="btn ghost"><i class="fa-solid fa-rotate-left"></i> ZurÃ¼cksetzen</button>
           </div>
-          <p class="note">Haupt-Slots sind lokal fix (max. 5; <b>4 Female + 1 Male</b>). Kopien können in der Gallery weiterbearbeitet werden.</p>
+          <p class="note">Haupt-Slots sind lokal fix (max. 5; <b>4 Female + 1 Male</b>). Kopien kÃ¶nnen in der Gallery weiterbearbeitet werden.</p>
           <div class="slots" id="slots"></div>
         </div>
       </section>
@@ -317,19 +317,19 @@
   <!-- OVERLAY PLAYER -->
   <div class="overlay" id="overlay" aria-hidden="true" aria-label="Medienanzeige">
     <div class="stage">
-      <button class="left" id="ovPrev" title="Vorheriges (←)"><i class="fa-solid fa-chevron-left"></i></button>
+      <button class="left" id="ovPrev" title="Vorheriges (â†)"><i class="fa-solid fa-chevron-left"></i></button>
       <div class="media-wrap" id="ovMediaWrap">
         <div class="topbar">
           <a id="ovDownload" class="bar-btn" download><i class="fa-solid fa-download"></i> <span>Download</span></a>
-          <button id="ovFit" class="bar-btn" title="Fit/Füllung umschalten"><i class="fa-solid fa-maximize"></i> Fit</button>
-          <button id="ovClose" class="bar-btn close" title="Schließen (Esc)"><i class="fa-solid fa-xmark"></i></button>
+          <button id="ovFit" class="bar-btn" title="Fit/FÃ¼llung umschalten"><i class="fa-solid fa-maximize"></i> Fit</button>
+          <button id="ovClose" class="bar-btn close" title="SchlieÃŸen (Esc)"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <!-- Media element wird dynamisch eingesetzt -->
       </div>
-      <button class="right" id="ovNext" title="Nächstes (→)"><i class="fa-solid fa-chevron-right"></i></button>
+      <button class="right" id="ovNext" title="NÃ¤chstes (â†’)"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
     <div class="footer">
-      <span class="hint">ESC schließen · Mausrad = Zoom (Bild) · Ziehen = Pan</span>
+      <span class="hint">ESC schlieÃŸen Â· Mausrad = Zoom (Bild) Â· Ziehen = Pan</span>
     </div>
   </div>
 
@@ -568,7 +568,7 @@
       state.attrs.prompt = $('#customPrompt').value?.trim() || '';
       if(!state.refs.character){ toast('Bitte Character-Bild laden', 'warn'); return; }
       $('#liveImg').src = state.refs.character?.dataUrl || $('#liveImg').src;
-      toast('Avatar Parameter gesammelt — Vorschau aktualisiert.');
+      toast('Avatar Parameter gesammelt â€” Vorschau aktualisiert.');
     });
 
     // Persistenz / Slots
@@ -581,7 +581,7 @@
       items.forEach((av,i)=>{
         const thumb = av.refs?.character?.dataUrl || imgPath('custom.webp');
         const el=document.createElement('div'); el.className='slot';
-        el.innerHTML=`<div class="thumb" data-idx="${i}" title="In Overlay öffnen">
+        el.innerHTML=`<div class="thumb" data-idx="${i}" title="In Overlay Ã¶ffnen">
             <img src="${thumb}" alt="">
             <div class="play"><i class="fa-regular fa-eye"></i>&nbsp;Anzeigen</div>
           </div>
@@ -595,11 +595,11 @@
             </div>
             <div class="actions">
               <button class="btn small secondary" data-act="use"><i class="fa-solid fa-eye"></i> Anzeigen</button>
-              <button class="btn small" data-act="copy"><i class="fa-solid fa-clone"></i> Kopie → Gallery</button>
+              <button class="btn small" data-act="copy"><i class="fa-solid fa-clone"></i> Kopie â†’ Gallery</button>
               <button class="btn small danger" data-act="del"><i class="fa-solid fa-trash"></i> Entfernen</button>
             </div>
           </div>`;
-        // Overlay öffnen bei Klick auf Thumb
+        // Overlay Ã¶ffnen bei Klick auf Thumb
         el.querySelector('.thumb').addEventListener('click',()=>openOverlayFromIndex(i));
         el.querySelector('[data-act="use"]').addEventListener('click',()=>{
           $('#liveImg').src = thumb; $('#avatarName').value = av.name||''; $('#customPrompt').value = av.attrs?.prompt||'';
@@ -629,11 +629,11 @@
     });
 
     $('#btnSaveMain').addEventListener('click', async ()=>{
-      const items=loadSlots(); if(items.length>=MAX_SLOTS){toast('Limit 5 erreicht — bitte einen Slot löschen','error');return;}
+      const items=loadSlots(); if(items.length>=MAX_SLOTS){toast('Limit 5 erreicht â€” bitte einen Slot lÃ¶schen','error');return;}
       if(!state.refs.character){toast('Bitte Character-Bild laden','warn');return;}
       const counts = genderCounts(items);
-      if(state.gender==='male' && counts.male>=1){ toast('Es ist bereits 1 Male gespeichert — zuerst löschen', 'error'); return; }
-      if(state.gender==='female' && counts.female>=4){ toast('Schon 4 Female — zuerst einen löschen', 'error'); return; }
+      if(state.gender==='male' && counts.male>=1){ toast('Es ist bereits 1 Male gespeichert â€” zuerst lÃ¶schen', 'error'); return; }
+      if(state.gender==='female' && counts.female>=4){ toast('Schon 4 Female â€” zuerst einen lÃ¶schen', 'error'); return; }
 
       const avatar=buildCurrentAvatar();
       try{
@@ -650,7 +650,7 @@
       $('#liveImg').src = imgPath('custom.webp');
       $$('.drop .preview img').forEach((im)=>{const fld=im.closest('.drop').dataset.field; im.src = (dropDefaults[fld]||imgPath('custom.webp'));});
       ['dotEye','dotHair','dotSkin'].forEach(id=>$('#'+id).style.background='transparent');
-      toast('Zurückgesetzt');
+      toast('ZurÃ¼ckgesetzt');
     });
 
     async function exportToGallery(avatar){
@@ -659,7 +659,7 @@
         if(!r.ok) throw 0; toast('Kopie in Gallery exportiert.');
       }catch{
         const key='andio.galleryQueue.v1'; const q=JSON.parse(localStorage.getItem(key)||'[]'); q.push(avatar); localStorage.setItem(key,JSON.stringify(q));
-        toast('Server nicht erreichbar — Kopie lokal gequeued.');
+        toast('Server nicht erreichbar â€” Kopie lokal gequeued.');
       }
     }
 
@@ -773,5 +773,12 @@
       }
     });
   </script>
+  <script src="assets/include.js"></script>
+  <script src="assets/overlay-player.js"></script>
 </body>
 </html>
+
+
+
+
+

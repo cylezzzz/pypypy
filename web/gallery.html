@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Gallery · AndioMediaStudio</title>
+  <title>Gallery Â· AndioMediaStudio</title>
   <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
   <!-- Globale UI (fixe Navbar Styles etc.) -->
@@ -115,7 +115,7 @@
     code{ background:rgba(255,255,255,.6); padding:2px 6px; border-radius:6px }
   </style>
 </head>
-<body data-page="gallery">
+<body data-page="gallery">`r`n  <div data-include="navbar"></div>
   <!-- Globale fixe Navbar -->
   <header class="andio-navbar" role="banner">
     <nav class="andio-nav" role="navigation" aria-label="Hauptnavigation">
@@ -127,7 +127,7 @@
 
       <!-- Links -->
       <div class="nav-links" role="menubar">
-        <a role="menuitem" href="index.html"      data-link="index">Übersicht</a>
+        <a role="menuitem" href="index.html"      data-link="index">Ãœbersicht</a>
         <a role="menuitem" href="images.html"     data-link="images">Image Studio</a>
         <a role="menuitem" href="video-gen.html"  data-link="video-gen">Video Studio</a>
         <a role="menuitem" href="wandrobe.html"   data-link="wardrobe">Wardrobe</a>
@@ -155,7 +155,7 @@
     <!-- Toolbar -->
     <div class="card">
       <div class="toolbar">
-        <input id="q" class="input grow" placeholder="Suche nach Name, Tags …"/>
+        <input id="q" class="input grow" placeholder="Suche nach Name, Tags â€¦"/>
         <select id="kind" class="select">
           <option value="">Alles</option>
           <option value="image">Nur Bilder</option>
@@ -167,8 +167,8 @@
         </select>
         <select id="sort" class="select">
           <option value="date_desc">Neueste</option>
-          <option value="date_asc">Älteste</option>
-          <option value="name_asc">Name A–Z</option>
+          <option value="date_asc">Ã„lteste</option>
+          <option value="name_asc">Name Aâ€“Z</option>
         </select>
       </div>
       <div class="muted">Quellen: <code>/api/outputs</code> (Server) oder <code>assets/outputs.json</code> (Fallback). Thumbnails werden automatisch genutzt.</div>
@@ -179,7 +179,7 @@
     <div id="empty" class="muted" style="display:none">Keine Ergebnisse.</div>
   </div>
 
-  <footer class="page">© Andio Media Studio</footer>
+  <footer class="page">Â© Andio Media Studio</footer>
 
   <!-- Globaler Overlay-Player (einmalig, zentral) -->
   <script src="assets/overlay-player.js"></script>
@@ -314,7 +314,7 @@
         const actions = document.createElement('div'); actions.className='row-actions';
         const btnDl = document.createElement('a'); btnDl.className='icon-btn'; btnDl.title='Download'; btnDl.href=it.src; btnDl.download='';
         btnDl.innerHTML='<i class="fa fa-download"></i>'; btnDl.addEventListener('click',e=>e.stopPropagation());
-        const btnDel = document.createElement('button'); btnDel.className='icon-btn'; btnDel.title='Löschen';
+        const btnDel = document.createElement('button'); btnDel.className='icon-btn'; btnDel.title='LÃ¶schen';
         btnDel.innerHTML='<i class="fa fa-trash"></i>'; btnDel.addEventListener('click', async (e)=>{ e.stopPropagation(); await deleteItem(it.id,it.src); });
         actions.append(btnDl, btnDel);
         wrap.append(actions);
@@ -330,16 +330,16 @@
         meta.append(name,row,dt);
         card.append(wrap, meta);
 
-        // >>> Globaler Player: direkt Item übergeben
+        // >>> Globaler Player: direkt Item Ã¼bergeben
         card.addEventListener('click', ()=> openOverlay(it));
 
         el.grid.append(card);
       });
     }
 
-    // Löschen (mit klaren Fallbacks, keine Fake-Ergebnisse)
+    // LÃ¶schen (mit klaren Fallbacks, keine Fake-Ergebnisse)
     async function deleteItem(id, src){
-      if(!confirm('Datei wirklich löschen?\n'+(src||''))) return;
+      if(!confirm('Datei wirklich lÃ¶schen?\n'+(src||''))) return;
       try{
         await fetchJson(`/api/outputs/${encodeURIComponent(id)}`, { method:'DELETE' });
         afterDelete(id); return;
@@ -352,7 +352,7 @@
         });
         afterDelete(id); return;
       }catch(_){}
-      alert('Backend nicht erreichbar – Eintrag wird nur aus der Anzeige entfernt.');
+      alert('Backend nicht erreichbar â€“ Eintrag wird nur aus der Anzeige entfernt.');
       afterDelete(id);
     }
     function afterDelete(id){
@@ -365,5 +365,11 @@
     [el.q, el.kind, el.sfw, el.sort].forEach(x=> x.addEventListener('input', apply));
     loadOutputs();
   </script>
+  <script src="assets/include.js"></script>
 </body>
 </html>
+
+
+
+
+
