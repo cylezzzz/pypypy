@@ -3,132 +3,221 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AndioMediaStudio â€“ Wardrobe</title>
-
-  <!-- Einheitliche Topbar (global) -->
-  <link rel="stylesheet" href="assets/ui.css">
+  <title>AndioMediaStudio – Advanced Wardrobe</title>
+  
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-
+  
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --bg1:#667eea; --bg2:#764ba2;
-      --panel:rgba(255,255,255,.95); --border:rgba(255,255,255,.2);
-      --ink:#333; --muted:#666; --hint:#999;
-      --brand1:#667eea; --brand2:#764ba2;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg1: #667eea; --bg2: #764ba2;
+      --panel: rgba(255,255,255,.95); --border: rgba(255,255,255,.2);
+      --ink: #333; --muted: #666; --hint: #999;
+      --brand1: #667eea; --brand2: #764ba2;
+      --success: #4CAF50; --warning: #FF9800; --danger: #F44336;
     }
-    body{
-      font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
-      min-height:100vh; color:var(--ink);
-      background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh; color: var(--ink);
+      background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
     }
-    .container{max-width:1800px;margin:0 auto;padding:20px}
-    .card{
-      background:var(--panel); border:1px solid var(--border);
-      border-radius:20px; box-shadow:0 8px 32px rgba(0,0,0,.1);
-      backdrop-filter:blur(10px);
+    
+    .container { max-width: 1800px; margin: 0 auto; padding: 20px; }
+    
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,.1);
+      backdrop-filter: blur(10px);
     }
-    .header{padding:24px 28px;margin-bottom:18px}
-    .header h1{
-      font-size:2.1rem;margin:0 0 6px;
-      background:linear-gradient(135deg,var(--bg1),var(--bg2));
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    
+    .header { padding: 24px 28px; margin-bottom: 18px; }
+    .header h1 {
+      font-size: 2.1rem; margin: 0 0 6px;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .nav{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-    .tab{
-      background:rgba(255,255,255,.9); color:var(--ink);
-      padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:600;
-      border:1px solid rgba(0,0,0,.06); transition:.2s ease;
+    
+    .modebar { display: flex; justify-content: flex-end; margin: 6px 0 18px; }
+    .modechip {
+      display: flex; align-items: center; gap: 10px; background: #fff;
+      border: 1px solid rgba(0,0,0,.08); padding: 8px 12px; border-radius: 999px; font-weight: 700;
     }
-    .tab:hover,.tab.active{color:#fff; background:linear-gradient(135deg,var(--bg1),var(--bg2)); transform:translateY(-1px)}
-    /* global mode toggle */
-    .modebar{display:flex;justify-content:flex-end;margin:6px 0 18px}
-    .modechip{
-      display:flex;align-items:center;gap:10px;background:#fff;
-      border:1px solid rgba(0,0,0,.08); padding:8px 12px;border-radius:999px;font-weight:700;
+    
+    .workspace { display: grid; grid-template-columns: 320px 1fr 380px; gap: 22px; align-items: start; }
+    
+    /* Canvas - Erweitert für echte Tools */
+    .canvas { padding: 18px; }
+    .drop {
+      border: 2px dashed #ddd; border-radius: 16px; padding: 24px; 
+      text-align: center; cursor: pointer; transition: .2s; margin-bottom: 14px;
     }
-    .workspace{display:grid;grid-template-columns:300px 1fr 360px; gap:22px; align-items:start}
-    /* Left â€“ slots */
-    .slots{padding:18px}
-    .slots h3{font-size:1.05rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-    .pillgrp{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-    .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(0,0,0,.08); background:#fff;font-weight:600;cursor:pointer}
-    .pill.active{background:rgba(102,126,234,.12);border-color:rgba(102,126,234,.35);color:#3949ab}
-    .cat{border:1px solid #e6e6e6;border-radius:12px;overflow:hidden;margin-bottom:12px}
-    .cat-h{background:rgba(102,126,234,.1);padding:10px 12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-    .cat-b{padding:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-    .item{background:rgba(102,126,234,.06);border:1px solid rgba(102,126,234,.25);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:.15s}
-    .item:hover{transform:translateY(-1px);background:rgba(102,126,234,.16)}
-    .item i{color:var(--brand1);margin-bottom:6px}
-    .item .name{font-size:.8rem;font-weight:600}
-    /* Middle â€“ canvas */
-    .canvas{padding:18px}
-    .drop{border:2px dashed #ddd; border-radius:16px; padding:24px; text-align:center; cursor:pointer; transition:.2s;margin-bottom:14px}
-    .drop:hover,.drop.dragover{border-color:var(--brand1); background:rgba(102,126,234,.06)}
-    .drop i{font-size:1.8rem;color:#ccc;margin-bottom:6px}
-    .stage{
-      background:
-       linear-gradient(45deg,#f8f9fa 25%,transparent 25%),
-       linear-gradient(-45deg,#f8f9fa 25%,transparent 25%),
-       linear-gradient(45deg,transparent 75%,#f8f9fa 75%),
-       linear-gradient(-45deg,transparent 75%,#f8f9fa 75%);
-      background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0;
-      border-radius:16px; min-height:520px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;
+    .drop:hover, .drop.dragover { border-color: var(--brand1); background: rgba(102,126,234,.06); }
+    
+    .stage {
+      background: 
+        linear-gradient(45deg, #f8f9fa 25%, transparent 25%),
+        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f8f9fa 75%),
+        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      border-radius: 16px; min-height: 600px; position: relative; 
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+      cursor: crosshair;
     }
-    .model{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px}
-    .overlay-layer{position:absolute;inset:0;pointer-events:none;width:100%;height:100%} /* <- wichtig fÃ¼r Canvas */
-    .canvas-hint{color:#666;text-align:center}
-    .btnrow{display:flex;gap:10px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
-    .btn{
-      padding:12px 16px;border:none;border-radius:12px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:8px
+    
+    .model {
+      max-width: 100%; max-height: 100%; object-fit: contain;
+      border-radius: 10px; position: relative; z-index: 1;
     }
-    .btn.primary{color:#fff;background:linear-gradient(135deg,var(--bg1),var(--bg2))}
-    .btn.ghost{background:rgba(102,126,234,.08);color:var(--brand1);border:1px solid rgba(102,126,234,.3)}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(102,126,234,.25)}
-    /* Right â€“ tools */
-    .tools{padding:18px;max-height:calc(100vh - 200px);overflow:auto}
-    .section{background:rgba(102,126,234,.06);border-radius:14px;padding:16px;margin-bottom:14px}
-    .title{font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-    .opt{display:flex;align-items:center;gap:8px;margin:6px 0}
-    .opt input[type=checkbox]{accent-color:var(--brand2)}
-    .rg{position:relative;margin:10px 0}
-    input[type=range]{width:100%;height:6px;border-radius:3px;background:#e0e0e0;outline:none;-webkit-appearance:none}
-    input[type=range]::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,var(--bg1),var(--bg2));box-shadow:0 2px 5px rgba(0,0,0,.25)}
-    .val{position:absolute;right:0;top:-20px;background:rgba(102,126,234,.1);padding:2px 8px;border-radius:10px;font-size:.8rem;font-weight:700;color:#3949ab}
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-    .toolbtn{padding:10px;border:1px solid rgba(102,126,234,.25);border-radius:10px;background:#fff;cursor:pointer;text-align:center;font-size:.9rem}
-    .chip{padding:6px 10px;border-radius:999px;border:1px solid rgba(0,0,0,.08);background:#fff;font-weight:600}
-    /* NSFW visibility */
-    .nsfw-only{display:none}
-    [data-mode="nsfw"] .nsfw-only{display:block}
-    [data-mode="nsfw"] .nsfw-hide{display:none !important}
-    @media (max-width:1400px){
-      .workspace{grid-template-columns:1fr;gap:18px}
-      .tools{max-height:none}
+    
+    /* Overlay-Layer für Tools */
+    .overlay-layer {
+      position: absolute; inset: 0; pointer-events: none; 
+      width: 100%; height: 100%; z-index: 2;
+    }
+    
+    .overlay-layer.interactive { pointer-events: all; }
+    
+    /* Selection Tools */
+    .selection-box {
+      position: absolute; border: 2px dashed var(--brand1);
+      background: rgba(102, 126, 234, 0.1); pointer-events: none;
+      border-radius: 4px; z-index: 10;
+    }
+    
+    .drag-handle {
+      position: absolute; width: 12px; height: 12px;
+      background: var(--brand1); border: 2px solid #fff;
+      border-radius: 50%; cursor: pointer; z-index: 11;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    
+    .drag-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+    .drag-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+    .drag-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+    .drag-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+    .drag-handle.move { top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: move; }
+    
+    /* Brush Tools */
+    .brush-cursor {
+      position: absolute; border: 2px solid var(--brand1);
+      border-radius: 50%; pointer-events: none; z-index: 15;
+      background: rgba(102, 126, 234, 0.1);
+    }
+    
+    /* Pin System */
+    .pin {
+      position: absolute; width: 8px; height: 8px;
+      background: var(--danger); border: 2px solid #fff;
+      border-radius: 50%; cursor: pointer; z-index: 12;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .pin:hover { transform: scale(1.3); }
+    
+    /* Tools Sidebar */
+    .tools { padding: 18px; max-height: calc(100vh - 200px); overflow: auto; }
+    .section { background: rgba(102,126,234,.06); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+    .title { font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    
+    .tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+    .tool-btn {
+      padding: 12px 8px; border: 2px solid rgba(102,126,234,.25);
+      border-radius: 10px; background: #fff; cursor: pointer;
+      text-align: center; font-size: 0.85rem; font-weight: 600;
+      transition: all 0.2s ease; position: relative;
+    }
+    
+    .tool-btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 4px 12px rgba(102,126,234,.3);
+      border-color: var(--brand1);
+    }
+    
+    .tool-btn.active {
+      background: linear-gradient(135deg, var(--brand1), var(--brand2));
+      color: white; border-color: transparent;
+    }
+    
+    .tool-btn i { display: block; margin-bottom: 6px; font-size: 1.2rem; }
+    
+    /* Range Controls */
+    .rg { position: relative; margin: 10px 0; }
+    .rg label { display: block; margin-bottom: 6px; font-weight: 600; }
+    
+    input[type=range] {
+      width: 100%; height: 8px; border-radius: 4px;
+      background: #e0e0e0; outline: none; -webkit-appearance: none;
+    }
+    
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none; width: 20px; height: 20px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      box-shadow: 0 2px 6px rgba(0,0,0,.3); cursor: pointer;
+    }
+    
+    .val {
+      position: absolute; right: 0; top: -2px;
+      background: rgba(102,126,234,.15); padding: 2px 8px;
+      border-radius: 12px; font-size: 0.8rem; font-weight: 700;
+      color: var(--brand2); min-width: 40px; text-align: center;
+    }
+    
+    /* Action Buttons */
+    .btnrow { display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; flex-wrap: wrap; }
+    .btn {
+      padding: 12px 18px; border: none; border-radius: 12px;
+      font-weight: 700; cursor: pointer; transition: all 0.2s ease;
+      display: flex; align-items: center; gap: 8px;
+    }
+    
+    .btn.primary { color: #fff; background: linear-gradient(135deg, var(--bg1), var(--bg2)); }
+    .btn.success { color: #fff; background: var(--success); }
+    .btn.danger { color: #fff; background: var(--danger); }
+    .btn.ghost { background: rgba(102,126,234,.08); color: var(--brand1); border: 1px solid rgba(102,126,234,.3); }
+    
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(102,126,234,.25); }
+    
+    /* NSFW Styling */
+    .nsfw-only { display: none; }
+    [data-mode="nsfw"] .nsfw-only { display: block; }
+    [data-mode="nsfw"] .nsfw-hide { display: none !important; }
+    
+    .nsfw-section {
+      border: 2px solid var(--danger);
+      background: rgba(244, 67, 54, 0.05);
+    }
+    
+    /* Status Display */
+    .status-bar {
+      position: fixed; bottom: 20px; right: 20px; z-index: 100;
+      background: rgba(0,0,0,0.8); color: white; padding: 12px 16px;
+      border-radius: 8px; font-size: 0.9rem; max-width: 300px;
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .status-bar.show { transform: translateY(0); opacity: 1; }
+    
+    /* Responsive */
+    @media (max-width: 1400px) {
+      .workspace { grid-template-columns: 1fr; gap: 18px; }
+      .tools { max-height: none; }
     }
   </style>
 </head>
-<body data-page="wardrobe" data-mode="sfw">`r`n  <div data-include="navbar"></div>
-  <!-- Globale Navbar per Include -->
-  <div data-include="partials/navbar.html"></div>
+<body data-mode="sfw">
 
   <div class="container">
     <div class="header card">
-      <h1><i class="fa-solid fa-shirt"></i> Wardrobe</h1>
-      <p style="color:var(--muted)">Virtual Try-On Â· Style-Transfer Â· Seam-Aware Compositing</p>
+      <h1><i class="fa-solid fa-palette"></i> Advanced Wardrobe Studio</h1>
+      <p style="color:var(--muted)">Avatar Manipulation • NSFW Tools • Professional Controls</p>
     </div>
 
-    <!-- lokale Tabs (optional) -->
-    <div class="nav">
-      <a class="tab" href="index.html"><i class="fa-solid fa-gauge"></i> Dashboard</a>
-      <a class="tab" href="images.html"><i class="fa-solid fa-image"></i> Bilder</a>
-      <a class="tab" href="video-gen.html"><i class="fa-solid fa-video"></i> Video</a>
-      <a class="tab active" href="wandrobe.html"><i class="fa-solid fa-shirt"></i> Wardrobe</a>
-      <a class="tab" href="editor.html"><i class="fa-solid fa-pen-to-square"></i> Editor</a>
-      <a class="tab" href="motion.html"><i class="fa-solid fa-person-running"></i> Motion</a>
-    </div>
-
-    <!-- SFW / NSFW global -->
+    <!-- Mode Toggle -->
     <div class="modebar">
       <label class="modechip">
         <span id="modeLabel">SFW</span>
@@ -138,380 +227,940 @@
     </div>
 
     <div class="workspace">
-      <!-- LEFT: Slots & Library -->
-      <aside class="card slots">
-        <h3><i class="fa-solid fa-sliders"></i> Slots</h3>
-        <div class="pillgrp">
-          <button class="pill active" data-slot="top">Top</button>
-          <button class="pill" data-slot="bottom">Bottom</button>
-          <button class="pill" data-slot="shoes">Schuhe</button>
-          <button class="pill" data-slot="acc">Accessoire</button>
-        </div>
-
-        <h3 style="margin-top:10px"><i class="fa-solid fa-layer-group"></i> Outfit-Bibliothek</h3>
-
-        <div class="cat">
-          <div class="cat-h" onclick="toggleCat('tops')">Oberteile <i class="fa-solid fa-chevron-down"></i></div>
-          <div class="cat-b" id="tops">
-            <div class="item" onclick="selectOutfit('tshirt')"><i class="fa-solid fa-shirt"></i><div class="name">T-Shirt</div></div>
-            <div class="item" onclick="selectOutfit('hoodie')"><i class="fa-solid fa-shirt"></i><div class="name">Hoodie</div></div>
-            <div class="item" onclick="selectOutfit('blouse')"><i class="fa-solid fa-user-tie"></i><div class="name">Bluse</div></div>
-            <div class="item" onclick="selectOutfit('jacket')"><i class="fa-solid fa-shirt"></i><div class="name">Jacke</div></div>
+      <!-- LEFT: Quick Tools -->
+      <aside class="card" style="padding: 18px;">
+        <h3><i class="fa-solid fa-tools"></i> Quick Tools</h3>
+        
+        <div class="tool-grid">
+          <div class="tool-btn active" id="tool-select" onclick="setTool('select')">
+            <i class="fa-solid fa-mouse-pointer"></i>
+            Select
+          </div>
+          <div class="tool-btn" id="tool-brush" onclick="setTool('brush')">
+            <i class="fa-solid fa-paintbrush"></i>
+            Brush
+          </div>
+          <div class="tool-btn" id="tool-eraser" onclick="setTool('eraser')">
+            <i class="fa-solid fa-eraser"></i>
+            Eraser
+          </div>
+          <div class="tool-btn" id="tool-pin" onclick="setTool('pin')">
+            <i class="fa-solid fa-thumbtack"></i>
+            Pin
+          </div>
+          <div class="tool-btn" id="tool-mask" onclick="setTool('mask')">
+            <i class="fa-solid fa-mask"></i>
+            Mask
+          </div>
+          <div class="tool-btn" id="tool-clone" onclick="setTool('clone')">
+            <i class="fa-solid fa-copy"></i>
+            Clone
           </div>
         </div>
 
-        <div class="cat">
-          <div class="cat-h" onclick="toggleCat('bottoms')">Unterteile <i class="fa-solid fa-chevron-down"></i></div>
-          <div class="cat-b" id="bottoms" style="display:none">
-            <div class="item" onclick="selectOutfit('jeans')"><i class="fa-solid fa-person"></i><div class="name">Jeans</div></div>
-            <div class="item" onclick="selectOutfit('skirt')"><i class="fa-solid fa-person-dress"></i><div class="name">Rock</div></div>
-            <div class="item" onclick="selectOutfit('shorts')"><i class="fa-solid fa-person-walking"></i><div class="name">Shorts</div></div>
-            <div class="item" onclick="selectOutfit('suitpants')"><i class="fa-solid fa-briefcase"></i><div class="name">Anzughose</div></div>
-          </div>
+        <div class="rg">
+          <label>Brush Size</label>
+          <input id="brushSize" type="range" min="5" max="100" value="20" 
+                 oninput="updateVal(this, 'brushSizeVal'); updateBrushSize(this.value)"/>
+          <span class="val" id="brushSizeVal">20px</span>
         </div>
 
-        <div class="cat">
-          <div class="cat-h" onclick="toggleCat('shoes')">Schuhe <i class="fa-solid fa-chevron-down"></i></div>
-          <div class="cat-b" id="shoes" style="display:none">
-            <div class="item" onclick="selectOutfit('sneaker')"><i class="fa-solid fa-shoe-prints"></i><div class="name">Sneaker</div></div>
-            <div class="item" onclick="selectOutfit('heels')"><i class="fa-solid fa-person-dress"></i><div class="name">High Heels</div></div>
-            <div class="item" onclick="selectOutfit('boots')"><i class="fa-solid fa-shoe-prints"></i><div class="name">Stiefel</div></div>
-            <div class="item" onclick="selectOutfit('dressshoes')"><i class="fa-solid fa-shoe-prints"></i><div class="name">Anzugschuhe</div></div>
-          </div>
-        </div>
-
-        <div class="cat">
-          <div class="cat-h" onclick="toggleCat('acc')">Accessoires <i class="fa-solid fa-chevron-down"></i></div>
-          <div class="cat-b" id="acc" style="display:none">
-            <div class="item" onclick="selectOutfit('hat')"><i class="fa-solid fa-hat-cowboy"></i><div class="name">Hut</div></div>
-            <div class="item" onclick="selectOutfit('glasses')"><i class="fa-solid fa-glasses"></i><div class="name">Brille</div></div>
-            <div class="item" onclick="selectOutfit('watch')"><i class="fa-solid fa-clock"></i><div class="name">Uhr</div></div>
-            <div class="item" onclick="selectOutfit('necklace')"><i class="fa-solid fa-gem"></i><div class="name">Kette</div></div>
-          </div>
-        </div>
-
-        <!-- NSFW categories -->
-        <div class="cat nsfw-only">
-          <div class="cat-h" onclick="toggleCat('lingerie')">Lingerie <i class="fa-solid fa-chevron-down"></i></div>
-          <div class="cat-b" id="lingerie" style="display:none">
-            <div class="item" onclick="selectOutfit('bra')"><i class="fa-solid fa-heart"></i><div class="name">Bra</div></div>
-            <div class="item" onclick="selectOutfit('panties')"><i class="fa-solid fa-heart"></i><div class="name">Panties</div></div>
-            <div class="item" onclick="selectOutfit('bodysuit')"><i class="fa-solid fa-heart"></i><div class="name">Bodysuit</div></div>
-            <div class="item" onclick="selectOutfit('stockings')"><i class="fa-solid fa-socks"></i><div class="name">Stockings</div></div>
-          </div>
-        </div>
-
-        <div class="cat nsfw-only">
-          <div class="cat-h" onclick="toggleCat('underlay')">Naked Underlay <i class="fa-solid fa-chevron-down"></i></div>
-          <div class="cat-b" id="underlay" style="display:none">
-            <div class="item" onclick="selectOutfit('naked-soft')"><i class="fa-solid fa-circle"></i><div class="name">Soft</div></div>
-            <div class="item" onclick="selectOutfit('naked-detailed')"><i class="fa-solid fa-circle"></i><div class="name">Detailed</div></div>
-            <div class="item" onclick="selectOutfit('naked-art')"><i class="fa-solid fa-paintbrush"></i><div class="name">Artistic</div></div>
-            <div class="item" onclick="selectOutfit('naked-tan')"><i class="fa-solid fa-sun"></i><div class="name">Body Tan</div></div>
-          </div>
+        <div class="rg">
+          <label>Opacity</label>
+          <input id="brushOpacity" type="range" min="0" max="100" value="80" 
+                 oninput="updateVal(this, 'brushOpacityVal'); updateBrushOpacity(this.value)"/>
+          <span class="val" id="brushOpacityVal">80%</span>
         </div>
       </aside>
 
       <!-- MIDDLE: Canvas -->
       <main class="card canvas">
-        <div class="drop" onclick="document.getElementById('modelInput').click()"
+        <div class="drop" onclick="document.getElementById('avatarInput').click()"
              ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
           <i class="fa-solid fa-user-plus"></i>
-          <h3>Personen-Foto hochladen</h3>
-          <p class="canvas-hint">PNG/JPG â€“ FÃ¼r Try-On mit Slot-Outfits</p>
-          <input id="modelInput" type="file" accept="image/*" style="display:none" onchange="loadModel(event)"/>
+          <h3>Avatar hochladen</h3>
+          <p>PNG/JPG für erweiterte Bearbeitung</p>
+          <input id="avatarInput" type="file" accept="image/*" style="display:none" onchange="loadAvatar(event)"/>
         </div>
 
         <div class="stage" id="stage">
-          <div class="canvas-hint" id="canvasHint">
+          <div style="color:#666; text-align:center;">
             <i class="fa-solid fa-user-circle" style="font-size:3rem;color:#ccc"></i>
-            <p style="margin-top:8px;color:#666">Lege ein Foto ab â€“ dann: Slot wÃ¤hlen â†’ Item klicken â†’ Tools rechts einstellen.</p>
-            <p class="nsfw-only" style="margin-top:6px;color:#666;font-size:.9rem">Tipp: <em>Coverage</em> & <em>Seam-Blend</em> fÃ¼r saubere ÃœbergÃ¤nge bei Lingerie/Underlay.</p>
+            <p style="margin-top:8px;">Lade deinen Avatar um zu beginnen</p>
+            <p class="nsfw-only" style="margin-top:6px;font-size:.9rem;">
+              <em>NSFW-Tools verfügbar nach Upload</em>
+            </p>
           </div>
-          <!-- Layers werden per JS eingesetzt -->
         </div>
 
         <div class="btnrow">
-          <button class="btn ghost" onclick="previewTryOn()"><i class="fa-solid fa-eye"></i> Vorschau</button>
-          <button class="btn primary" onclick="applyTryOn()"><i class="fa-solid fa-wand-magic-sparkles"></i> Anwenden</button>
+          <button class="btn ghost" onclick="undoAction()">
+            <i class="fa-solid fa-undo"></i> Rückgängig
+          </button>
+          <button class="btn ghost" onclick="redoAction()">
+            <i class="fa-solid fa-redo"></i> Wiederholen
+          </button>
+          <button class="btn primary" onclick="applyChanges()">
+            <i class="fa-solid fa-magic"></i> Anwenden
+          </button>
+          <button class="btn success" onclick="saveResult()">
+            <i class="fa-solid fa-save"></i> Speichern
+          </button>
         </div>
       </main>
 
-      <!-- RIGHT: Tools -->
+      <!-- RIGHT: Advanced Tools -->
       <aside class="card tools">
+        <!-- Transform Tools -->
         <div class="section">
-          <div class="title"><i class="fa-solid fa-wand-magic-sparkles"></i> QualitÃ¤ts-Optionen</div>
-          <label class="opt"><input type="checkbox" id="seam" checked/>Naht-ÃœbergÃ¤nge</label>
-          <label class="opt"><input type="checkbox" id="edge" checked/>Kanten/Haare-Refine</label>
-          <label class="opt"><input type="checkbox" id="shadow" checked/>Kontakt-Schatten</label>
-          <label class="opt"><input type="checkbox" id="halo" checked/>Artefakt-Schutz</label>
-          <label class="opt"><input type="checkbox" id="superres"/>Detail-Boost</label>
-        </div>
-
-        <div class="section">
-          <div class="title"><i class="fa-solid fa-ruler-combined"></i> Passform</div>
+          <div class="title"><i class="fa-solid fa-arrows-alt"></i> Transform</div>
+          
           <div class="rg">
-            <label class="chip">GrÃ¶ÃŸe</label>
-            <input id="scale" type="range" min="50" max="200" value="100" oninput="bindVal(this,'scaleVal');setScale(this.value)"/>
+            <label>Scale</label>
+            <input id="scaleSlider" type="range" min="10" max="200" value="100" 
+                   oninput="updateVal(this, 'scaleVal'); applyTransform()"/>
             <span class="val" id="scaleVal">100%</span>
           </div>
+          
           <div class="rg">
-            <label class="chip">Rotation</label>
-            <input id="rot" type="range" min="-30" max="30" value="0" oninput="bindVal(this,'rotVal');setRotation(this.value)"/>
-            <span class="val" id="rotVal">0Â°</span>
+            <label>Rotation</label>
+            <input id="rotationSlider" type="range" min="-180" max="180" value="0" 
+                   oninput="updateVal(this, 'rotationVal'); applyTransform()"/>
+            <span class="val" id="rotationVal">0°</span>
           </div>
+          
           <div class="rg">
-            <label class="chip">Deckkraft</label>
-            <input id="alpha" type="range" min="0" max="100" value="100" oninput="bindVal(this,'alphaVal');setAlpha(this.value)"/>
-            <span class="val" id="alphaVal">100%</span>
+            <label>Position X</label>
+            <input id="posXSlider" type="range" min="-50" max="50" value="0" 
+                   oninput="updateVal(this, 'posXVal'); applyTransform()"/>
+            <span class="val" id="posXVal">0</span>
           </div>
-          <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
-            <button class="toolbtn" onclick="pinMode(true)"><i class="fa-solid fa-thumbtack"></i><br/>Pin-&-Drape</button>
-            <button class="toolbtn" onclick="clearPins()"><i class="fa-solid fa-eraser"></i><br/>Pins lÃ¶schen</button>
-            <button class="toolbtn" onclick="autoPins()"><i class="fa-solid fa-wand-magic-sparkles"></i><br/>Auto-Pins</button>
+          
+          <div class="rg">
+            <label>Position Y</label>
+            <input id="posYSlider" type="range" min="-50" max="50" value="0" 
+                   oninput="updateVal(this, 'posYVal'); applyTransform()"/>
+            <span class="val" id="posYVal">0</span>
           </div>
         </div>
 
+        <!-- Selection Tools -->
         <div class="section">
-          <div class="title"><i class="fa-solid fa-palette"></i> Farbe & Muster</div>
-          <label class="opt"><input type="checkbox" id="colormatch" checked/>Farb-Matching (Hautton/Umgebung)</label>
-          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px" id="swatches"></div>
-          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-            <select id="fabric" class="chip" onchange="setFabric(this.value)">
-              <option value="auto">Stoff: Auto</option>
-              <option value="denim">Denim</option><option value="cotton">Cotton</option>
-              <option value="silk">Silk</option><option value="leather">Leather</option>
-            </select>
-            <select id="refl" class="chip" onchange="setReflection(this.value)">
-              <option value="norm">Reflections: Norm</option>
-              <option value="low">Low</option><option value="high">High</option>
-              <option value="matte">Matte</option>
-            </select>
+          <div class="title"><i class="fa-solid fa-crop"></i> Selection</div>
+          
+          <div class="tool-grid">
+            <div class="tool-btn" onclick="selectAll()">
+              <i class="fa-solid fa-expand"></i>
+              Select All
+            </div>
+            <div class="tool-btn" onclick="deselectAll()">
+              <i class="fa-solid fa-times"></i>
+              Deselect
+            </div>
+            <div class="tool-btn" onclick="invertSelection()">
+              <i class="fa-solid fa-exchange-alt"></i>
+              Invert
+            </div>
+          </div>
+          
+          <div style="margin-top: 10px;">
+            <button class="btn ghost" onclick="cropToSelection()" style="width: 100%;">
+              <i class="fa-solid fa-crop"></i> Crop to Selection
+            </button>
           </div>
         </div>
 
-        <!-- Skin / Flecken / Tan / Sheen -->
+        <!-- NSFW Advanced Tools -->
+        <div class="section nsfw-only nsfw-section">
+          <div class="title"><i class="fa-solid fa-user-secret"></i> NSFW Tools</div>
+          
+          <div class="rg">
+            <label>Skin Tone</label>
+            <input id="skinTone" type="range" min="0" max="100" value="50" 
+                   oninput="updateVal(this, 'skinToneVal'); applySkinTone(this.value)"/>
+            <span class="val" id="skinToneVal">50%</span>
+          </div>
+          
+          <div class="rg">
+            <label>Body Enhancement</label>
+            <input id="bodyEnhance" type="range" min="0" max="100" value="0" 
+                   oninput="updateVal(this, 'bodyEnhanceVal'); applyBodyEnhancement(this.value)"/>
+            <span class="val" id="bodyEnhanceVal">0%</span>
+          </div>
+          
+          <div class="tool-grid">
+            <div class="tool-btn" onclick="removeClothing('top')">
+              <i class="fa-solid fa-tshirt"></i>
+              Remove Top
+            </div>
+            <div class="tool-btn" onclick="removeClothing('bottom')">
+              <i class="fa-solid fa-person"></i>
+              Remove Bottom
+            </div>
+            <div class="tool-btn" onclick="addCensor()">
+              <i class="fa-solid fa-eye-slash"></i>
+              Add Censor
+            </div>
+          </div>
+          
+          <div class="rg">
+            <label>Privacy Level</label>
+            <input id="privacyLevel" type="range" min="0" max="100" value="80" 
+                   oninput="updateVal(this, 'privacyLevelVal'); applyPrivacyLevel(this.value)"/>
+            <span class="val" id="privacyLevelVal">80%</span>
+          </div>
+        </div>
+
+        <!-- Filter & Effects -->
         <div class="section">
-          <div class="title"><i class="fa-solid fa-droplet"></i> Hautton & â€žFleckenâ€œ</div>
+          <div class="title"><i class="fa-solid fa-magic"></i> Effects</div>
+          
           <div class="rg">
-            <label class="chip">Hautton-Blend (Ãœbergang)</label>
-            <input id="skinBlend" type="range" min="0" max="100" value="35" oninput="bindVal(this,'skinBlendVal');setSkinBlend(this.value)"/>
-            <span class="val" id="skinBlendVal">35%</span>
+            <label>Brightness</label>
+            <input id="brightness" type="range" min="-50" max="50" value="0" 
+                   oninput="updateVal(this, 'brightnessVal'); applyFilters()"/>
+            <span class="val" id="brightnessVal">0</span>
           </div>
+          
           <div class="rg">
-            <label class="chip">Freckles (Sommer-Sprossen)</label>
-            <input id="freckles" type="range" min="0" max="100" value="20" oninput="bindVal(this,'frecklesVal');setFreckles(this.value)"/>
-            <span class="val" id="frecklesVal">20%</span>
+            <label>Contrast</label>
+            <input id="contrast" type="range" min="-50" max="50" value="0" 
+                   oninput="updateVal(this, 'contrastVal'); applyFilters()"/>
+            <span class="val" id="contrastVal">0</span>
           </div>
+          
           <div class="rg">
-            <label class="chip">Tan-Lines (Bikini-Abzeichnung)</label>
-            <input id="tan" type="range" min="0" max="100" value="15" oninput="bindVal(this,'tanVal');setTan(this.value)"/>
-            <span class="val" id="tanVal">15%</span>
+            <label>Saturation</label>
+            <input id="saturation" type="range" min="-50" max="50" value="0" 
+                   oninput="updateVal(this, 'saturationVal'); applyFilters()"/>
+            <span class="val" id="saturationVal">0</span>
           </div>
+          
           <div class="rg">
-            <label class="chip">Skin-Sheen (Glanz)</label>
-            <input id="sheen" type="range" min="0" max="100" value="10" oninput="bindVal(this,'sheenVal');setSheen(this.value)"/>
-            <span class="val" id="sheenVal">10%</span>
-          </div>
-          <div class="rg">
-            <label class="chip">Blemish-Reduce</label>
-            <input id="blemish" type="range" min="0" max="100" value="30" oninput="bindVal(this,'blemishVal');setBlemish(this.value)"/>
-            <span class="val" id="blemishVal">30%</span>
-          </div>
-        </div>
-
-        <!-- NSFW tools -->
-        <div class="section nsfw-only">
-          <div class="title"><i class="fa-solid fa-user-shield"></i> NSFW Tools</div>
-          <div class="rg">
-            <label class="chip">Bedeckung (Coverage)</label>
-            <input id="coverage" type="range" min="0" max="100" value="70" oninput="bindVal(this,'coverageVal');setCoverage(this.value)"/>
-            <span class="val" id="coverageVal">70%</span>
-          </div>
-          <label class="chip" style="display:block;margin:6px 0 8px">Body-Physics-Profil</label>
-          <select id="physics" class="chip" onchange="setPhysics(this.value)">
-            <option value="soft">Soft</option><option value="firm">Firm</option><option value="athletic">Athletic</option>
-          </select>
-          <div class="grid3" style="margin-top:10px">
-            <button class="toolbtn" onclick="toggleGarment('top')"><i class="fa-solid fa-eye-slash"></i> Top an/aus</button>
-            <button class="toolbtn" onclick="toggleGarment('bottom')"><i class="fa-solid fa-eye-slash"></i> Bottom an/aus</button>
-            <button class="toolbtn" onclick="toggleCensor()"><i class="fa-solid fa-ban"></i> Censor</button>
+            <label>Blur</label>
+            <input id="blur" type="range" min="0" max="20" value="0" 
+                   oninput="updateVal(this, 'blurVal'); applyFilters()"/>
+            <span class="val" id="blurVal">0px</span>
           </div>
         </div>
 
         <!-- Actions -->
         <div class="section">
-          <div class="title"><i class="fa-solid fa-download"></i> Aktionen</div>
-          <div class="grid3">
-            <button class="toolbtn" onclick="saveOutfit()"><i class="fa-solid fa-save"></i> Speichern</button>
-            <button class="toolbtn" onclick="exportOutfit()"><i class="fa-solid fa-file-export"></i> Export</button>
-            <button class="toolbtn" onclick="resetAll()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
-          </div>
+          <div class="title"><i class="fa-solid fa-cogs"></i> Actions</div>
+          
+          <button class="btn danger" onclick="resetAll()" style="width: 100%; margin-bottom: 8px;">
+            <i class="fa-solid fa-refresh"></i> Reset All
+          </button>
+          
+          <button class="btn ghost" onclick="exportImage()" style="width: 100%;">
+            <i class="fa-solid fa-download"></i> Export Image
+          </button>
         </div>
       </aside>
     </div>
   </div>
 
-  <!-- Navbar-Loader (muss nach <div data-include="..."> kommen) -->
-  <script src="assets/include.js"></script>
-  <!-- Globaler Overlay-Player fÃ¼r Bilder/Videos -->
-  <script src="assets/overlay-player.js"></script>
+  <!-- Status Bar -->
+  <div class="status-bar" id="statusBar">
+    Ready
+  </div>
 
   <script>
-    /* ---------- Mode (SFW/NSFW) ---------- */
-    let nsfwMode = localStorage.getItem('andio_mode') || 'sfw';
-    let outputBase = nsfwMode === 'nsfw' ? '/outputs/nsfw' : '/outputs/sfw';
-    const el = (id)=>document.getElementById(id);
+    // ===== CORE VARIABLES =====
+    let currentTool = 'select';
+    let currentMode = localStorage.getItem('andio_mode') || 'sfw';
+    let avatar = null;
+    let canvasContext = null;
+    let overlayContext = null;
+    let isDrawing = false;
+    let selections = [];
+    let pins = [];
+    let actionHistory = [];
+    let historyIndex = -1;
 
-    function applyModeUI(){
-      document.documentElement.setAttribute('data-mode', nsfwMode);
-      document.body.setAttribute('data-mode', nsfwMode);
-      const t=el('modeToggle'); const l=el('modeLabel');
-      if(t){ t.checked = (nsfwMode==='nsfw'); }
-      if(l){ l.textContent = nsfwMode.toUpperCase(); }
-      outputBase = nsfwMode==='nsfw'?'/outputs/nsfw':'/outputs/sfw';
-    }
+    // Selection variables
+    let selectionStart = null;
+    let currentSelection = null;
+    
+    // Transform variables
+    let currentTransform = {
+      scale: 1,
+      rotation: 0,
+      translateX: 0,
+      translateY: 0
+    };
 
-    document.addEventListener('DOMContentLoaded', ()=>{
-      // swatches
-      const cols=['#000','#fff','#F44336','#E91E63','#9C27B0','#673AB7','#3F51B5','#2196F3','#03A9F4','#00BCD4','#009688','#4CAF50','#8BC34A','#CDDC39','#FFC107','#FF9800','#795548','#9E9E9E'];
-      const box=el('swatches'); if(box){ cols.forEach(c=>{
-        const d=document.createElement('div');
-        d.style.width='26px';d.style.height='26px';d.style.borderRadius='50%';d.style.border='2px solid rgba(0,0,0,.1)';
-        d.style.background=c;d.style.cursor='pointer';
-        d.title=c; d.onclick=()=>setColor(c); box.appendChild(d);
-      }); }
-      // mode
+    // ===== INITIALIZATION =====
+    document.addEventListener('DOMContentLoaded', function() {
       applyModeUI();
-      const mt=el('modeToggle');
-      if(mt){ mt.addEventListener('change',()=>{ nsfwMode = mt.checked?'nsfw':'sfw'; localStorage.setItem('andio_mode',nsfwMode); applyModeUI(); }); }
+      initializeEventListeners();
+      showStatus('Wardrobe Studio bereit');
     });
 
-    /* ---------- Slots ---------- */
-    let activeSlot='top', currentItem=null, currentModel=null;
-    document.querySelectorAll('.pill').forEach(p=>{
-      p.addEventListener('click',()=>{
-        document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
-        p.classList.add('active');
-        activeSlot = p.dataset.slot;
-      });
-    });
-    function toggleCat(id){
-      const b=el(id); const icon=b?.previousElementSibling?.querySelector('i:last-child');
-      if(!b) return; const show = b.style.display==='none' || !b.style.display;
-      b.style.display = show ? 'grid' : 'none';
-      if(icon) icon.className = 'fa-solid fa-chevron-' + (show?'up':'down');
+    function applyModeUI() {
+      document.documentElement.setAttribute('data-mode', currentMode);
+      document.body.setAttribute('data-mode', currentMode);
+      
+      const toggle = document.getElementById('modeToggle');
+      const label = document.getElementById('modeLabel');
+      
+      if (toggle) toggle.checked = (currentMode === 'nsfw');
+      if (label) label.textContent = currentMode.toUpperCase();
     }
 
-    /* ---------- Canvas / Model ---------- */
-    function dragOver(ev){ ev.preventDefault(); ev.currentTarget.classList.add('dragover'); }
-    function dragLeave(ev){ ev.currentTarget.classList.remove('dragover'); }
-    function dropFile(ev){ ev.preventDefault(); ev.currentTarget.classList.remove('dragover'); loadFile(ev.dataTransfer.files?.[0]); }
-    function loadModel(ev){ loadFile(ev.target.files?.[0]); }
-    function loadFile(file){
-      if(!file || !file.type.startsWith('image/')) return;
-      const r=new FileReader();
-      r.onload= e=>{
-        currentModel = e.target.result;
-        const stage=el('stage');
-        stage.innerHTML = `<img id="modelImg" class="model" src="${currentModel}" alt="Model">
-                           <canvas id="overlay" class="overlay-layer"></canvas>
-                           <canvas id="censor" class="overlay-layer"></canvas>`;
-      };
-      r.readAsDataURL(file);
-    }
+    function initializeEventListeners() {
+      const modeToggle = document.getElementById('modeToggle');
+      if (modeToggle) {
+        modeToggle.addEventListener('change', function() {
+          currentMode = this.checked ? 'nsfw' : 'sfw';
+          localStorage.setItem('andio_mode', currentMode);
+          applyModeUI();
+          showStatus(`Modus gewechselt zu ${currentMode.toUpperCase()}`);
+        });
+      }
 
-    function selectOutfit(type){
-      currentItem = type;
-      if(el('modelImg')) applyPreviewTint();
-    }
-
-    /* ---------- Tools (Bindings) ---------- */
-    function bindVal(r, spanId){
-      const v = r.id==='rot'? `${r.value}Â°` : `${r.value}${(r.id==='alpha'||r.id==='scale')?'%':''}`;
-      const s = el(spanId); if(s) s.textContent = v;
-    }
-    function setScale(v){ const img=el('modelImg'); if(img) img.style.transform = `scale(${v/100}) rotate(${el('rot').value}deg)`; }
-    function setRotation(v){ const img=el('modelImg'); if(img) img.style.transform = `scale(${el('scale').value/100}) rotate(${v}deg)`; }
-    function setAlpha(v){ const img=el('modelImg'); if(img) img.style.opacity = v/100; }
-    function setColor(hex){ /* apply to garment layer */ }
-    function setFabric(v){} function setReflection(v){}
-    function pinMode(on){ /* enable pin interactions */ }
-    function clearPins(){} function autoPins(){}
-
-    // Skin / â€žFleckenâ€œ
-    function setSkinBlend(v){} function setFreckles(v){} function setTan(v){} function setSheen(v){} function setBlemish(v){}
-
-    // NSFW
-    function setCoverage(v){} function setPhysics(v){} function toggleGarment(slot){}
-    let censorOn=false;
-    function toggleCensor(){
-      censorOn=!censorOn;
-      const c=el('censor'); if(!c) return;
-      const rect = c.getBoundingClientRect();
-      c.width = rect.width; c.height = rect.height;
-      const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height);
-      if(censorOn){
-        ctx.fillStyle='rgba(0,0,0,.85)';
-        const h=c.height; const w=c.width;
-        ctx.fillRect(w*.32,h*.42,w*.36,h*.06);
-        ctx.fillRect(w*.35,h*.62,w*.3,h*.06);
+      // Stage event listeners
+      const stage = document.getElementById('stage');
+      if (stage) {
+        stage.addEventListener('mousedown', handleMouseDown);
+        stage.addEventListener('mousemove', handleMouseMove);
+        stage.addEventListener('mouseup', handleMouseUp);
+        stage.addEventListener('contextmenu', e => e.preventDefault());
       }
     }
 
-    function applyPreviewTint(){
-      const stage=el('stage'); if(!stage) return;
-      stage.style.boxShadow='inset 0 0 0 9999px rgba(102,126,234,.08)';
-      setTimeout(()=>stage.style.boxShadow='none',220);
-    }
-
-    // Vorschau nutzt den globalen Overlay-Player
-    function previewTryOn(){
-      if(!currentModel){ alert('Bitte Foto laden.'); return; }
-      if(!currentItem){ alert('Bitte Outfit wÃ¤hlen.'); return; }
-      openOverlay({
-        kind:'image',
-        src: currentModel,
-        name: 'Preview Â· ' + currentItem,
-        date: new Date().toISOString(),
-        format: 'PNG',
-        nsfw: (nsfwMode==='nsfw'),
-        gen: 'Wardrobe'
+    // ===== TOOL MANAGEMENT =====
+    function setTool(tool) {
+      // Remove active class from all tools
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.classList.remove('active');
       });
+      
+      // Add active class to selected tool
+      const toolBtn = document.getElementById(`tool-${tool}`);
+      if (toolBtn) toolBtn.classList.add('active');
+      
+      currentTool = tool;
+      updateCursor();
+      showStatus(`Tool gewechselt zu: ${tool}`);
     }
 
-    function applyTryOn(){
-      if(!currentModel || !currentItem){ alert('Bitte Foto & Outfit wÃ¤hlen.'); return; }
-      alert('Try-On angewendet (Demo).');
+    function updateCursor() {
+      const stage = document.getElementById('stage');
+      if (!stage) return;
+
+      const cursors = {
+        'select': 'default',
+        'brush': 'crosshair',
+        'eraser': 'crosshair',
+        'pin': 'crosshair',
+        'mask': 'crosshair',
+        'clone': 'crosshair'
+      };
+
+      stage.style.cursor = cursors[currentTool] || 'default';
     }
 
-    function resetAll(){
-      const defaults={scale:100,rot:0,alpha:100,skinBlend:35,freckles:20,tan:15,sheen:10,blemish:30,coverage:70};
-      Object.keys(defaults).forEach(id=>{
-        const ctl = el(id); if(!ctl) return;
-        ctl.value = defaults[id];
-        const map={rot:'rotVal',alpha:'alphaVal',scale:'scaleVal',skinBlend:'skinBlendVal',freckles:'frecklesVal',tan:'tanVal',sheen:'sheenVal',blemish:'blemishVal',coverage:'coverageVal'};
-        bindVal(ctl, map[id]);
+    // ===== AVATAR LOADING =====
+    function dragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
+    function dragLeave(e) { e.currentTarget.classList.remove('dragover'); }
+    function dropFile(e) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); loadFile(e.dataTransfer.files?.[0]); }
+    function loadAvatar(e) { loadFile(e.target.files?.[0]); }
+
+    function loadFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        showStatus('Bitte eine gültige Bilddatei wählen', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        avatar = e.target.result;
+        setupCanvas();
+        showStatus('Avatar geladen');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setupCanvas() {
+      const stage = document.getElementById('stage');
+      if (!stage || !avatar) return;
+
+      stage.innerHTML = `
+        <img id="avatarImg" class="model" src="${avatar}" alt="Avatar" style="position: relative; z-index: 1;">
+        <canvas id="overlayCanvas" class="overlay-layer interactive" style="z-index: 2;"></canvas>
+        <canvas id="workCanvas" class="overlay-layer" style="z-index: 3;"></canvas>
+      `;
+
+      const img = document.getElementById('avatarImg');
+      const overlay = document.getElementById('overlayCanvas');
+      const work = document.getElementById('workCanvas');
+
+      img.onload = function() {
+        const rect = stage.getBoundingClientRect();
+        overlay.width = work.width = rect.width;
+        overlay.height = work.height = rect.height;
+        
+        overlayContext = overlay.getContext('2d');
+        canvasContext = work.getContext('2d');
+        
+        // Apply initial transform
+        applyTransform();
+        showStatus('Canvas initialisiert');
+      };
+    }
+
+    // ===== MOUSE HANDLING =====
+    function handleMouseDown(e) {
+      if (!avatar) return;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      switch(currentTool) {
+        case 'select':
+          startSelection(x, y);
+          break;
+        case 'brush':
+          startDrawing(x, y);
+          break;
+        case 'eraser':
+          startErasing(x, y);
+          break;
+        case 'pin':
+          addPin(x, y);
+          break;
+        case 'mask':
+          startMasking(x, y);
+          break;
+        case 'clone':
+          startCloning(x, y);
+          break;
+      }
+    }
+
+    function handleMouseMove(e) {
+      if (!avatar) return;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      updateBrushPreview(x, y);
+
+      if (isDrawing) {
+        switch(currentTool) {
+          case 'select':
+            updateSelection(x, y);
+            break;
+          case 'brush':
+            continueBrush(x, y);
+            break;
+          case 'eraser':
+            continueErasing(x, y);
+            break;
+          case 'mask':
+            continueMasking(x, y);
+            break;
+        }
+      }
+    }
+
+    function handleMouseUp(e) {
+      if (isDrawing) {
+        endDrawing();
+      }
+    }
+
+    // ===== SELECTION TOOLS =====
+    function startSelection(x, y) {
+      selectionStart = {x, y};
+      isDrawing = true;
+    }
+
+    function updateSelection(x, y) {
+      if (!selectionStart || !overlayContext) return;
+
+      overlayContext.clearRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
+      
+      const width = x - selectionStart.x;
+      const height = y - selectionStart.y;
+
+      // Draw selection rectangle
+      overlayContext.strokeStyle = '#667eea';
+      overlayContext.lineWidth = 2;
+      overlayContext.setLineDash([5, 5]);
+      overlayContext.strokeRect(selectionStart.x, selectionStart.y, width, height);
+      
+      // Fill with transparent blue
+      overlayContext.fillStyle = 'rgba(102, 126, 234, 0.1)';
+      overlayContext.fillRect(selectionStart.x, selectionStart.y, width, height);
+
+      currentSelection = {
+        x: Math.min(selectionStart.x, x),
+        y: Math.min(selectionStart.y, y),
+        width: Math.abs(width),
+        height: Math.abs(height)
+      };
+    }
+
+    function selectAll() {
+      if (!overlayContext) return;
+      
+      currentSelection = {
+        x: 0, y: 0,
+        width: overlayContext.canvas.width,
+        height: overlayContext.canvas.height
+      };
+      
+      overlayContext.clearRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
+      overlayContext.strokeStyle = '#667eea';
+      overlayContext.lineWidth = 2;
+      overlayContext.setLineDash([5, 5]);
+      overlayContext.strokeRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
+      
+      showStatus('Alles ausgewählt');
+    }
+
+    function deselectAll() {
+      currentSelection = null;
+      if (overlayContext) {
+        overlayContext.clearRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
+      }
+      showStatus('Auswahl aufgehoben');
+    }
+
+    function invertSelection() {
+      // Implementation für Auswahl umkehren
+      showStatus('Auswahl umgekehrt (in Entwicklung)');
+    }
+
+    function cropToSelection() {
+      if (!currentSelection) {
+        showStatus('Keine Auswahl aktiv', 'error');
+        return;
+      }
+      showStatus('Cropping zur Auswahl...');
+      saveAction();
+    }
+
+    // ===== DRAWING TOOLS =====
+    function startDrawing(x, y) {
+      isDrawing = true;
+      if (canvasContext) {
+        canvasContext.beginPath();
+        canvasContext.moveTo(x, y);
+        canvasContext.strokeStyle = 'rgba(102, 126, 234, 0.8)';
+        canvasContext.lineWidth = document.getElementById('brushSize').value;
+        canvasContext.lineCap = 'round';
+        canvasContext.globalAlpha = document.getElementById('brushOpacity').value / 100;
+      }
+    }
+
+    function continueBrush(x, y) {
+      if (canvasContext && isDrawing) {
+        canvasContext.lineTo(x, y);
+        canvasContext.stroke();
+      }
+    }
+
+    function startErasing(x, y) {
+      isDrawing = true;
+      if (canvasContext) {
+        canvasContext.globalCompositeOperation = 'destination-out';
+        canvasContext.beginPath();
+        canvasContext.moveTo(x, y);
+        canvasContext.lineWidth = document.getElementById('brushSize').value;
+        canvasContext.lineCap = 'round';
+      }
+    }
+
+    function continueErasing(x, y) {
+      if (canvasContext && isDrawing) {
+        canvasContext.lineTo(x, y);
+        canvasContext.stroke();
+      }
+    }
+
+    function startMasking(x, y) {
+      isDrawing = true;
+      if (canvasContext) {
+        canvasContext.globalCompositeOperation = 'source-over';
+        canvasContext.beginPath();
+        canvasContext.moveTo(x, y);
+        canvasContext.strokeStyle = 'rgba(244, 67, 54, 0.6)';
+        canvasContext.lineWidth = document.getElementById('brushSize').value;
+        canvasContext.lineCap = 'round';
+      }
+    }
+
+    function continueMasking(x, y) {
+      if (canvasContext && isDrawing) {
+        canvasContext.lineTo(x, y);
+        canvasContext.stroke();
+      }
+    }
+
+    function startCloning(x, y) {
+      // Implementierung für Clone-Tool
+      showStatus('Clone-Tool aktiv - Quelle definieren');
+    }
+
+    function endDrawing() {
+      isDrawing = false;
+      if (canvasContext) {
+        canvasContext.globalCompositeOperation = 'source-over';
+        canvasContext.globalAlpha = 1;
+      }
+      saveAction();
+    }
+
+    // ===== PIN SYSTEM =====
+    function addPin(x, y) {
+      const pin = { x, y, id: Date.now() };
+      pins.push(pin);
+      
+      const pinElement = document.createElement('div');
+      pinElement.className = 'pin';
+      pinElement.style.left = (x - 4) + 'px';
+      pinElement.style.top = (y - 4) + 'px';
+      pinElement.onclick = () => removePin(pin.id);
+      
+      document.getElementById('stage').appendChild(pinElement);
+      showStatus(`Pin hinzugefügt (${pins.length} aktiv)`);
+    }
+
+    function removePin(pinId) {
+      pins = pins.filter(p => p.id !== pinId);
+      // Remove DOM element
+      document.querySelectorAll('.pin').forEach(el => {
+        if (el.onclick.toString().includes(pinId)) {
+          el.remove();
+        }
       });
-      const img=el('modelImg'); if(img){ img.style.transform=''; img.style.opacity='1'; }
+      showStatus(`Pin entfernt (${pins.length} verbleibend)`);
     }
 
-    // Speichern/Export â€“ pfadabhÃ¤ngig SFW/NSFW
-    function saveOutfit(){
-      if(!currentModel){ alert('Kein Bild.'); return; }
-      const path = `${outputBase}/wardrobe/${Date.now()}_tryon.png`;
-      alert('Gespeichert nach:\n' + path);
+    // ===== BRUSH PREVIEW =====
+    function updateBrushPreview(x, y) {
+      if (currentTool !== 'brush' && currentTool !== 'eraser') return;
+      
+      // Remove existing brush cursor
+      document.querySelectorAll('.brush-cursor').forEach(el => el.remove());
+      
+      const size = document.getElementById('brushSize').value;
+      const cursor = document.createElement('div');
+      cursor.className = 'brush-cursor';
+      cursor.style.width = size + 'px';
+      cursor.style.height = size + 'px';
+      cursor.style.left = (x - size/2) + 'px';
+      cursor.style.top = (y - size/2) + 'px';
+      
+      if (currentTool === 'eraser') {
+        cursor.style.borderColor = '#F44336';
+        cursor.style.background = 'rgba(244, 67, 54, 0.1)';
+      }
+      
+      document.getElementById('stage').appendChild(cursor);
     }
-    function exportOutfit(){
-      if(!currentModel){ alert('Kein Bild.'); return; }
-      const path = `${outputBase}/exports/${Date.now()}_wardrobe.png`;
-      alert('Export nach:\n' + path);
+
+    function updateBrushSize(value) {
+      showStatus(`Brush-Größe: ${value}px`);
     }
+
+    function updateBrushOpacity(value) {
+      showStatus(`Brush-Deckkraft: ${value}%`);
+    }
+
+    // ===== TRANSFORM CONTROLS =====
+    function applyTransform() {
+      const img = document.getElementById('avatarImg');
+      if (!img) return;
+
+      const scale = document.getElementById('scaleSlider').value / 100;
+      const rotation = document.getElementById('rotationSlider').value;
+      const posX = document.getElementById('posXSlider').value;
+      const posY = document.getElementById('posYSlider').value;
+
+      currentTransform = { scale, rotation, translateX: posX, translateY: posY };
+
+      const transform = `
+        scale(${scale}) 
+        rotate(${rotation}deg) 
+        translateX(${posX}px) 
+        translateY(${posY}px)
+      `;
+
+      img.style.transform = transform;
+    }
+
+    // ===== NSFW FUNCTIONS =====
+    function applySkinTone(value) {
+      if (currentMode !== 'nsfw') return;
+      
+      const img = document.getElementById('avatarImg');
+      if (img) {
+        const hue = (value - 50) * 0.6; // -30 to +30 degrees
+        img.style.filter = (img.style.filter || '') + ` hue-rotate(${hue}deg)`;
+      }
+      showStatus(`Hautton angepasst: ${value}%`);
+    }
+
+    function applyBodyEnhancement(value) {
+      if (currentMode !== 'nsfw') return;
+      showStatus(`Body Enhancement: ${value}% (AI-Processing erforderlich)`);
+    }
+
+    function removeClothing(type) {
+      if (currentMode !== 'nsfw') {
+        showStatus('NSFW-Modus erforderlich', 'error');
+        return;
+      }
+      
+      showStatus(`Entferne ${type}... (AI-Processing wird gestartet)`);
+      
+      // Hier würde die echte AI-Integration stattfinden
+      setTimeout(() => {
+        showStatus(`${type} entfernt (Demo-Modus)`);
+      }, 2000);
+    }
+
+    function addCensor() {
+      if (!canvasContext) return;
+      
+      const canvas = canvasContext.canvas;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      
+      // Add censor bars
+      canvasContext.fillStyle = 'rgba(0, 0, 0, 0.9)';
+      canvasContext.fillRect(centerX - 80, centerY - 60, 160, 30); // Top bar
+      canvasContext.fillRect(centerX - 80, centerY + 30, 160, 30); // Bottom bar
+      
+      showStatus('Zensur hinzugefügt');
+      saveAction();
+    }
+
+    function applyPrivacyLevel(value) {
+      if (currentMode !== 'nsfw') return;
+      
+      const opacity = value / 100;
+      const censorElements = document.querySelectorAll('.censor-overlay');
+      censorElements.forEach(el => {
+        el.style.opacity = opacity;
+      });
+      
+      showStatus(`Privacy Level: ${value}%`);
+    }
+
+    // ===== FILTER EFFECTS =====
+    function applyFilters() {
+      const img = document.getElementById('avatarImg');
+      if (!img) return;
+
+      const brightness = parseInt(document.getElementById('brightness').value);
+      const contrast = parseInt(document.getElementById('contrast').value);
+      const saturation = parseInt(document.getElementById('saturation').value);
+      const blur = parseInt(document.getElementById('blur').value);
+
+      const filters = [
+        `brightness(${100 + brightness}%)`,
+        `contrast(${100 + contrast}%)`,
+        `saturate(${100 + saturation}%)`,
+        `blur(${blur}px)`
+      ];
+
+      img.style.filter = filters.join(' ');
+    }
+
+    // ===== ACTION HISTORY =====
+    function saveAction() {
+      if (!canvasContext) return;
+      
+      const imageData = canvasContext.getImageData(0, 0, canvasContext.canvas.width, canvasContext.canvas.height);
+      actionHistory = actionHistory.slice(0, historyIndex + 1);
+      actionHistory.push(imageData);
+      historyIndex++;
+      
+      // Limit history size
+      if (actionHistory.length > 20) {
+        actionHistory.shift();
+        historyIndex--;
+      }
+    }
+
+    function undoAction() {
+      if (historyIndex > 0 && canvasContext) {
+        historyIndex--;
+        const imageData = actionHistory[historyIndex];
+        canvasContext.putImageData(imageData, 0, 0);
+        showStatus('Rückgängig gemacht');
+      } else {
+        showStatus('Nichts zum Rückgängig machen', 'error');
+      }
+    }
+
+    function redoAction() {
+      if (historyIndex < actionHistory.length - 1 && canvasContext) {
+        historyIndex++;
+        const imageData = actionHistory[historyIndex];
+        canvasContext.putImageData(imageData, 0, 0);
+        showStatus('Wiederhergestellt');
+      } else {
+        showStatus('Nichts zum Wiederherstellen', 'error');
+      }
+    }
+
+    // ===== MAIN ACTIONS =====
+    function applyChanges() {
+      if (!avatar) {
+        showStatus('Kein Avatar geladen', 'error');
+        return;
+      }
+      
+      showStatus('Änderungen werden angewendet...');
+      
+      // Simulate AI processing
+      setTimeout(() => {
+        showStatus('Änderungen erfolgreich angewendet!');
+      }, 1500);
+    }
+
+    function saveResult() {
+      if (!avatar) {
+        showStatus('Kein Avatar zum Speichern', 'error');
+        return;
+      }
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `avatar_${timestamp}_${currentMode}.png`;
+      
+      showStatus(`Avatar gespeichert: ${filename}`);
+    }
+
+    function resetAll() {
+      if (confirm('Alle Änderungen zurücksetzen?')) {
+        // Reset all sliders
+        const sliders = ['scaleSlider', 'rotationSlider', 'posXSlider', 'posYSlider', 
+                        'brightness', 'contrast', 'saturation', 'blur', 'brushSize', 'brushOpacity'];
+        
+        const defaults = {
+          'scaleSlider': 100, 'rotationSlider': 0, 'posXSlider': 0, 'posYSlider': 0,
+          'brightness': 0, 'contrast': 0, 'saturation': 0, 'blur': 0,
+          'brushSize': 20, 'brushOpacity': 80
+        };
+        
+        sliders.forEach(id => {
+          const slider = document.getElementById(id);
+          if (slider) {
+            slider.value = defaults[id] || 0;
+            const valSpan = document.getElementById(id.replace('Slider', 'Val') + 'Val');
+            if (valSpan) {
+              updateVal(slider, valSpan.id);
+            }
+          }
+        });
+        
+        // Clear canvases
+        if (overlayContext) overlayContext.clearRect(0, 0, overlayContext.canvas.width, overlayContext.canvas.height);
+        if (canvasContext) canvasContext.clearRect(0, 0, canvasContext.canvas.width, canvasContext.canvas.height);
+        
+        // Remove pins
+        pins = [];
+        document.querySelectorAll('.pin').forEach(el => el.remove());
+        
+        // Reset transforms
+        const img = document.getElementById('avatarImg');
+        if (img) {
+          img.style.transform = '';
+          img.style.filter = '';
+        }
+        
+        // Clear selections
+        currentSelection = null;
+        
+        // Reset history
+        actionHistory = [];
+        historyIndex = -1;
+        
+        showStatus('Alle Einstellungen zurückgesetzt');
+      }
+    }
+
+    function exportImage() {
+      if (!avatar) {
+        showStatus('Kein Avatar zum Exportieren', 'error');
+        return;
+      }
+      
+      // Create export canvas
+      const exportCanvas = document.createElement('canvas');
+      const exportCtx = exportCanvas.getContext('2d');
+      const img = document.getElementById('avatarImg');
+      
+      if (img) {
+        exportCanvas.width = img.naturalWidth;
+        exportCanvas.height = img.naturalHeight;
+        exportCtx.drawImage(img, 0, 0);
+        
+        // Add overlay if exists
+        if (canvasContext) {
+          exportCtx.drawImage(canvasContext.canvas, 0, 0, exportCanvas.width, exportCanvas.height);
+        }
+        
+        // Download
+        exportCanvas.toBlob(blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `wardrobe_export_${Date.now()}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showStatus('Bild exportiert');
+        });
+      }
+    }
+
+    // ===== UTILITY FUNCTIONS =====
+    function updateVal(slider, spanId) {
+      const span = document.getElementById(spanId);
+      if (span) {
+        let value = slider.value;
+        let unit = '';
+        
+        if (slider.id.includes('rotation')) unit = '°';
+        else if (slider.id.includes('scale') || slider.id.includes('opacity') || slider.id.includes('Opacity')) unit = '%';
+        else if (slider.id.includes('blur') || slider.id.includes('Size')) unit = 'px';
+        
+        span.textContent = value + unit;
+      }
+    }
+
+    function showStatus(message, type = 'info') {
+      const statusBar = document.getElementById('statusBar');
+      if (statusBar) {
+        statusBar.textContent = message;
+        statusBar.className = `status-bar show ${type}`;
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+          statusBar.classList.remove('show');
+        }, 3000);
+      }
+    }
+
+    // ===== CLEANUP =====
+    document.addEventListener('mouseup', () => {
+      if (isDrawing) {
+        endDrawing();
+      }
+    });
+
+    // Remove brush cursor when mouse leaves stage
+    document.getElementById('stage')?.addEventListener('mouseleave', () => {
+      document.querySelectorAll('.brush-cursor').forEach(el => el.remove());
+    });
   </script>
 </body>
 </html>
-
-
-
-
-

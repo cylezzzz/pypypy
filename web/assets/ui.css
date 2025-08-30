@@ -188,3 +188,29 @@ nav.andio-links a.active {
    Utility
    =========================== */
 .hide { display:none!important; }
+/* --- Navbar: Brand-Logo & Wortmarke --- */
+.andio-navbar .brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.andio-navbar .brand-link img {
+  height: 28px;          /* <= hier die feste Logo-Höhe */
+  max-height: 28px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.andio-navbar .wordmark {
+  font-size: 16px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Mobile: kleiner & Wortmarke ausblenden */
+@media (max-width: 640px) {
+  .andio-navbar .brand-link img { height: 22px; max-height: 22px; }
+  .andio-navbar .wordmark { display: none; }
+}
