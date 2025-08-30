@@ -1,299 +1,1080 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Image Studio – AndioMediaStudio</title>
-  <link rel="stylesheet" href="assets/styles.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AndioMediaStudio - Image Studio</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
-    .page-grid{display:grid;grid-template-columns:320px 1fr 380px;gap:12px;align-items:start}
-    .card{background:#1112;border:1px solid #333;border-radius:12px;padding:12px}
-    .grid{display:grid;gap:8px}
-    .grid-2{grid-template-columns:1fr 1fr}
-    .grid-3{grid-template-columns:1fr 1fr 1fr}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .badge{padding:2px 6px;border-radius:8px;background:#222;border:1px solid #444;font-size:12px}
-    .pill{border:1px solid #444;border-radius:999px;padding:4px 10px;font-size:12px}
-    .list{display:flex;flex-direction:column;gap:8px;max-height:42vh;overflow:auto}
-    .canvas-wrap{position:relative;aspect-ratio:1/1;background:#000;border-radius:12px;overflow:hidden}
-    .canvas-wrap canvas{width:100%;height:100%;display:block}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-    .toolbar button.active{outline:2px solid #66f}
-    .thumb{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:10px;border:1px solid #222;background:#000}
+    /* ===== Base / Theme ===== */
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --g1:#667eea; --g2:#764ba2;
+      --glass: rgba(255,255,255,.95);
+      --glass2: rgba(255,255,255,.9);
+      --stroke: rgba(255,255,255,.2);
+      --ink:#1b1f2a; --muted:#5a6072;
+      --ok:#4CAF50; --warn:#FF9800; --err:#F44336;
+      --shadow:0 8px 32px rgba(0,0,0,.12);
+      --radius:20px;
+      --nb-bg: rgba(255,255,255,.92);
+      --nb-pill:#fff; --nb-pill-hover:#f5f7ff;
+    }
+    body{
+      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background:linear-gradient(135deg,var(--g1) 0%, var(--g2) 100%);
+      min-height:100vh; color:#333;
+    }
+    .container{max-width:1600px;margin:0 auto;padding:20px}
+
+    /* ===== NEW Navbar (sticky, konsistent) ===== */
+    .navbar{
+      position:sticky; top:0; z-index:40;
+      background:var(--nb-bg); backdrop-filter: blur(10px) saturate(1.1);
+      border-bottom:1px solid var(--stroke);
+    }
+    .navbar .row{
+      max-width:1600px; margin:0 auto; padding:12px 18px;
+      display:flex; align-items:center; gap:14px;
+    }
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+    .brand img{height:40px;border-radius:8px}
+    .brand .title{font-weight:800;color:var(--ink)}
+    .brand .subtitle{font-size:.86rem;color:var(--muted)}
+    .links{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .links a{
+      text-decoration:none; color:var(--ink);
+      background:var(--nb-pill); border:1px solid var(--stroke);
+      padding:8px 12px; border-radius:999px; font-weight:650; display:flex; gap:8px; align-items:center; transition:.2s;
+    }
+    .links a:hover{background:var(--nb-pill-hover); transform:translateY(-1px)}
+    .links a.active{ background:linear-gradient(135deg,var(--g1),var(--g2)); color:#fff; border-color:transparent }
+    .spacer{flex:1}
+    .mode-toggle{display:flex;align-items:center;gap:8px;padding:6px;border-radius:999px;background:#fff;border:1px solid var(--stroke)}
+    .mode-toggle .chip{padding:8px 12px;border-radius:999px;font-weight:700;cursor:pointer;background:#fff;border:1px solid var(--stroke)}
+    .mode-toggle .chip.active.sfw{background:#e7f5ff;color:#005b96;border-color:#bee3ff}
+    .mode-toggle .chip.active.nsfw{background:#ffe7ef;color:#9b0034;border-color:#ffc2d2}
+    .menu{position:relative}
+    .menu > button{
+      background:#fff; border:1px solid var(--stroke); color:#1b1f2a;
+      padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer;
+    }
+    .menu .pane{
+      position:absolute; right:0; top:calc(100% + 8px); min-width:220px;
+      background:#fff; border:1px solid var(--stroke); border-radius:12px; box-shadow:var(--shadow); padding:8px; display:none;
+    }
+    .menu.open .pane{display:block}
+    .pane a, .pane button{display:flex;align-items:center;gap:8px;width:100%;padding:10px;border-radius:10px;border:1px solid transparent;background:transparent;color:#1b1f2a;text-decoration:none;cursor:pointer}
+    .pane a:hover, .pane button:hover{background:#f5f7ff}
+
+    /* ===== Workspace ===== */
+    .workspace{display:grid; gap:20px; grid-template-columns: 340px 1fr 380px;}
+    @media (max-width: 1280px){ .workspace{grid-template-columns:1fr} }
+    .panel{
+      background:var(--glass); border-radius:var(--radius); padding:18px;
+      box-shadow:var(--shadow); border:1px solid var(--stroke);
+    }
+    .panel h3{display:flex;align-items:center;gap:10px;font-size:1.1rem;margin-bottom:10px}
+    .sub{color:#666; font-size:.9rem; margin:-4px 0 10px}
+
+    /* Left: Genre */
+    .genre-list{display:grid; gap:8px}
+    .genre-btn{
+      padding:10px 12px; border-radius:12px; border:1px solid var(--stroke); background:#fff; cursor:pointer; text-align:left; font-weight:700;
+      display:flex; gap:8px; align-items:center; transition:.2s;
+    }
+    .genre-btn.active, .genre-btn:hover{background:#f6f6ff}
+    .genre-section{margin-top:14px; display:none}
+    .genre-section.active{display:block}
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    label{font-weight:600; font-size:.92rem; color:#333}
+    select, input[type="text"], input[type="number"], textarea{
+      width:100%; padding:10px; border:2px solid #e0e0e0; border-radius:10px; background:rgba(255,255,255,.95); font-size:.95rem;
+    }
+    textarea{min-height:90px; resize:vertical}
+    .hint{font-size:.82rem; color:#777}
+
+    /* Middle: Preview */
+    .upload{border:2px dashed #ddd; border-radius:15px; padding:18px; text-align:center; cursor:pointer; transition:.2s; background:#fff}
+    .upload:hover{border-color:#667eea; background:rgba(102,126,234,.05)}
+    .upload i{font-size:2rem; color:#ccc; margin-bottom:6px}
+    .preview{
+      margin-top:12px; background:#f8f9fa; border:2px dashed #ddd; border-radius:15px; min-height:420px;
+      display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+    }
+    .preview img{max-width:100%; max-height:100%; object-fit:contain; display:block; cursor:zoom-in}
+    .variants{margin-top:10px; display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px}
+    .variant{background:#fff;border:1px solid var(--stroke);border-radius:10px; overflow:hidden; cursor:pointer}
+    .variant img{width:100%; height:110px; object-fit:cover; display:block}
+    .progress{display:none;background:rgba(102,126,234,.1);padding:14px;border-radius:12px;margin-top:12px}
+    .bar{height:8px;background:rgba(102,126,234,.2);border-radius:4px;overflow:hidden;margin-top:8px}
+    .bar i{display:block;height:100%;background:linear-gradient(135deg,var(--g1),var(--g2));width:0%;transition:width .4s}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .btn{padding:10px 12px;border-radius:12px;border:1px solid var(--stroke);background:#fff;cursor:pointer;font-weight:700}
+    .btn.primary{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border:0}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+
+    /* Right: Params */
+    .kv{display:grid; gap:10px}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px}
+    .chip{padding:6px 10px; border-radius:999px; background:#eef2ff; border:1px solid #e5e7ff; cursor:pointer; font-weight:700; font-size:.9rem}
+    .chip.active{background:#c7d2fe}
+
+    .tabs{display:flex; gap:8px; margin-top:8px}
+    .tab{padding:8px 12px; border-radius:10px; border:1px solid var(--stroke); background:#fff; cursor:pointer; font-weight:700}
+    .tab.active{background:#f6f6ff}
+    .opt-section{display:none; margin-top:10px}
+    .opt-section.active{display:block}
+
+    /* ===== Overlay Player / Viewer ===== */
+    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:center; justify-content:center; padding:20px; z-index:99; }
+    .overlay.active{ display:flex; }
+    .viewer{
+      background:#111; color:#fff; width:min(1100px, 95vw); border-radius:16px; overflow:hidden; border:1px solid #333;
+      display:grid; grid-template-rows:auto 1fr auto;
+    }
+    .viewer header{ padding:12px 14px; display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; }
+    .viewer .body{ padding:14px; display:grid; gap:12px; }
+    .viewer footer{ padding:10px 14px; background:#1a1a1a; display:flex; justify-content:space-between; align-items:center; }
+    .viewer .media{ width:100%; max-height:70vh; background:#000; border-radius:10px; overflow:hidden; position:relative; }
+    .viewer .media img{ width:100%; height:100%; object-fit:contain; display:block; cursor:grab; }
+    .ov-ctrls{ position:absolute; left:10px; top:10px; display:flex; gap:8px; z-index:2; }
+    .ov-btn{ display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:10px; background:rgba(0,0,0,.45); color:#fff; border:1px solid rgba(255,255,255,.2); cursor:pointer; }
+    .ov-btn:hover{ background:rgba(0,0,0,.65) }
+    .ov-nav{ position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.45); color:#fff; border:1px solid rgba(255,255,255,.2); cursor:pointer; }
+    .ov-prev{ left:10px } .ov-next{ right:10px }
+    .ov-nav:hover{ background:rgba(0,0,0,.65) }
   </style>
 </head>
 <body>
-  <script src="assets/app.js"></script>
-  <!-- Optional: Preset-Modelle laden (wenn vorhanden) -->
-  <script src="assets/presets.de.js"></script>
-  <script src="assets/presets.loader.js"></script>
-  <script>window.Andio?.navbar?.('images');</script>
+  <!-- ===== NAVBAR ===== -->
+  <div class="navbar" role="banner" aria-label="Hauptnavigation">
+    <div class="row">
+      <a class="brand" href="index.html" aria-label="Startseite">
+        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo">
+        <div>
+          <div class="title">AndioMediaStudio</div>
+          <div class="subtitle">Image Studio</div>
+        </div>
+      </a>
 
+      <nav class="links" role="navigation" aria-label="Seiten">
+        <a href="index.html"><i class="fas fa-gauge"></i> Dashboard</a>
+        <a href="images.html" class="active" aria-current="page"><i class="fas fa-image"></i> Images</a>
+        <a href="video-gen.html"><i class="fas fa-video"></i> Video</a>
+        <a href="editor.html"><i class="fas fa-pen-nib"></i> Editor</a>
+        <a href="wandrobe.html"><i class="fas fa-shirt"></i> Wardrobe</a>
+        <a href="motion.html"><i class="fas fa-person-running"></i> Motion</a>
+        <a href="gallery.html"><i class="fas fa-folder-open"></i> Galerie</a>
+      </nav>
+
+      <div class="spacer"></div>
+
+      <div class="mode-toggle" aria-label="SFW/NSFW-Umschalter">
+        <button class="chip sfw" id="btnSFW" aria-pressed="true">SFW</button>
+        <button class="chip nsfw" id="btnNSFW" aria-pressed="false">NSFW</button>
+      </div>
+
+      <div class="menu" id="profileMenu">
+        <button aria-haspopup="true" aria-expanded="false"><i class="fa-regular fa-user"></i> Profil</button>
+        <div class="pane" role="menu">
+          <a role="menuitem" href="catalog.html"><i class="fa-solid fa-database"></i> Katalog / Modelle</a>
+          <a role="menuitem" href="settings.html"><i class="fa-solid fa-gear"></i> Einstellungen</a>
+          <button role="menuitem" id="btnTheme"><i class="fa-regular fa-moon"></i> Theme umschalten</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE ===== -->
   <div class="container">
-    <h1>Image Studio</h1>
+    <div class="workspace">
+      <!-- LEFT: Genre Panel -->
+      <aside class="panel">
+        <h3><i class="fas fa-list"></i> Genre</h3>
+        <p class="sub">Wähle ein Genre – die passenden Eingaben erscheinen darunter.</p>
 
-    <div class="page-grid">
-      <!-- Links: Einstellungen -->
-      <aside class="card">
-        <h3>Einstellungen</h3>
-        <div class="grid">
-          <div class="grid grid-2">
-            <label>Modus
-              <select id="mode">
-                <option value="txt2img">Text → Bild</option>
-                <option value="img2img">Bild → Bild</option>
+        <div class="genre-list" id="genreList">
+          <button class="genre-btn active" data-genre="portrait"><i class="fa-solid fa-user"></i> Portrait / Character</button>
+          <button class="genre-btn" data-genre="fashion"><i class="fa-solid fa-shirt"></i> Fashion / Wardrobe</button>
+          <button class="genre-btn" data-genre="product"><i class="fa-solid fa-box-open"></i> Product / Packshot</button>
+          <button class="genre-btn" data-genre="landscape"><i class="fa-solid fa-mountain"></i> Landscape / Environment</button>
+          <button class="genre-btn" data-genre="toon"><i class="fa-solid fa-wand-magic-sparkles"></i> Animation / Toon</button>
+          <button class="genre-btn nsfw-only" data-genre="nsfw"><i class="fa-solid fa-eye-slash"></i> NSFW – Body / Pose / Akt</button>
+        </div>
+
+        <!-- (sections unverändert aus deiner Vorlage) -->
+        <!-- Portrait -->
+        <div class="genre-section active" data-section="portrait">
+          <div class="grid-2">
+            <div>
+              <label>Gesichtsfokus</label>
+              <select id="por_face">
+                <option value="upper_body">Oberkörper</option>
+                <option value="headshot">Headshot / Close-Up</option>
+                <option value="full_body">Ganzkörper</option>
               </select>
-            </label>
-            <label>Inhalt
-              <select id="content">
-                <option value="sfw">SFW</option>
-                <option value="nsfw">NSFW</option>
-              </select>
-            </label>
-          </div>
-
-          <details id="nsfwGate" class="card" style="border-style:solid;display:none">
-            <summary>NSFW-Bestätigung</summary>
-            <label><input type="checkbox" id="ageOk"/> Ich bin 18+.</label>
-            <label><input type="checkbox" id="rightsOk"/> Rechte am Bild vorhanden.</label>
-            <label><input type="checkbox" id="lawOk"/> Nutzung legal & privat.</label>
-          </details>
-
-          <label>Modell
-            <select id="model"></select>
-          </label>
-
-          <div class="grid grid-2">
-            <label>Auflösung
-              <select id="size">
-                <option value="512x512">512×512</option>
-                <option value="768x768">768×768</option>
-                <option value="1024x1024">1024×1024</option>
-                <option value="1280x768">1280×768</option>
-                <option value="1536x1024">1536×1024</option>
-              </select>
-            </label>
-            <label>Guidance (CFG)
-              <input type="number" id="cfg" min="1" max="20" step="0.5" value="7"/>
-            </label>
-          </div>
-
-          <div class="grid grid-2">
-            <label>Steps
-              <input type="number" id="steps" min="1" max="100" step="1" value="28"/>
-            </label>
-            <label>Seed
-              <input type="number" id="seed" placeholder="leer = zufällig"/>
-            </label>
-          </div>
-
-          <details class="card">
-            <summary>Erweiterte Optionen</summary>
-            <div class="grid">
-              <label>Sampler
-                <select id="sampler">
-                  <option value="euler">Euler</option>
-                  <option value="dpmpp_2m">DPM++ 2M</option>
-                  <option value="dpmpp_sde">DPM++ SDE</option>
-                  <option value="ddim">DDIM</option>
-                </select>
-              </label>
-              <label>VAE (optional)
-                <input id="vae" placeholder="auto / name"/>
-              </label>
             </div>
-          </details>
-
-          <div class="row">
-            <button id="btnRandom">Random</button>
-            <button id="btnGenerate" class="primary">Generieren</button>
+            <div>
+              <label>Hautton-Palette</label>
+              <select id="por_skin">
+                <option value="">Neutral</option>
+                <option value="fair">Hell</option>
+                <option value="medium">Mittel</option>
+                <option value="tan">Gebräunt</option>
+                <option value="dark">Dunkel</option>
+              </select>
+            </div>
           </div>
-          <small class="pill">Job-HUD oben rechts zeigt **Stage / % / ETA**.</small>
+          <div class="grid-2" style="margin-top:8px">
+            <div>
+              <label>Kamera</label>
+              <select id="por_cam">
+                <option value="50mm_f2">50 mm, f/2</option>
+                <option value="85mm_f1_8">85 mm, f/1.8</option>
+                <option value="35mm_f2_8">35 mm, f/2.8</option>
+              </select>
+            </div>
+            <div>
+              <label>Licht</label>
+              <select id="por_light">
+                <option value="3point">3-Punkt (Key/Fill/Rim)</option>
+                <option value="rembrandt">Rembrandt</option>
+                <option value="softbox">Softbox links</option>
+                <option value="hard">Hart, dramatisch</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Stil</label>
+            <select id="por_style">
+              <option value="real">Realistisch</option>
+              <option value="illustration">Illustration</option>
+              <option value="anime">Anime</option>
+              <option value="comic">Comic</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Fashion -->
+        <div class="genre-section" data-section="fashion">
+          <div class="grid-2">
+            <div>
+              <label>Outfit-Kategorie</label>
+              <select id="fas_cat">
+                <option value="dress">Dress</option>
+                <option value="top">Top</option>
+                <option value="bottoms">Bottoms</option>
+                <option value="lingerie">Lingerie</option>
+                <option value="shoes">Schuhe</option>
+              </select>
+            </div>
+            <div>
+              <label>Material</label>
+              <select id="fas_mat">
+                <option value="">Neutral</option>
+                <option value="denim">Denim</option>
+                <option value="cotton">Cotton</option>
+                <option value="silk">Silk</option>
+                <option value="leather">Leather</option>
+                <option value="latex">Latex</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:8px">
+            <div>
+              <label>Pose-Preset</label>
+              <select id="fas_pose">
+                <option value="lookbook">Lookbook Stand</option>
+                <option value="catwalk">Catwalk</option>
+                <option value="turntable">Turntable Pose</option>
+              </select>
+            </div>
+            <div>
+              <label>Hintergrund</label>
+              <select id="fas_bg">
+                <option value="studio">Studio (nahtlos)</option>
+                <option value="street">Street</option>
+                <option value="interior">Interior</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Seam/Falten-Hints</label>
+            <input type="text" id="fas_seams" placeholder="z. B. softer Stofffall, leichte Falten an Taille">
+          </div>
+        </div>
+
+        <!-- Product -->
+        <div class="genre-section" data-section="product">
+          <div class="grid-2">
+            <div>
+              <label>Studio-Setup</label>
+              <select id="pro_setup">
+                <option value="tabletop">Table-Top</option>
+                <option value="softbox">Softbox 2x</option>
+                <option value="light_tent">Lichtzelt</option>
+              </select>
+            </div>
+            <div>
+              <label>Material/Shader</label>
+              <input type="text" id="pro_mat" placeholder="Metallisch, matt, raue Oberfläche">
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Schatten/Reflexion</label>
+            <select id="pro_shadow">
+              <option value="soft_shadow">Weicher Kontaktschatten</option>
+              <option value="hard_shadow">Harter Schatten</option>
+              <option value="mirror_floor">Spiegelnder Boden</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Landscape -->
+        <div class="genre-section" data-section="landscape">
+          <div class="grid-2">
+            <div>
+              <label>Tageszeit/Wetter</label>
+              <select id="lan_time">
+                <option value="sunset">Sonnenuntergang</option>
+                <option value="sunrise">Sonnenaufgang</option>
+                <option value="golden">Golden Hour</option>
+                <option value="overcast">Bewölkt</option>
+                <option value="storm">Sturm</option>
+              </select>
+            </div>
+            <div>
+              <label>Perspektive</label>
+              <select id="lan_persp">
+                <option value="eye_level">Augenhöhe</option>
+                <option value="high">Vogelperspektive</option>
+                <option value="low">Froschperspektive</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Atmosphäre/Tiefe</label>
+            <input type="text" id="lan_atmo" placeholder="Dunst, Nebel, volumetrisches Licht">
+          </div>
+        </div>
+
+        <!-- Toon -->
+        <div class="genre-section" data-section="toon">
+          <div class="grid-2">
+            <div>
+              <label>Linien-Dichte</label>
+              <select id="toon_lines">
+                <option value="fine">Fein</option>
+                <option value="medium">Mittel</option>
+                <option value="bold">Kräftig</option>
+              </select>
+            </div>
+            <div>
+              <label>Cell-Shade-Stufen</label>
+              <select id="toon_cells">
+                <option value="2">2 Stufen</option>
+                <option value="3">3 Stufen</option>
+                <option value="4">4 Stufen</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Körnung/Grain</label>
+            <select id="toon_grain">
+              <option value="none">Keine</option>
+              <option value="light">Leicht</option>
+              <option value="heavy">Stark</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- NSFW -->
+        <div class="genre-section" data-section="nsfw">
+          <div class="grid-2">
+            <div>
+              <label>Akt-Typ</label>
+              <select id="nsfw_act">
+                <option value="teilakt_topless">Teilakt (topless)</option>
+                <option value="teilakt_bottomless">Teilakt (bottomless)</option>
+                <option value="vollakt">Vollakt</option>
+                <option value="boudoir">Boudoir</option>
+                <option value="erotisch_dezent">Erotisch – dezent</option>
+              </select>
+            </div>
+            <div>
+              <label>Bedeckungsgrad</label>
+              <select id="nsfw_cov">
+                <option value="bedeckt">Bedeckt</option>
+                <option value="teilweise">Teilweise</option>
+                <option value="nackt">Nackt</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:8px">
+            <div>
+              <label>Körperfokus</label>
+              <select id="nsfw_focus">
+                <option value="">Neutral</option>
+                <option value="brust">Brust</option>
+                <option value="po">Po</option>
+                <option value="bauch/taille">Bauch/Taille</option>
+                <option value="beine">Beine</option>
+              </select>
+            </div>
+            <div>
+              <label>Pose / Positionen</label>
+              <select id="nsfw_pose">
+                <option value="stehend_frontal">Stehend – frontal</option>
+                <option value="stehend_seitlich">Stehend – seitlich</option>
+                <option value="rueckenansicht">Rückenansicht</option>
+                <option value="kniend">Kniend</option>
+                <option value="liegend">Liegend</option>
+                <option value="gebeugter_ruecken">Gebeugter Rücken / Hohlkreuz</option>
+                <option value="po_betont">Po-betont (arch back)</option>
+                <option value="beinposition_leicht_geoeffnet">Beinposition: leicht geöffnet</option>
+                <option value="beinposition_weit_geoeffnet">Beinposition: weit geöffnet</option>
+              </select>
+              <div class="hint">Professionelle Akt-Posen; keine expliziten Handlungen.</div>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:8px">
+            <div>
+              <label>Kamerawinkel</label>
+              <select id="nsfw_cam">
+                <option value="eye">Augenhöhe</option>
+                <option value="low">Low-Angle (betont)</option>
+                <option value="high">High-Angle (verkürzt)</option>
+                <option value="closeup">Close-Up</option>
+              </select>
+            </div>
+            <div>
+              <label>Censor-Overlay</label>
+              <select id="nsfw_censor">
+                <option value="none">Kein Overlay</option>
+                <option value="pixel">Pixel</option>
+                <option value="bar">Schwarzer Balken</option>
+                <option value="blur">Weichzeichner</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Zusatz-Hinweise</label>
+            <input type="text" id="nsfw_notes" placeholder="z. B. Hautdetail hoch, weiches Fensterlicht, dezente Erotik">
+          </div>
         </div>
       </aside>
 
-      <!-- Mitte: Canvas & evtl. Masken -->
-      <main class="card">
-        <div class="toolbar" id="tools" style="display:none">
-          <button data-tool="rect" class="active">Rechteck</button>
-          <button data-tool="ellipse">Ellipse</button>
-          <button data-tool="lasso">Lasso</button>
-          <button data-tool="brush">Pinsel</button>
-          <button id="btnClearSel">Auswahlen löschen</button>
-          <span class="badge">Kanten bewahren <input type="checkbox" id="edgeKeep" checked></span>
+      <!-- MIDDLE: Preview & Prompt -->
+      <main class="panel">
+        <h3><i class="fas fa-image"></i> Vorschau</h3>
+        <div class="upload" id="upload" onclick="fileInput.click()">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <div><strong>Referenzbild hochladen (optional)</strong></div>
+          <small class="sub">Für Bild-zu-Bild oder Pose-Guides. PNG/JPG.</small>
+          <input type="file" id="fileInput" accept="image/*" style="display:none">
+        </div>
+        <div class="preview" id="preview" title="Zum Öffnen in den Viewer klicken">
+          <div class="sub">Zuerst erscheint hier dein Upload (falls vorhanden), danach das generierte Bild.</div>
         </div>
 
-        <div class="canvas-wrap">
-          <canvas id="canvas" width="1024" height="1024" aria-label="Vorschau"></canvas>
-          <canvas id="mask" width="1024" height="1024" style="position:absolute;inset:0;pointer-events:none"></canvas>
+        <div style="margin-top:12px">
+          <label>Prompt (Beschreibung)</label>
+          <textarea id="prompt" placeholder="Beschreibe das gewünschte Bild … z. B. 'realistic studio portrait, soft rim light, detailed skin'"></textarea>
+          <div class="chips" id="promptPresets">
+            <span class="chip" data-add="hyperrealistic, 8k, detailed textures">Hyperrealistisch</span>
+            <span class="chip" data-add="cinematic lighting, film still">Cinematisch</span>
+            <span class="chip" data-add="oil painting, classic, rich brushwork">Ölgemälde</span>
+            <span class="chip" data-add="anime style, vibrant colors">Anime-Stil</span>
+            <span class="chip" data-add="studio backdrop, seamless paper">Studio-Hintergrund</span>
+          </div>
         </div>
 
-        <div class="row" style="margin-top:8px">
-          <label class="row">
-            <span class="badge">Referenzbild</span>
-            <input id="imgRef" type="file" accept="image/*"/>
-          </label>
-          <span id="refInfo" class="pill">–</span>
+        <div class="progress" id="progressBox">
+          <div><strong>Status:</strong> <span id="statusTxt">–</span></div>
+          <div class="bar"><i id="bar"></i></div>
         </div>
+
+        <div class="actions">
+          <button class="btn" id="btnCancel" disabled><i class="fas fa-ban"></i> Abbrechen</button>
+          <button class="btn primary" id="btnGenerate"><i class="fas fa-wand-magic-sparkles"></i> Bild generieren</button>
+          <button class="btn" id="btnVariant" disabled><i class="fas fa-clone"></i> Variante</button>
+          <button class="btn" id="btnSave" disabled><i class="fas fa-floppy-disk"></i> In Galerie speichern</button>
+        </div>
+
+        <div class="variants" id="variants"></div>
       </main>
 
-      <!-- Rechts: Prompts, Vorschläge & Ergebnisse -->
-      <aside class="card">
-        <h3>Prompts</h3>
-        <div class="grid">
-          <label>Positiver Prompt
-            <textarea id="prompt" rows="5" placeholder="Beschreibe das gewünschte Bild (Stil, Motiv, Licht, Details)…"></textarea>
-          </label>
-          <label>Negativer Prompt
-            <textarea id="neg" rows="3" placeholder="Was vermeiden? z. B. Artefakte, Verzerrungen, Extra-Finger…"></textarea>
-          </label>
-        </div>
+      <!-- RIGHT: Parameters -->
+      <aside class="panel">
+        <h3><i class="fas fa-sliders"></i> Parameter</h3>
+        <div class="kv">
+          <div>
+            <label>Modell</label>
+            <select id="model">
+              <option value="sdxl">Stable Diffusion XL (empfohlen)</option>
+              <option value="sd15">Stable Diffusion 1.5</option>
+              <option value="flux">FLUX (experimentell)</option>
+              <option value="custom">Custom Fine-Tune</option>
+            </select>
+          </div>
 
-        <div class="card" style="margin-top:10px">
-          <h3>Vorschläge</h3>
-          <div id="ideas" class="list"></div>
-        </div>
+          <div class="row">
+            <div>
+              <label>Breite</label>
+              <input type="number" id="w" value="1024" min="256" step="64">
+            </div>
+            <div>
+              <label>Höhe</label>
+              <input type="number" id="h" value="1024" min="256" step="64">
+            </div>
+          </div>
 
-        <div class="card" style="margin-top:10px">
-          <h3>Ergebnisse</h3>
-          <div id="results" class="list"></div>
+          <div>
+            <label>Seitenverhältnis</label>
+            <div class="chips" id="ratios">
+              <span class="chip active" data-w="1024" data-h="1024">1:1</span>
+              <span class="chip" data-w="1024" data-h="1344">3:4</span>
+              <span class="chip" data-w="1344" data-h="1024">4:3</span>
+              <span class="chip" data-w="896" data-h="1152">9:16</span>
+              <span class="chip" data-w="1152" data-h="896">16:9</span>
+              <span class="chip" data-w="1728" data-h="864">21:9</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Guidance</label>
+              <input type="number" id="guidance" value="7.5" min="1" max="20" step="0.1">
+            </div>
+            <div>
+              <label>Steps</label>
+              <input type="number" id="steps" value="28" min="10" max="60" step="1">
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Sampler</label>
+              <select id="sampler">
+                <option value="euler_a">Euler a</option>
+                <option value="euler">Euler</option>
+                <option value="dpm2m">DPM++ 2M</option>
+                <option value="ddim">DDIM</option>
+                <option value="lms">LMS</option>
+              </select>
+            </div>
+            <div>
+              <label>Seed</label>
+              <input type="number" id="seed" placeholder="Random">
+            </div>
+          </div>
+
+          <div>
+            <label>Batch</label>
+            <div class="row">
+              <input type="number" id="batch" value="1" min="1" max="8">
+              <input type="number" id="variation" value="1" min="0" max="1000" title="Seed Variation">
+            </div>
+          </div>
+
+          <!-- Optional Tabs -->
+          <div style="margin-top:8px">
+            <div class="tabs">
+              <button class="tab active" data-tab="none">Basis</button>
+              <button class="tab" data-tab="inpaint">Inpainting</button>
+              <button class="tab" data-tab="controlnet">ControlNet / Pose</button>
+            </div>
+            <div class="opt-section active" data-opt="none">
+              <div class="sub">Standard-Modus ohne Masken/Guides.</div>
+            </div>
+            <div class="opt-section" data-opt="inpaint">
+              <div class="sub">Markiere Bereiche im Upload (Maske). Prompt beschreibt <strong>was</strong> neu entstehen soll.</div>
+              <label>Mask-Weichheit (px)</label>
+              <input type="number" id="mask_feather" value="12" min="0" max="64">
+              <label style="margin-top:6px">Kanten/Licht/Schatten anpassen</label>
+              <select id="adapt_edges">
+                <option value="auto">Auto</option>
+                <option value="strong">Stark</option>
+                <option value="light">Leicht</option>
+                <option value="off">Aus</option>
+              </select>
+            </div>
+            <div class="opt-section" data-opt="controlnet">
+              <div class="sub">Pose/Edges/Depth als Steuerung. Für <strong>Pose</strong> bitte ein Referenzbild mit sichtbarer Person laden.</div>
+              <label>Control-Typ</label>
+              <select id="cn_type">
+                <option value="pose">Pose (OpenPose)</option>
+                <option value="canny">Kanten (Canny)</option>
+                <option value="depth">Tiefenkarte</option>
+              </select>
+              <label style="margin-top:6px">Control-Stärke</label>
+              <input type="number" id="cn_strength" value="0.65" min="0" max="1" step="0.05">
+            </div>
+          </div>
         </div>
       </aside>
     </div>
   </div>
 
-  <footer>© AndioMediaStudio</footer>
+  <!-- ===== Overlay Viewer ===== -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Bildviewer">
+    <div class="viewer">
+      <header>
+        <strong id="vwTitle">Viewer</strong>
+        <div style="display:flex; gap:8px;">
+          <button class="btn" id="vwFit"><i class="fas fa-maximize"></i> Fit/Fill</button>
+          <a class="btn" id="vwDownload" download><i class="fas fa-download"></i> Download</a>
+          <button class="btn" id="vwClose"><i class="fas fa-xmark"></i> Schließen</button>
+        </div>
+      </header>
+      <div class="body">
+        <div class="media" id="vwMedia">
+          <div class="ov-ctrls">
+            <button class="ov-btn" id="vwZoomIn" title="Zoom +"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+            <button class="ov-btn" id="vwZoomOut" title="Zoom -"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+            <button class="ov-btn" id="vwReset" title="Reset"><i class="fa-solid fa-arrows-rotate"></i></button>
+          </div>
+          <button class="ov-nav ov-prev" id="vwPrev" title="Vorherige (←)"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="ov-nav ov-next" id="vwNext" title="Nächste (→)"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div id="vwMeta" class="sub">–</div>
+      </div>
+      <footer>
+        <div class="sub">Tipp: Mausrad = Zoom, Drag = Pan, ESC/Backdrop = schließen</div>
+        <div></div>
+      </footer>
+    </div>
+  </div>
 
   <script>
-  (()=> {
-    const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
-    const canvas=$('#canvas'), mask=$('#mask'), ctx=canvas.getContext('2d');
-    let img=null;
+    /***************
+     * Navbar basics
+     ***************/
+    const profileMenu = document.getElementById('profileMenu');
+    profileMenu.querySelector('button').addEventListener('click', ()=>{
+      const open = profileMenu.classList.toggle('open');
+      profileMenu.querySelector('button').setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click',(e)=>{ if(!profileMenu.contains(e.target)) profileMenu.classList.remove('open'); });
+    document.getElementById('btnTheme')?.addEventListener('click', ()=>alert('Theme-Umschalter: (Stub) – globales Theme folgt.'));
 
-    // Preset-Modelle (falls Loader vorhanden)
-    function fillModels(){
-      const sel=$('#model'); sel.innerHTML='';
-      const list = (window.Andio?.presets?.getModels?.()||[]).slice(0,200);
-      if(!list.length){ sel.innerHTML='<option value="auto">auto</option>'; return; }
-      list.forEach(m=>{
-        const o=document.createElement('option'); o.value=m.id; o.textContent=m.name; sel.appendChild(o);
-      });
+    /**************
+     * Persistence / Mode
+     **************/
+    const store = {
+      k:{ mode:'andio.mode', consent:'andio.consent' },
+      getMode(){ return localStorage.getItem(this.k.mode)||'sfw' },
+      setMode(m){ localStorage.setItem(this.k.mode,m) },
+      consentOK(){ try{ const c = JSON.parse(localStorage.getItem(this.k.consent)||'{}'); return !!c.ok; }catch{return false} }
+    };
+    const btnSFW = document.getElementById('btnSFW');
+    const btnNSFW = document.getElementById('btnNSFW');
+    function applyModeUI(mode){
+      btnSFW.classList.toggle('active', mode==='sfw');
+      btnNSFW.classList.toggle('active', mode==='nsfw');
+      btnSFW.setAttribute('aria-pressed', mode==='sfw');
+      btnNSFW.setAttribute('aria-pressed', mode==='nsfw');
+      document.querySelectorAll('.nsfw-only').forEach(el=>{ el.style.display = (mode==='nsfw') ? '' : 'none'; });
+      const nsfwSection = document.querySelector('[data-section="nsfw"]');
+      if(nsfwSection) nsfwSection.style.display = (mode==='nsfw') ? '' : 'none';
+      if(mode==='nsfw' && !store.consentOK()){ store.setMode('sfw'); applyModeUI('sfw'); }
     }
-    fillModels();
+    btnSFW.onclick = ()=>{ store.setMode('sfw'); applyModeUI('sfw'); };
+    btnNSFW.onclick = ()=>{ if(store.consentOK()){ store.setMode('nsfw'); applyModeUI('nsfw'); } else { alert('NSFW erfordert Altersbestätigung im Dashboard.'); } };
 
-    // Inhalt / NSFW
-    const nsfwGate = $('#nsfwGate');
-    $('#content').addEventListener('change', e=>{
-      nsfwGate.style.display = e.target.value==='nsfw' ? 'block' : 'none';
-    });
-    const consentOk = ()=> $('#content').value!=='nsfw' || ($('#ageOk').checked && $('#rightsOk').checked && $('#lawOk').checked);
-
-    // Modus: img2img blendet Tools ein
-    const tools = $('#tools');
-    $('#mode').addEventListener('change', ()=>{
-      const m = $('#mode').value;
-      tools.style.display = (m==='img2img') ? '' : 'none';
-    });
-
-    // Annotator
-    const annot = Andio.tools.attachAnnotator(canvas, mask, ()=>{});
-    $$('#tools button[data-tool]').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        $$('#tools button[data-tool]').forEach(x=>x.classList.remove('active'));
-        b.classList.add('active'); annot.setTool(b.dataset.tool);
+    /**************
+     * Genre logic
+     **************/
+    const genreList = document.getElementById('genreList');
+    genreList.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.genre-btn'); if(!btn) return;
+      if(btn.classList.contains('nsfw-only') && store.getMode()!=='nsfw'){ alert('NSFW-Genre ist nur im NSFW-Modus sichtbar.'); return; }
+      document.querySelectorAll('.genre-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const g = btn.dataset.genre;
+      document.querySelectorAll('.genre-section').forEach(sec=>{
+        sec.classList.toggle('active', sec.getAttribute('data-section')===g);
       });
     });
-    $('#btnClearSel').addEventListener('click', ()=> annot.reset());
 
-    // Bild laden
-    $('#imgRef').addEventListener('change', ()=>{
-      const f = $('#imgRef').files?.[0]; if(!f) return;
-      const im = new Image();
-      im.onload=()=>{ img=im; ctx.drawImage(im,0,0,1024,1024); annot.markImageLoaded(); $('#refInfo').textContent=f.name; };
-      im.src = URL.createObjectURL(f);
+    /**************
+     * Ratios & Prompt
+     **************/
+    document.getElementById('ratios').addEventListener('click', (e)=>{
+      const c = e.target.closest('.chip'); if(!c) return;
+      document.querySelectorAll('#ratios .chip').forEach(x=>x.classList.remove('active'));
+      c.classList.add('active');
+      document.getElementById('w').value = c.dataset.w;
+      document.getElementById('h').value = c.dataset.h;
+    });
+    document.getElementById('promptPresets').addEventListener('click', (e)=>{
+      const chip = e.target.closest('.chip'); if(!chip) return;
+      const t = document.getElementById('prompt'); const add = chip.getAttribute('data-add');
+      t.value = t.value ? (t.value + ', ' + add) : add;
     });
 
-    // Vorschläge initial
-    function setIdeas(){
-      const list=$('#ideas'); list.innerHTML='';
-      const mode = $('#mode').value;
-      const ideas = mode==='txt2img' ? [
-        'Porträt, soft studio light, 85mm, ultrarealistisch',
-        'Cinematic city at night, rain, reflections, bokeh',
-        'Product shot, rim light, clean background, high detail',
-        'Fantasy landscape, volumetric light, epic scale'
-      ] : [
-        'Stil-Transfer: „Filmlook 90s“, leichte Körnung, warmer Ton',
-        'Objekt hinzufügen: „goldene Kette“, dezente Highlights',
-        'Retusche: Hauttöne vereinheitlichen, weiches Licht',
-        'Hintergrund vereinfachen, leichte Vignette'
-      ];
-      ideas.forEach(t=>{ const d=document.createElement('div'); d.className='card'; d.textContent=t; d.style.cursor='pointer'; d.onclick=()=>{$('#prompt').value+=($('#prompt').value?'\n':'')+t;}; list.appendChild(d); });
-    }
-    setIdeas();
-    $('#mode').addEventListener('change', setIdeas);
-
-    // Random
-    $('#btnRandom').addEventListener('click', ()=>{
-      const mode = $('#mode').value;
-      const idea = Andio.randomPrompt('editor', mode==='txt2img'?'generate':'filter') || Andio.randomPrompt('wardrobe','sfw') || '';
-      if (idea) $('#prompt').value = ($('#prompt').value?$('#prompt').value+'\n':'') + idea;
-      // Seed leer lassen = zufällig
-      $('#seed').value='';
+    /**************
+     * Tabs
+     **************/
+    document.querySelectorAll('.tab').forEach(tab=>{
+      tab.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+        tab.classList.add('active');
+        const sel = tab.dataset.tab;
+        document.querySelectorAll('.opt-section').forEach(sec=>{
+          sec.classList.toggle('active', sec.getAttribute('data-opt')===sel || (sel==='none' && sec.getAttribute('data-opt')==='none'));
+          if(sel==='none') sec.classList.toggle('active', sec.getAttribute('data-opt')==='none');
+        });
+      });
     });
 
-    // Generate
-    $('#btnGenerate').addEventListener('click', async ()=>{
-      if($('#content').value==='nsfw' && !consentOk()){ alert('Bitte NSFW-Bestätigungen setzen.'); return; }
-      if($('#mode').value==='img2img' && !img){ alert('Bitte Referenzbild laden (Bild→Bild).'); return; }
+    /**************
+     * Upload → preview
+     **************/
+    const fileInput = document.getElementById('fileInput');
+    const upload = document.getElementById('upload');
+    const preview = document.getElementById('preview');
+    let uploadedImageData = null;
 
-      const payload = {
-        mode: $('#mode').value,
-        content: $('#content').value,
-        model: $('#model').value || 'auto',
-        size: $('#size').value,
-        steps: parseInt($('#steps').value||28,10),
-        cfg: parseFloat($('#cfg').value||7),
-        sampler: $('#sampler').value,
-        vae: $('#vae').value||null,
-        seed: $('#seed').value? parseInt($('#seed').value,10): null,
-        prompt: $('#prompt').value,
-        negative: $('#neg').value,
-        selections: annot.state.selections,
-        options: { edgeKeep: $('#edgeKeep').checked }
+    upload.addEventListener('dragover', e=>{ e.preventDefault(); upload.style.borderColor='#667eea'; upload.style.background='rgba(102,126,234,.05)'; });
+    upload.addEventListener('dragleave', e=>{ upload.style.borderColor='#ddd'; upload.style.background='#fff'; });
+    upload.addEventListener('drop', e=>{
+      e.preventDefault(); upload.style.borderColor='#ddd'; upload.style.background='#fff';
+      const f = e.dataTransfer.files?.[0]; if(f) handleFile(f);
+    });
+    fileInput.addEventListener('change', e=>{ const f=e.target.files?.[0]; if(f) handleFile(f); });
+
+    function handleFile(file){
+      const reader = new FileReader();
+      reader.onload = e=>{
+        uploadedImageData = e.target.result;
+        upload.innerHTML = `<img src="${uploadedImageData}" alt="Referenz" style="max-width:100%;max-height:180px;border-radius:10px;display:block;margin:0 auto"> <div class="sub" style="margin-top:6px">${file.name}</div>`;
+        preview.innerHTML = `<img id="previewImg" src="${uploadedImageData}" alt="Referenz">`;
+        enablePreviewOpen();
       };
+      reader.readAsDataURL(file);
+    }
 
-      const {hud} = await Andio.startJobWithHUD('Image: '+payload.mode, async ()=>{
-        if (Andio.api?.image?.start) return await Andio.api.image.start(payload); // -> {jobId}
-        return {jobId:'demo_'+Date.now()};
-      });
+    /**************
+     * Generate (API)
+     **************/
+    const btnGenerate = document.getElementById('btnGenerate');
+    const btnCancel   = document.getElementById('btnCancel');
+    const btnVariant  = document.getElementById('btnVariant');
+    const btnSave     = document.getElementById('btnSave');
+    const progressBox = document.getElementById('progressBox');
+    const statusTxt   = document.getElementById('statusTxt');
+    const bar         = document.getElementById('bar');
+    const variantsBox = document.getElementById('variants');
+    let currentJobId = null;
+    let pollTimer = null;
+    let lastResult = null;
 
-      setTimeout(async ()=>{
-        let out=null;
-        try{
-          if (Andio.api?.image?.finish) out = await Andio.api.image.finish(); // -> {files:[{url,type:'image',name,generated:true}]}
-          else out = {files:[{url:'assets/placeholders/sample_result.jpg', type:'image', name:'image.jpg', generated:true}]};
-          addResults(out.files||[]);
-        }catch(e){ console.error(e); }
-      }, 250);
+    async function api(path, opts){
+      try{ const r = await fetch(path, opts); if(!r.ok) return null; return await r.json(); }
+      catch{ return null; }
+    }
+
+    btnGenerate.addEventListener('click', async ()=>{
+      if(pollTimer) { clearInterval(pollTimer); pollTimer=null; }
+      btnGenerate.disabled = true; btnCancel.disabled=false; btnVariant.disabled = true; btnSave.disabled=true;
+      progressBox.style.display='block'; bar.style.width='0%'; statusTxt.textContent='Starte …';
+
+      const mode = store.getMode(); // sfw|nsfw
+      const genre = document.querySelector('.genre-btn.active')?.dataset.genre || 'portrait';
+      const payload = buildPayload(genre, mode);
+
+      const form = new FormData();
+      form.append('params', new Blob([JSON.stringify(payload)], {type:'application/json'}));
+      if(uploadedImageData){
+        const blob = dataURLtoBlob(uploadedImageData);
+        form.append('image', blob, 'reference.png');
+      }
+
+      const start = await fetch('/api/generate/image', { method:'POST', body:form }).catch(()=>null);
+      if(!start || !start.ok){
+        statusTxt.textContent = 'Fehler beim Starten der Generierung.';
+        btnGenerate.disabled=false; btnCancel.disabled=true; return;
+      }
+      const resp = await start.json().catch(()=>null);
+      currentJobId = resp?.job_id || resp?.id;
+      if(!currentJobId){
+        statusTxt.textContent='Kein Job-ID erhalten.'; btnGenerate.disabled=false; btnCancel.disabled=true; return;
+      }
+      statusTxt.textContent='Wird generiert …';
+      pollTimer = setInterval(pollJob, 1000);
     });
 
-    function addResults(files){
-      const host=$('#results');
-      files.forEach(f=>{
-        const card=document.createElement('div'); card.className='card';
-        card.innerHTML = `
-          <img class="thumb" src="${f.url}" alt="${f.name||'Output'}"/>
-          <div class="row" style="justify-content:space-between;margin-top:6px">
-            <b>${f.name||'Output'}</b>
-            <span class="badge">${(f.type||'image').toUpperCase()}</span>
-          </div>`;
-        host.prepend(card);
-      });
-    }
-  })();
-  </script>
+    btnCancel.addEventListener('click', async ()=>{
+      if(!currentJobId) return;
+      await api(`/api/jobs/${currentJobId}/cancel`);
+      statusTxt.textContent='Abgebrochen';
+      cleanupAfterJob();
+    });
 
-  <script>window.Andio?.polish?.();</script>
+    function cleanupAfterJob(){
+      if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+      btnGenerate.disabled=false; btnCancel.disabled=true;
+      btnVariant.disabled = !!lastResult; btnSave.disabled = !!lastResult;
+    }
+
+    async function pollJob(){
+      const j = await api(`/api/jobs/${currentJobId}`);
+      if(!j){ statusTxt.textContent='Warte auf Server …'; return; }
+      const pct = Math.max(0, Math.min(100, Math.round(j.progress||0)));
+      bar.style.width = pct + '%';
+      statusTxt.textContent = (j.status||'running');
+
+      if(j.status==='completed' || pct>=100){
+        clearInterval(pollTimer); pollTimer=null;
+        const out = await api(`/api/outputs?id=${encodeURIComponent(currentJobId)}`);
+        const item = Array.isArray(out) ? out[0] : out;
+        if(item && item.path){
+          preview.innerHTML = `<img id="previewImg" src="${item.path}" alt="Ergebnis">`;
+          enablePreviewOpen();
+          addVariant(item);
+          lastResult = item;
+          btnVariant.disabled=false; btnSave.disabled=false;
+          statusTxt.textContent='Fertig';
+        } else {
+          statusTxt.textContent='Fertig – kein Output gefunden.';
+        }
+        btnGenerate.disabled=false; btnCancel.disabled=true;
+      }
+      if(j.status==='failed'){
+        clearInterval(pollTimer); pollTimer=null;
+        statusTxt.textContent='Fehlgeschlagen';
+        btnGenerate.disabled=false; btnCancel.disabled=true;
+      }
+    }
+
+    function addVariant(item){
+      const card = document.createElement('div');
+      card.className = 'variant';
+      card.innerHTML = `<img src="${item.thumb || item.path}" alt="Variante">`;
+      card.onclick = ()=>{ openViewer(item.path, 'Variante'); };
+      variantsBox.prepend(card);
+    }
+
+    btnVariant.addEventListener('click', ()=>{
+      if(!lastResult) return;
+      const v = document.getElementById('variation'); v.value = Number(v.value||0)+1;
+      btnGenerate.click();
+    });
+
+    btnSave.addEventListener('click', async ()=>{
+      if(!lastResult) return;
+      await api(`/api/outputs/save?id=${encodeURIComponent(lastResult.id||currentJobId)}`);
+      alert('In Galerie gespeichert.');
+    });
+
+    function dataURLtoBlob(dataurl) {
+      const arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]); let n = bstr.length; const u8arr = new Uint8Array(n);
+      while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+      return new Blob([u8arr], {type:mime});
+    }
+
+    /**************
+     * Build payload from UI
+     **************/
+    function buildPayload(genre, mode){
+      const base = {
+        mode, genre,
+        prompt: document.getElementById('prompt').value.trim(),
+        model: document.getElementById('model').value,
+        width: Number(document.getElementById('w').value||1024),
+        height: Number(document.getElementById('h').value||1024),
+        steps: Number(document.getElementById('steps').value||28),
+        guidance: Number(document.getElementById('guidance').value||7.5),
+        sampler: document.getElementById('sampler').value,
+        seed: document.getElementById('seed').value ? Number(document.getElementById('seed').value) : null,
+        batch: Number(document.getElementById('batch').value||1),
+        variation: Number(document.getElementById('variation').value||0),
+        options: {}
+      };
+      const tab = document.querySelector('.tab.active')?.dataset.tab || 'none';
+      if(tab==='inpaint'){
+        base.options.inpaint = {
+          mask_feather: Number(document.getElementById('mask_feather').value||12),
+          adapt_edges: document.getElementById('adapt_edges').value
+        };
+      } else if(tab==='controlnet'){
+        base.options.controlnet = {
+          type: document.getElementById('cn_type').value,
+          strength: Number(document.getElementById('cn_strength').value||0.65)
+        };
+      }
+      switch(genre){
+        case 'portrait':
+          base.options.portrait = {
+            face:  document.getElementById('por_face').value,
+            skin:  document.getElementById('por_skin').value,
+            cam:   document.getElementById('por_cam').value,
+            light: document.getElementById('por_light').value,
+            style: document.getElementById('por_style').value
+          }; break;
+        case 'fashion':
+          base.options.fashion = {
+            cat: document.getElementById('fas_cat').value,
+            mat: document.getElementById('fas_mat').value,
+            pose: document.getElementById('fas_pose').value,
+            bg: document.getElementById('fas_bg').value,
+            seams: document.getElementById('fas_seams').value.trim()
+          }; break;
+        case 'product':
+          base.options.product = {
+            setup: document.getElementById('pro_setup').value,
+            material: document.getElementById('pro_mat').value.trim(),
+            shadow: document.getElementById('pro_shadow').value
+          }; break;
+        case 'landscape':
+          base.options.landscape = {
+            time: document.getElementById('lan_time').value,
+            persp: document.getElementById('lan_persp').value,
+            atmo: document.getElementById('lan_atmo').value.trim()
+          }; break;
+        case 'toon':
+          base.options.toon = {
+            lines: document.getElementById('toon_lines').value,
+            cells: document.getElementById('toon_cells').value,
+            grain: document.getElementById('toon_grain').value
+          }; break;
+        case 'nsfw':
+          base.options.nsfw = {
+            act: document.getElementById('nsfw_act').value,
+            cover: document.getElementById('nsfw_cov').value,
+            focus: document.getElementById('nsfw_focus').value,
+            pose: document.getElementById('nsfw_pose').value,
+            cam: document.getElementById('nsfw_cam').value,
+            censor: document.getElementById('nsfw_censor').value,
+            notes: document.getElementById('nsfw_notes').value.trim()
+          }; break;
+      }
+      return base;
+    }
+
+    /**************
+     * Overlay Viewer logic
+     **************/
+    const overlay = document.getElementById('overlay');
+    const vwClose = document.getElementById('vwClose');
+    const vwMedia = document.getElementById('vwMedia');
+    const vwMeta  = document.getElementById('vwMeta');
+    const vwDownload = document.getElementById('vwDownload');
+    const vwPrev = document.getElementById('vwPrev');
+    const vwNext = document.getElementById('vwNext');
+    const vwFit  = document.getElementById('vwFit');
+    const vwZoomIn = document.getElementById('vwZoomIn');
+    const vwZoomOut = document.getElementById('vwZoomOut');
+    const vwReset = document.getElementById('vwReset');
+
+    let imageList = []; // Reihenfolge: zuerst Preview, dann Varianten (neueste zuerst)
+    let currentIdx = -1;
+    let imgState = { zoom:1, panX:0, panY:0, dragging:false, startX:0, startY:0 };
+
+    function collectImages(){
+      imageList = [];
+      const main = document.getElementById('preview').querySelector('img')?.src;
+      if(main) imageList.push({src:main, title:'Vorschau'});
+      document.querySelectorAll('#variants img').forEach((im)=> imageList.push({src:im.src, title:'Variante'}));
+    }
+
+    function enablePreviewOpen(){
+      const pimg = document.getElementById('previewImg');
+      if(pimg){
+        pimg.addEventListener('click', ()=> openViewer(pimg.src, 'Vorschau'));
+      }
+    }
+
+    function openViewer(src, title){
+      collectImages();
+      currentIdx = imageList.findIndex(i=>i.src===src);
+      if(currentIdx<0) currentIdx = 0;
+      showCurrent(title);
+      overlay.classList.add('active');
+    }
+
+    function showCurrent(fallbackTitle='Bild'){
+      if(currentIdx<0 || currentIdx>=imageList.length) return;
+      const item = imageList[currentIdx];
+      document.getElementById('vwTitle').textContent = item.title || fallbackTitle;
+      vwMedia.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = item.src; img.alt = 'Bild';
+      img.style.transform = 'translate(0px,0px) scale(1)';
+      img.style.cursor='grab';
+      vwMedia.appendChild(img);
+      vwDownload.href = item.src;
+      vwMeta.textContent = `${item.title||'Bild'} • ${currentIdx+1}/${imageList.length}`;
+
+      imgState = { zoom:1, panX:0, panY:0, dragging:false, startX:0, startY:0 };
+
+      // Pan & Zoom
+      img.addEventListener('mousedown',(e)=>{
+        imgState.dragging = true; img.style.cursor='grabbing';
+        imgState.startX = e.clientX - imgState.panX; imgState.startY = e.clientY - imgState.panY;
+      });
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      img.addEventListener('wheel', (e)=>{
+        e.preventDefault();
+        const delta = -Math.sign(e.deltaY)*0.1;
+        imgState.zoom = Math.min(5, Math.max(0.2, imgState.zoom + delta));
+        img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`;
+      }, { passive:false });
+
+      vwFit.onclick = ()=>{
+        if(imgState.zoom!==1 || imgState.panX!==0 || imgState.panY!==0){
+          imgState.zoom=1; imgState.panX=0; imgState.panY=0;
+        }else{
+          imgState.zoom=1.35;
+        }
+        img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`;
+      };
+      vwZoomIn.onclick = ()=>{ imgState.zoom = Math.min(5, imgState.zoom + 0.15); img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`; };
+      vwZoomOut.onclick = ()=>{ imgState.zoom = Math.max(0.2, imgState.zoom - 0.15); img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`; };
+      vwReset.onclick = ()=>{ imgState.zoom=1; imgState.panX=0; imgState.panY=0; img.style.transform = `translate(0px,0px) scale(1)`; };
+
+      function onMove(e){
+        if(!imgState.dragging) return;
+        imgState.panX = e.clientX - imgState.startX; imgState.panY = e.clientY - imgState.startY;
+        img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`;
+      }
+      function onUp(){ imgState.dragging=false; img.style.cursor='grab'; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); }
+    }
+
+    function step(delta){
+      collectImages();
+      if(!imageList.length) return;
+      currentIdx = (currentIdx + delta + imageList.length) % imageList.length;
+      showCurrent();
+    }
+
+    // Viewer bindings
+    document.getElementById('vwClose').onclick = ()=> overlay.classList.remove('active');
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.classList.remove('active'); });
+    vwPrev.addEventListener('click', ()=>step(-1));
+    vwNext.addEventListener('click', ()=>step(1));
+    window.addEventListener('keydown',(e)=>{
+      if(!overlay.classList.contains('active')) return;
+      if(e.key==='Escape') overlay.classList.remove('active');
+      if(e.key==='ArrowLeft') step(-1);
+      if(e.key==='ArrowRight') step(1);
+    });
+
+    /**************
+     * Boot
+     **************/
+    document.addEventListener('DOMContentLoaded', ()=>{
+      applyModeUI(store.getMode());
+      // NSFW-Section initial togglen
+      document.querySelectorAll('.nsfw-only').forEach(el=>{ el.style.display = (store.getMode()==='nsfw') ? '' : 'none'; });
+      const nsfwSection = document.querySelector('[data-section="nsfw"]');
+      if(nsfwSection) nsfwSection.style.display = (store.getMode()==='nsfw') ? '' : 'none';
+    });
+  </script>
 </body>
 </html>

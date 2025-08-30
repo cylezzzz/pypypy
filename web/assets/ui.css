@@ -1,0 +1,190 @@
+/* ===========================
+   Andio Media Studio – Global UI
+   =========================== */
+
+/* --- Reset & Base --- */
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0f1115;
+  --panel:#171a22; --panel-2:#1e2330;
+  --text:#e7e9ef; --muted:#a7afc0;
+  --accent:#ff4fa3;
+  --ok:#5dd39e; --warn:#ffcf5a; --danger:#ff6b6b;
+  --line:#2a3144;
+  --chip:#2a3242; --chip-active:#3b455b;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+body {
+  font-family: 'Inter', system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background:linear-gradient(180deg,#0e1014,#0c0f14 40%,#0b0e13);
+  color:var(--text);
+}
+
+/* ===========================
+   Navbar
+   =========================== */
+header.andio-header {
+  position:sticky; top:0; z-index:60;
+  background:rgba(18,20,26,.85);
+  backdrop-filter:saturate(1.1) blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.andio-nav {
+  display:flex; align-items:center; gap:14px;
+  max-width:1400px; margin:0 auto; padding:12px 20px;
+}
+.andio-brand {
+  display:flex; align-items:center; gap:10px; font-weight:800;
+}
+.andio-brand .dot {
+  width:12px; height:12px; border-radius:50%;
+  background:var(--accent); box-shadow:0 0 20px var(--accent);
+}
+/* ✅ Logo fix */
+.andio-brand img {
+  height:28px;          /* vorher 44px → jetzt kompakt */
+  max-height:32px;
+  border-radius:6px;
+  object-fit:contain;
+}
+nav.andio-links {
+  display:flex; gap:6px; margin-left:14px; flex-wrap:wrap;
+}
+nav.andio-links a {
+  color:var(--muted); text-decoration:none;
+  padding:8px 12px; border-radius:10px;
+  border:1px solid transparent; line-height:1;
+}
+nav.andio-links a:hover {
+  color:var(--text); background:var(--panel);
+}
+nav.andio-links a.active {
+  color:#fff;
+  background:linear-gradient(180deg,rgba(255,79,163,.2),rgba(255,79,163,.06));
+  border-color:rgba(255,79,163,.35);
+}
+.andio-spacer { flex:1; }
+
+/* Suche */
+.andio-search { position:relative; }
+.andio-search input {
+  background:#111521; border:1px solid var(--line);
+  border-radius:10px; color:var(--text);
+  padding:8px 12px 8px 30px; min-width:220px;
+}
+.andio-search .fa-search {
+  position:absolute; left:8px; top:50%; transform:translateY(-50%);
+  color:var(--muted); font-size:13px;
+}
+
+/* NSFW Switch */
+.andio-badge {
+  padding:4px 8px; border-radius:999px;
+  background:var(--chip); border:1px solid var(--line);
+  font-size:12px; color:var(--muted);
+}
+.andio-switch {
+  --h:22px; position:relative;
+  width:46px; height:var(--h);
+  background:var(--chip); border-radius:999px;
+  cursor:pointer; border:1px solid var(--line);
+}
+.andio-switch input { display:none; }
+.andio-switch i {
+  position:absolute; left:2px; top:2px;
+  width:18px; height:18px;
+  border-radius:50%; background:#fff;
+  transition:all .18s ease;
+}
+.andio-switch input:checked + i {
+  left:26px; background:var(--accent);
+}
+
+/* Profil-Menü */
+.andio-tools { display:flex; align-items:center; gap:10px; }
+.andio-btn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 10px; border-radius:10px;
+  border:1px solid var(--line);
+  color:var(--text); background:#121722; cursor:pointer;
+}
+.andio-btn:hover { filter:brightness(1.06); }
+.andio-menu { position:relative; }
+.andio-menu-pane {
+  position:absolute; right:0; top:calc(100% + 8px);
+  min-width:220px;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line);
+  border-radius:12px; box-shadow:var(--shadow);
+  padding:8px; display:none;
+}
+.andio-menu.open .andio-menu-pane { display:block; }
+.andio-menu-pane a,.andio-menu-pane button {
+  display:flex; align-items:center; gap:8px;
+  width:100%; padding:10px;
+  border-radius:10px; border:1px solid transparent;
+  color:var(--text); background:transparent;
+  text-align:left; cursor:pointer;
+}
+.andio-menu-pane a:hover,.andio-menu-pane button:hover {
+  background:#2a3242;
+}
+
+/* ===========================
+   Overlay Player
+   =========================== */
+.andio-overlay {
+  position:fixed; inset:0;
+  background:rgba(7,8,12,.86);
+  backdrop-filter:blur(6px) saturate(1.2);
+  display:none; z-index:80;
+}
+.andio-overlay.show { display:flex; }
+.andio-overlay .stage {
+  position:relative; display:flex; flex:1; min-height:0;
+}
+.andio-overlay .media-wrap {
+  margin:auto; max-width:92vw; max-height:88vh;
+  position:relative; border-radius:14px;
+  overflow:hidden; border:1px solid var(--line);
+  background:#0b0f16;
+}
+.andio-overlay img.viewer {
+  display:block; max-width:100%; max-height:88vh;
+  transform-origin:center center; cursor:grab;
+}
+.andio-overlay video.viewer {
+  max-width:92vw; max-height:88vh; background:#000;
+}
+.andio-overlay .topbar {
+  position:absolute; left:0; right:0; top:0;
+  display:flex; gap:8px; align-items:center;
+  justify-content:flex-end; padding:8px;
+}
+.andio-overlay .bar-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 10px; border-radius:10px;
+  border:1px solid var(--line);
+  background:rgba(23,26,34,.85); color:#fff; cursor:pointer;
+}
+.andio-overlay .bar-btn:hover { filter:brightness(1.07); }
+.andio-overlay .footer {
+  position:absolute; left:0; right:0; bottom:0;
+  display:flex; gap:8px; align-items:center;
+  justify-content:center; padding:10px;
+}
+.andio-overlay .hint { color:#cbd2e2; font-size:12px; opacity:.8; }
+.andio-overlay .left,.andio-overlay .right {
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:46px; height:46px; border-radius:999px;
+  border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(23,26,34,.85); cursor:pointer; color:#fff;
+}
+.andio-overlay .left { left:16px; }
+.andio-overlay .right { right:16px; }
+
+/* ===========================
+   Utility
+   =========================== */
+.hide { display:none!important; }

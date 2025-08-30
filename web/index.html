@@ -1,86 +1,840 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>AndioMediaStudio – Start</title>
-  <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
-  <link rel="stylesheet" href="assets/styles.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AndioMediaStudio - Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
-    .hero{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
-    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-    .card.link{cursor:pointer;transition:transform .15s ease}
-    .card.link:hover{transform:translateY(-2px)}
-    .muted{opacity:.8}
+    /* ---------- Reset & Base ---------- */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root{
+      --g1:#667eea; --g2:#764ba2;
+      --glass: rgba(255,255,255,.95);
+      --glass2: rgba(255,255,255,.9);
+      --stroke: rgba(255,255,255,.2);
+      --ink:#333; --muted:#666;
+      --ok:#4CAF50; --warn:#FF9800; --info:#2196F3; --err:#F44336;
+      --chip:#eef2ff;
+      --shadow:0 8px 32px rgba(0,0,0,.12);
+      --radius:20px;
+
+      /* Navbar dark-on-glass */
+      --nb-bg: rgba(255,255,255,.9);
+      --nb-stroke: rgba(255,255,255,.25);
+      --nb-ink:#1b1f2a; --nb-muted:#5a6072;
+      --nb-pill:#ffffff; --nb-pill-hover:#f5f7ff;
+    }
+    body{
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--g1) 0%, var(--g2) 100%);
+      min-height:100vh; color:var(--ink);
+    }
+    .container{ max-width:1400px; margin:0 auto; padding:20px; }
+
+    /* ---------- NEW Navbar (sticky) ---------- */
+    .navbar{
+      position:sticky; top:0; z-index:40;
+      background:var(--nb-bg); backdrop-filter: blur(10px) saturate(1.1);
+      border-bottom:1px solid var(--nb-stroke);
+    }
+    .navbar .row{
+      max-width:1400px; margin:0 auto; padding:12px 18px;
+      display:flex; align-items:center; gap:14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px; text-decoration:none;
+    }
+    .brand img{ height:40px; border-radius:8px; }
+    .brand .title{ font-weight:800; color:var(--nb-ink); letter-spacing:.2px }
+    .brand .subtitle{ font-size:.85rem; color:var(--nb-muted); margin-top:2px }
+    .links{
+      display:flex; align-items:center; gap:6px; margin-left:8px; flex-wrap:wrap;
+    }
+    .links a{
+      text-decoration:none; color:var(--nb-ink);
+      background:var(--nb-pill); border:1px solid var(--nb-stroke);
+      padding:8px 12px; border-radius:999px; font-weight:650;
+      display:flex; align-items:center; gap:8px; transition:.2s;
+    }
+    .links a:hover{ background:var(--nb-pill-hover); transform:translateY(-1px) }
+    .links a.active{ background:linear-gradient(135deg,var(--g1),var(--g2)); color:#fff; border-color:transparent }
+    .spacer{ flex:1 }
+    .search{ position:relative }
+    .search input{
+      background:#fff; border:1px solid var(--nb-stroke); color:var(--nb-ink);
+      border-radius:10px; padding:8px 12px 8px 32px; min-width:220px;
+    }
+    .search .fa-search{ position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--nb-muted); font-size:.9rem }
+    .mode-toggle{
+      display:flex; align-items:center; gap:6px; padding:4px; border-radius:999px;
+      background:#fff; border:1px solid var(--nb-stroke);
+    }
+    .mode-toggle .chip{
+      padding:8px 12px; border-radius:999px; font-weight:700; cursor:pointer;
+      background:#fff; border:1px solid var(--nb-stroke); color:var(--nb-ink);
+    }
+    .mode-toggle .chip.active.sfw{ background:#e7f5ff; color:#005b96; border-color:#bee3ff; }
+    .mode-toggle .chip.active.nsfw{ background:#ffe7ef; color:#9b0034; border-color:#ffc2d2; }
+    .badge-18{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px;
+      border-radius:999px; background:#fff3e0; color:#9c5400; border:1px solid #ffe0b2; font-weight:700; }
+
+    .menu{ position:relative }
+    .menu > button{
+      background:#fff; border:1px solid var(--nb-stroke); color:var(--nb-ink);
+      padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer;
+    }
+    .menu .pane{
+      position:absolute; right:0; top:calc(100% + 8px);
+      min-width:220px; background:#fff; border:1px solid var(--nb-stroke);
+      border-radius:12px; box-shadow:var(--shadow); padding:8px; display:none;
+    }
+    .menu.open .pane{ display:block }
+    .pane a, .pane button{
+      display:flex; align-items:center; gap:8px; width:100%; padding:10px;
+      border-radius:10px; border:1px solid transparent; background:transparent; color:var(--nb-ink); text-decoration:none; cursor:pointer;
+    }
+    .pane a:hover, .pane button:hover{ background:#f5f7ff }
+
+    /* ---------- Grid Layout / Cards ---------- */
+    .grid{
+      display:grid; gap:22px; margin-top:18px;
+      grid-template-columns: 360px 1fr 380px;
+    }
+    @media (max-width: 1200px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+    .card{
+      background:var(--glass); border-radius:var(--radius); padding:18px;
+      box-shadow:var(--shadow); border:1px solid var(--stroke); transition:.25s;
+    }
+    .card:hover{ transform: translateY(-3px); box-shadow:0 15px 40px rgba(0,0,0,.15); }
+    .card h3{ display:flex; align-items:center; gap:10px; font-size:1.15rem; margin-bottom:12px; }
+    .sub{ color:var(--muted); font-size:.92rem; margin:-6px 0 10px; }
+
+    /* ---------- System Panel ---------- */
+    .status-dot{ width:10px; height:10px; border-radius:50%; background:var(--ok); margin-left:6px }
+    .metric{ display:flex; justify-content:space-between; align-items:center; margin:8px 0; padding:10px; background:rgba(102,126,234,.10); border-radius:10px; }
+    .metric-label{ color:var(--muted); font-weight:500; }
+    .metric-value{ font-weight:700; }
+    .progress{ height:8px; background:rgba(102,126,234,.2); border-radius:4px; overflow:hidden; margin-top:8px;}
+    .progress > i{ display:block; height:100%; background: linear-gradient(135deg, var(--g1), var(--g2)); width:0%; transition: width .4s ease; }
+
+    /* ---------- Jobs ---------- */
+    .filters{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+    .chip{ background:var(--chip); border:1px solid #e5e7ff; padding:6px 10px; border-radius:999px; cursor:pointer; font-weight:600; }
+    .chip.active{ background:#c7d2fe; }
+    .joblist{ display:flex; flex-direction:column; gap:10px; max-height:420px; overflow:auto; }
+    .job{ background:rgba(102,126,234,.10); padding:12px; border-radius:12px; display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; }
+    .job h4{ font-size:.98rem; }
+    .job small{ color:var(--muted); }
+    .job .actions{ display:flex; gap:6px; }
+    .btn{ padding:8px 10px; border-radius:10px; border:1px solid var(--stroke); background:#fff; cursor:pointer; font-weight:600; }
+    .btn:hover{ background:#f6f6ff; }
+    .pill{ padding:4px 8px; border-radius:999px; font-size:.78rem; font-weight:700; }
+    .pill.running{ background:#FFF3E0; color:#C77700; }
+    .pill.queued{ background:#E3F2FD; color:#1263a0; }
+    .pill.completed{ background:#E8F5E8; color:#1e7a31; }
+    .pill.failed{ background:#ffebee; color:#b00020; }
+    .job .bar{ height:6px; background:#eae7ff; border-radius:4px; overflow:hidden; margin-top:6px; }
+    .job .bar i{ display:block; height:100%; background: linear-gradient(135deg, var(--g1), var(--g2)); width:0%; transition:width .4s; }
+
+    /* ---------- Models ---------- */
+    .models{ display:grid; grid-template-columns:1fr; gap:10px; }
+    .model{ background:rgba(102,126,234,.10); padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; }
+    .model .name{ font-weight:700; }
+    .model .type{ color:var(--muted); font-size:.9rem; }
+    .model .state{ padding:4px 8px; border-radius:999px; font-size:.8rem; font-weight:700; }
+    .state.loaded{ background:#E8F5E8; color:#1e7a31; }
+    .state.available{ background:#E3F2FD; color:#1263a0; }
+
+    /* ---------- Recent Results & Quick Actions ---------- */
+    .split{ display:grid; gap:22px; grid-template-columns: 1.2fr .8fr; }
+    @media (max-width: 1200px){ .split{ grid-template-columns:1fr; } }
+    .thumbs{ display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); }
+    .thumb{ position:relative; background:#f6f7ff; border-radius:12px; overflow:hidden; cursor:pointer; border:1px solid var(--stroke); }
+    .thumb img, .thumb video{ width:100%; height:140px; object-fit:cover; display:block; }
+    .thumb .meta{ position:absolute; left:8px; top:8px; display:flex; gap:6px; }
+    .thumb .meta span{ background:rgba(0,0,0,.55); color:#fff; font-size:.72rem; padding:3px 6px; border-radius:999px; }
+    .qa{ display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:12px; }
+    .action{
+      background: linear-gradient(135deg, var(--g1), var(--g2)); color:#fff; border:0; padding:14px 16px;
+      border-radius:14px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:10px; justify-content:center;
+    }
+    .action:hover{ transform: translateY(-2px); box-shadow:0 10px 24px rgba(102,126,234,.35); }
+
+    /* ---------- Overlay Player (enhanced) ---------- */
+    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:center; justify-content:center; padding:20px; z-index:99; }
+    .overlay.active{ display:flex; }
+    .player{
+      background:#111; color:#fff; width:min(1100px, 95vw); border-radius:16px; overflow:hidden; border:1px solid #333;
+      display:grid; grid-template-rows:auto 1fr auto;
+    }
+    .player header{ padding:12px 14px; display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; }
+    .player .body{ padding:14px; display:grid; gap:12px; }
+    .player footer{ padding:10px 14px; background:#1a1a1a; display:flex; justify-content:space-between; align-items:center; }
+    .player .media{ width:100%; max-height:70vh; background:#000; border-radius:10px; overflow:hidden; position:relative; }
+    .player .media img, .player .media video{ width:100%; height:100%; object-fit:contain; background:#000; display:block; }
+    .player .tags{ display:flex; gap:6px; flex-wrap:wrap; }
+    .player .tags span{ background:#263238; padding:4px 8px; border-radius:999px; font-size:.8rem; }
+    .ov-ctrls{
+      position:absolute; left:10px; top:10px; display:flex; gap:8px; z-index:2;
+    }
+    .ov-btn{
+      display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:10px;
+      background:rgba(0,0,0,.45); color:#fff; border:1px solid rgba(255,255,255,.2); cursor:pointer;
+    }
+    .ov-btn:hover{ background:rgba(0,0,0,.65) }
+    .ov-nav{
+      position:absolute; top:50%; transform:translateY(-50%);
+      width:44px; height:44px; border-radius:999px; display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.45); color:#fff; border:1px solid rgba(255,255,255,.2); cursor:pointer;
+    }
+    .ov-prev{ left:10px } .ov-next{ right:10px }
+    .ov-nav:hover{ background:rgba(0,0,0,.65) }
+
+    /* ---------- Consent Modal (18+) ---------- */
+    .modal{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding:16px; z-index:100; }
+    .modal.active{ display:flex; }
+    .modal .box{
+      width:min(600px, 95vw); background:#fff; border-radius:16px; border:1px solid var(--stroke); box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .modal .box h2{ font-size:1.3rem; margin-bottom:8px; }
+    .modal .box p{ color:var(--muted); margin-bottom:10px; }
+    .consent-row{ display:flex; align-items:center; gap:10px; margin:10px 0; }
+    .consent-actions{ display:flex; gap:10px; justify-content:flex-end; }
+    .btn.primary{ background:linear-gradient(135deg, var(--g1), var(--g2)); color:#fff; border:0; }
+    .btn.danger{ background:#ffe8ee; color:#9b0034; }
+
+    /* ---------- Subtle Anim ---------- */
+    .card, .model, .job, .thumb { transition: transform .35s, box-shadow .35s; }
   </style>
 </head>
 <body>
-  <script src="assets/app.js"></script>
-  <script>window.Andio?.navbar?.('index');</script>
+  <!-- NEW NAVBAR -->
+  <div class="navbar" role="banner" aria-label="Hauptnavigation">
+    <div class="row">
+      <a class="brand" href="index.html" aria-label="Startseite">
+        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo">
+        <div>
+          <div class="title">AndioMediaStudio</div>
+          <div class="subtitle">Universelles lokales KI-Medienstudio</div>
+        </div>
+      </a>
 
-  <div class="container">
-    <h1>Andio Media Studio</h1>
+      <nav class="links" role="navigation" aria-label="Seitennavigation">
+        <a href="images.html"><i class="fas fa-image"></i> Images</a>
+        <a href="video-gen.html"><i class="fas fa-video"></i> Video</a>
+        <a href="editor.html"><i class="fas fa-pen-nib"></i> Editor</a>
+        <a href="wandrobe.html"><i class="fas fa-shirt"></i> Wardrobe</a>
+        <a href="motion.html"><i class="fas fa-person-running"></i> Motion</a>
+        <a href="gallery.html"><i class="fas fa-folder-open"></i> Galerie</a>
+        <a href="index.html" class="active" aria-current="page"><i class="fas fa-gauge"></i> Dashboard</a>
+      </nav>
 
-    <section class="card hero">
-      <div>
-        <h2>Lokales KI-Studio für Bild, Video & Motion</h2>
-        <p class="muted">
-          Text→Bild/Video, Bildbearbeitung (Inpainting/Remove), Wardrobe, Pose & Animation, Gallery & Model-Store.
-          Alles lokal, ohne Filter – du kontrollierst die Inhalte.
-        </p>
-        <div class="row" style="margin-top:8px">
-          <a class="btn primary" href="images.html">Los geht’s – Image Studio</a>
-          <a class="btn" href="video-gen.html">Video Studio</a>
-          <a class="btn" href="editor.html">Editor</a>
+      <div class="spacer"></div>
+
+      <div class="search" role="search">
+        <i class="fa-solid fa-search" aria-hidden="true"></i>
+        <input id="qSearch" type="search" placeholder="Outputs durchsuchen…">
+      </div>
+
+      <span class="badge-18" title="Ab 18"><i class="fa-solid fa-triangle-exclamation"></i> 18+</span>
+
+      <div class="mode-toggle" aria-label="SFW/NSFW-Umschalter">
+        <button class="chip sfw" id="btnSFW" aria-pressed="true">SFW</button>
+        <button class="chip nsfw" id="btnNSFW" aria-pressed="false">NSFW</button>
+      </div>
+
+      <div class="menu" id="profileMenu">
+        <button aria-haspopup="true" aria-expanded="false"><i class="fa-regular fa-user"></i> Profil</button>
+        <div class="pane" role="menu">
+          <a role="menuitem" href="catalog.html"><i class="fa-solid fa-database"></i> Katalog / Modelle</a>
+          <a role="menuitem" href="settings.html"><i class="fa-solid fa-gear"></i> Einstellungen</a>
+          <button role="menuitem" id="btnTheme"><i class="fa-regular fa-moon"></i> Theme umschalten</button>
         </div>
       </div>
-      <div>
-        <img src="assets/placeholders/hero.png" alt="AndioMediaStudio" style="width:100%;border-radius:12px;border:1px solid #222;background:#000"/>
-      </div>
-    </section>
-
-    <h3 style="margin-top:16px">Module</h3>
-    <div class="cards">
-      <a class="card link" href="images.html">
-        <h4>Image Studio</h4>
-        <p class="muted">Text→Bild & Bild→Bild, Masken-Tools, Vorschläge und Ergebnisse mit Player.</p>
-      </a>
-      <a class="card link" href="video-gen.html">
-        <h4>Video Studio</h4>
-        <p class="muted">Text→Video & Bild→Video mit erweiterten Parametern, sauberer Overlay-Player.</p>
-      </a>
-      <a class="card link" href="editor.html">
-        <h4>Editor</h4>
-        <p class="muted">Photoshop-ähnlich: Bereiche markieren, pro Bereich Prompts, Generieren/Remove/Filter/Pose.</p>
-      </a>
-      <a class="card link" href="wandrobe.html">
-        <h4>Wardrobe</h4>
-        <p class="muted">Auto-Masken, Stil-Presets, SFW/NSFW mit Consent-Gate, robuster Generate-Flow.</p>
-      </a>
-      <a class="card link" href="motion.html">
-        <h4>Motion</h4>
-        <p class="muted">Live-Keypoints, Timeline/Keyframes, Preview, Aktions-/Pose-Presets.</p>
-      </a>
-      <a class="card link" href="gallery.html">
-        <h4>Gallery</h4>
-        <p class="muted">Outputs aus /api/outputs oder Fallback-JSON, Overlay-Player, Filter.</p>
-      </a>
-      <a class="card link" href="catalog.html">
-        <h4>Store</h4>
-        <p class="muted">Modelle sichten/filtern, Details, Download/Install mit Job-HUD.</p>
-      </a>
-    </div>
-
-    <div class="card" style="margin-top:16px">
-      <h3>Tipps</h3>
-      <ul class="muted">
-        <li>Der Player öffnet ausschließlich für <strong>generierte</strong> Inhalte.</li>
-        <li>NSFW ist möglich – aktiviere die Bestätigungen im jeweiligen Modul.</li>
-        <li>Modelle kannst du im <a href="catalog.html">Store</a> verwalten.</li>
-      </ul>
     </div>
   </div>
 
-  <footer>© AndioMediaStudio</footer>
+  <!-- Main Grid -->
+  <div class="container">
+    <div class="grid">
+      <!-- Left: System -->
+      <section class="card" aria-labelledby="sys-title">
+        <h3 id="sys-title"><i class="fas fa-server"></i> System Status <span id="sys-dot" class="status-dot" aria-hidden="true"></span></h3>
+        <p class="sub" id="uptime">–</p>
+
+        <div class="metric">
+          <span class="metric-label">GPU Auslastung</span>
+          <span class="metric-value" id="gpuVal">–</span>
+        </div>
+        <div class="progress"><i id="gpuBar" style="width:0%"></i></div>
+
+        <div class="metric">
+          <span class="metric-label">RAM Verbrauch</span>
+          <span class="metric-value" id="ramVal">–</span>
+        </div>
+        <div class="progress"><i id="ramBar" style="width:0%"></i></div>
+
+        <div class="metric">
+          <span class="metric-label">VRAM Verbrauch</span>
+          <span class="metric-value" id="vramVal">–</span>
+        </div>
+        <div class="progress"><i id="vramBar" style="width:0%"></i></div>
+
+        <div class="metric">
+          <span class="metric-label">Queue Tiefe</span>
+          <span class="metric-value" id="queueVal">–</span>
+        </div>
+      </section>
+
+      <!-- Middle: Jobs -->
+      <section class="card" aria-labelledby="jobs-title">
+        <h3 id="jobs-title"><i class="fas fa-tasks"></i> Aktive Jobs</h3>
+        <p class="sub">Steuern & überwachen. Nur echte Daten – keine Simu.</p>
+
+        <div class="filters" role="tablist" aria-label="Jobfilter">
+          <button class="chip active" data-filter="all">Alle</button>
+          <button class="chip" data-filter="running">Laufend</button>
+          <button class="chip" data-filter="queued">Wartend</button>
+          <button class="chip" data-filter="completed">Fertig</button>
+          <button class="chip" data-filter="failed">Fehlgeschlagen</button>
+        </div>
+
+        <div id="joblist" class="joblist" aria-live="polite">
+          <!-- Jobs werden dynamisch geladen -->
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn" id="btnRefreshJobs"><i class="fas fa-sync"></i> Aktualisieren</button>
+          <button class="btn danger" id="btnClearQueued"><i class="fas fa-trash"></i> Wartende abbrechen</button>
+        </div>
+      </section>
+
+      <!-- Right: Models -->
+      <aside class="card" aria-labelledby="models-title">
+        <h3 id="models-title"><i class="fas fa-brain"></i> Geladene Modelle</h3>
+        <p class="sub">Status & Größe (VRAM-Footprint, falls verfügbar).</p>
+        <div id="models" class="models">
+          <!-- Modelle dynamisch -->
+        </div>
+      </aside>
+    </div>
+
+    <!-- Bottom: Results + Quick Actions -->
+    <div class="split" style="margin-top:22px;">
+      <section class="card" aria-labelledby="results-title">
+        <h3 id="results-title"><i class="fas fa-images"></i> Letzte Ergebnisse</h3>
+        <p class="sub">Nur <strong>generierte</strong> Medien (Upload-Referenzen werden ausgeblendet). Klick = Player-Overlay.</p>
+        <div id="thumbs" class="thumbs" aria-live="polite"></div>
+        <div id="thumbs-empty" class="sub" style="display:none;">Noch keine Ergebnisse. Starte eine Generierung rechts bei den Quick Actions.</div>
+      </section>
+
+      <section class="card" aria-labelledby="qa-title">
+        <h3 id="qa-title"><i class="fas fa-rocket"></i> Schnellzugriff</h3>
+        <div class="qa">
+          <button class="action" data-go="images.html?genre=portrait&style=real&lights=3point"><i class="fas fa-user"></i> Portrait Realistic</button>
+          <button class="action" data-go="images.html?genre=fashion&pose=lookbook&bg=studio"><i class="fas fa-shirt"></i> Lookbook (Studio)</button>
+          <button class="action" data-go="images.html?genre=product&setup=tabletop&lights=softbox"><i class="fas fa-box"></i> Product Table-Top</button>
+          <button class="action" data-go="video-gen.html?genre=fashion&camera=turntable"><i class="fas fa-film"></i> Fashion Turntable</button>
+          <button class="action" data-go="motion.html?mode=pose&softIK=1"><i class="fas fa-person-running"></i> Motion: Pose (Live)</button>
+          <button class="action" data-go="editor.html?mode=inpaint"><i class="fas fa-wand-magic-sparkles"></i> Editor: Inpainting</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Overlay Player (enhanced) -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Player">
+    <div class="player">
+      <header>
+        <strong id="plTitle">Player</strong>
+        <div style="display:flex; gap:8px;">
+          <button class="btn" id="plFit"><i class="fas fa-maximize"></i> Fit/Fill</button>
+          <a class="btn" id="plDownload" download><i class="fas fa-download"></i> Download</a>
+          <button class="btn" id="plClose"><i class="fas fa-xmark"></i> Schließen</button>
+        </div>
+      </header>
+      <div class="body">
+        <div class="media" id="plMedia">
+          <!-- overlay controls on media -->
+          <div class="ov-ctrls">
+            <button class="ov-btn" id="plZoomIn" title="Zoom +"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+            <button class="ov-btn" id="plZoomOut" title="Zoom -"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+            <button class="ov-btn" id="plReset" title="Reset"><i class="fa-solid fa-arrows-rotate"></i></button>
+          </div>
+          <button class="ov-nav ov-prev" id="plPrev" title="Vorherige (←)"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="ov-nav ov-next" id="plNext" title="Nächste (→)"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div class="tags" id="plTags"></div>
+      </div>
+      <footer>
+        <div id="plMeta">–</div>
+        <div style="display:flex; gap:8px;">
+          <a class="btn" id="plOpenFolder" target="_blank"><i class="fas fa-folder-open"></i> Im Ordner</a>
+          <a class="btn" id="plOpenFile" target="_blank"><i class="fas fa-arrow-up-right-from-square"></i> Datei öffnen</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 18+ Consent Modal -->
+  <div id="consent" class="modal" role="dialog" aria-modal="true" aria-label="Altersbestätigung">
+    <div class="box">
+      <h2><i class="fa-solid fa-triangle-exclamation"></i> Alters- & Inhalts­hinweis (ab 18)</h2>
+      <p>Dieses Programm kann Inhalte generieren oder anzeigen, die nur für Volljährige geeignet sind (NSFW). Mit “Bestätigen” erklärst du, dass du mindestens 18 Jahre alt bist und die Verantwortung für die Verwendung übernimmst.</p>
+      <div class="consent-row">
+        <input type="checkbox" id="chk18"> <label for="chk18">Ich bin mindestens 18 Jahre alt.</label>
+      </div>
+      <div class="consent-row">
+        <input type="checkbox" id="chkNSFWPref"> <label for="chkNSFWPref">NSFW-Inhalte im Interface sichtbar machen.</label>
+      </div>
+      <p class="sub">Du kannst die NSFW-Sichtbarkeit später jederzeit über den SFW/NSFW-Schalter ändern. Dieser Hinweis erscheint stündlich erneut (einstellbar).</p>
+      <div class="consent-actions">
+        <button class="btn danger" id="btnCancelConsent"><i class="fas fa-door-open"></i> Beenden</button>
+        <button class="btn primary" id="btnConfirmConsent"><i class="fas fa-check"></i> Bestätigen</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /***********************
+     * Persistence Helpers *
+     ***********************/
+    const store = {
+      get k(){ return {
+        mode:'andio.mode',            // 'sfw' | 'nsfw'
+        consent:'andio.consent',      // {ok:true, ts:number}
+        lastPopup:'andio.consent.ts', // number (ms)
+      }},
+      getMode(){ return localStorage.getItem(this.k.mode) || 'sfw'; },
+      setMode(m){ localStorage.setItem(this.k.mode, m); },
+      getConsent(){ try{ return JSON.parse(localStorage.getItem(this.k.consent)||'{}'); }catch{return{};} },
+      setConsent(obj){ localStorage.setItem(this.k.consent, JSON.stringify(obj||{})); localStorage.setItem(this.k.lastPopup, String(Date.now())); },
+      getLastPopup(){ return Number(localStorage.getItem(this.k.lastPopup)||0); }
+    };
+
+    /*****************
+     * Navbar basics *
+     *****************/
+    const profileMenu = document.getElementById('profileMenu');
+    profileMenu.querySelector('button').addEventListener('click', ()=>{
+      const open = profileMenu.classList.toggle('open');
+      profileMenu.querySelector('button').setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click',(e)=>{ if(!profileMenu.contains(e.target)) profileMenu.classList.remove('open'); });
+    document.getElementById('qSearch').addEventListener('input', (e)=>{
+      const q = e.target.value.trim().toLowerCase();
+      document.querySelectorAll('#thumbs .thumb').forEach(t=>{
+        t.style.display = t.innerText.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+    document.getElementById('btnTheme')?.addEventListener('click', ()=>alert('Theme-Umschalter: (Stub) – globales Theme folgt.'));
+
+    /*****************
+     * SFW/NSFW UI   *
+     *****************/
+    const btnSFW = document.getElementById('btnSFW');
+    const btnNSFW = document.getElementById('btnNSFW');
+
+    function applyModeUI(mode){
+      btnSFW.classList.toggle('active', mode==='sfw');
+      btnNSFW.classList.toggle('active', mode==='nsfw');
+      btnSFW.setAttribute('aria-pressed', mode==='sfw');
+      btnNSFW.setAttribute('aria-pressed', mode==='nsfw');
+    }
+
+    function setMode(mode){
+      // NSFW nur, wenn Consent ok
+      if(mode==='nsfw'){
+        const c = store.getConsent();
+        if(!c.ok){ showConsent(); return; }
+      }
+      store.setMode(mode);
+      applyModeUI(mode);
+      // QuickActions mit mode parammen
+      document.querySelectorAll('.action').forEach(btn=>{
+        const base = btn.getAttribute('data-go');
+        const url = new URL(base, window.location.origin);
+        url.searchParams.set('mode', mode);
+        btn.onclick = () => window.location.href = url.toString();
+      });
+      // Thumbs neu filtern (NSFW nur zeigen, wenn nsfw)
+      renderThumbs(cache.outputs);
+    }
+
+    btnSFW.addEventListener('click',()=>setMode('sfw'));
+    btnNSFW.addEventListener('click',()=>setMode('nsfw'));
+
+    /*****************
+     * Consent (18+) *
+     *****************/
+    const CONSENT_INTERVAL_MIN = 60; // jede Stunde erneut (anpassbar)
+    const consentEl = document.getElementById('consent');
+    const chk18 = document.getElementById('chk18');
+    const chkNSFWPref = document.getElementById('chkNSFWPref');
+    document.getElementById('btnCancelConsent').onclick = ()=>{ window.close?.(); consentEl.classList.remove('active'); alert('Ohne Altersbestätigung wird NSFW deaktiviert.'); setMode('sfw'); };
+    document.getElementById('btnConfirmConsent').onclick = ()=>{
+      if(!chk18.checked){ alert('Bitte bestätige, dass du mindestens 18 bist.'); return; }
+      store.setConsent({ok:true, ts:Date.now()});
+      consentEl.classList.remove('active');
+      if(chkNSFWPref.checked) setMode('nsfw'); else setMode('sfw');
+    };
+    function showConsent(){
+      consentEl.classList.add('active');
+      chk18.checked = false; chkNSFWPref.checked = false;
+    }
+    function maybeShowConsentOnLoad(){
+      const c = store.getConsent();
+      const last = store.getLastPopup();
+      const due = Date.now() - last > CONSENT_INTERVAL_MIN*60*1000;
+      if(!c.ok || due){ showConsent(); }
+    }
+
+    /*****************
+     * API Helpers   *
+     *****************/
+    async function api(path){
+      const r = await fetch(path).catch(()=>null);
+      if(!r || !r.ok) return null;
+      return await r.json().catch(()=>null);
+    }
+
+    const cache = { jobs:[], models:[], system:null, outputs:[] };
+
+    /*****************
+     * System Panel  *
+     *****************/
+    function fmtPercent(n){ if(n==null) return '–'; return `${Math.round(n)}%`; }
+    function updateBar(el, pct){ if(!el) return; el.style.width = Math.max(0, Math.min(100, Math.round(pct||0))) + '%'; }
+
+    async function loadSystem(){
+      const data = await api('/api/system');
+      cache.system = data;
+      const ok = !!data;
+      document.getElementById('sys-dot').style.background = ok ? 'var(--ok)' : 'var(--err)';
+      if(!ok){
+        document.getElementById('uptime').textContent = 'Server nicht erreichbar.';
+        ['gpuVal','ramVal','vramVal','queueVal'].forEach(id=>document.getElementById(id).textContent='–');
+        updateBar(document.getElementById('gpuBar'),0);
+        updateBar(document.getElementById('ramBar'),0);
+        updateBar(document.getElementById('vramBar'),0);
+        return;
+      }
+      document.getElementById('uptime').textContent = `Uptime: ${data.uptime_h || '–'}h`;
+      document.getElementById('gpuVal').textContent  = fmtPercent(data.gpu?.util);
+      document.getElementById('ramVal').textContent  = `${data.ram?.used_gb ?? '–'} / ${data.ram?.total_gb ?? '–'} GB`;
+      document.getElementById('vramVal').textContent = `${data.vram?.used_gb ?? '–'} / ${data.vram?.total_gb ?? '–'} GB`;
+      document.getElementById('queueVal').textContent= data.queue_depth ?? '–';
+      updateBar(document.getElementById('gpuBar'), data.gpu?.util);
+      const ramPct = data.ram && data.ram.total_gb ? (100*data.ram.used_gb/data.ram.total_gb) : 0;
+      updateBar(document.getElementById('ramBar'), ramPct);
+      const vramPct = data.vram && data.vram.total_gb ? (100*data.vram.used_gb/data.vram.total_gb) : 0;
+      updateBar(document.getElementById('vramBar'), vramPct);
+    }
+
+    /*****************
+     * Jobs Panel    *
+     *****************/
+    let jobFilter = 'all';
+    document.querySelectorAll('.filters .chip').forEach(ch=>{
+      ch.addEventListener('click', ()=>{
+        document.querySelectorAll('.filters .chip').forEach(x=>x.classList.remove('active'));
+        ch.classList.add('active');
+        jobFilter = ch.dataset.filter;
+        renderJobs(cache.jobs);
+      });
+    });
+
+    async function loadJobs(){
+      const data = await api('/api/jobs');
+      cache.jobs = Array.isArray(data)? data : [];
+      renderJobs(cache.jobs);
+    }
+
+    function renderJobs(list){
+      const box = document.getElementById('joblist');
+      box.innerHTML = '';
+      const filt = list.filter(j=>{
+        if(jobFilter==='all') return true;
+        return (j.status||'').toLowerCase() === jobFilter;
+      });
+      if(filt.length===0){
+        box.innerHTML = `<div class="sub">Keine Jobs gefunden.</div>`;
+        return;
+      }
+      for(const j of filt){
+        const id = j.id || '—';
+        const name = j.name || (j.type ? j.type.replace('_',' ') : 'Job');
+        const model = j.model || '';
+        const status = (j.status||'').toLowerCase();
+        const pct = Math.max(0, Math.min(100, Math.round(j.progress||0)));
+        const eta = j.eta_s ? `${Math.round(j.eta_s)}s` : '—';
+
+        const row = document.createElement('div');
+        row.className = 'job';
+        row.innerHTML = `
+          <div>
+            <h4>${name}</h4>
+            <small>${model} • ETA: ${eta}</small>
+            <div class="bar"><i style="width:${pct}%"></i></div>
+          </div>
+          <div>
+            <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
+              <span class="pill ${status}">${status||'—'}</span>
+              <div class="actions">
+                ${(status==='queued'||status==='running') ? `<button class="btn" data-act="cancel" data-id="${id}"><i class="fas fa-ban"></i></button>`:''}
+                ${(status==='failed') ? `<button class="btn" data-act="retry" data-id="${id}"><i class="fas fa-rotate-right"></i></button>`:''}
+              </div>
+            </div>
+          </div>
+        `;
+        box.appendChild(row);
+      }
+      box.querySelectorAll('button[data-act]').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const id = btn.getAttribute('data-id');
+          const act = btn.getAttribute('data-act');
+          if(act==='cancel') await api(`/api/jobs/${id}/cancel`);
+          if(act==='retry')  await api(`/api/jobs/${id}/retry`);
+          loadJobs();
+        });
+      });
+    }
+
+    document.getElementById('btnRefreshJobs').onclick = loadJobs;
+    document.getElementById('btnClearQueued').onclick = async ()=>{
+      const queued = cache.jobs.filter(j=>(j.status||'').toLowerCase()==='queued');
+      for(const q of queued){ await api(`/api/jobs/${q.id}/cancel`); }
+      loadJobs();
+    };
+
+    /*****************
+     * Models Panel  *
+     *****************/
+    async function loadModels(){
+      const data = await api('/api/models');
+      cache.models = Array.isArray(data)? data : [];
+      const box = document.getElementById('models');
+      box.innerHTML = '';
+      if(cache.models.length===0){
+        box.innerHTML = `<div class="sub">Keine Modelle erkannt. <br/>Starte den Server oder lade Modelle in der Katalog-Seite.</div>`;
+        return;
+      }
+      for(const m of cache.models){
+        const state = (m.status||'available').toLowerCase();
+        const type = m.type || '';
+        const vram = m.vram_gb ? ` • VRAM: ${m.vram_gb} GB` : '';
+        const div = document.createElement('div');
+        div.className = 'model';
+        div.innerHTML = `
+          <div>
+            <div class="name">${m.name||'Modell'}</div>
+            <div class="type">${type}${vram}</div>
+          </div>
+          <span class="state ${state}">${state==='loaded'?'Geladen':'Verfügbar'}</span>
+        `;
+        box.appendChild(div);
+      }
+    }
+
+    /*****************
+     * Results Grid  *
+     *****************/
+    async function loadOutputs(){
+      const data = await api('/api/outputs?limit=12&onlyGenerated=true');
+      cache.outputs = Array.isArray(data)? data : [];
+      renderThumbs(cache.outputs);
+      document.getElementById('thumbs-empty').style.display = cache.outputs.length? 'none':'block';
+    }
+
+    function renderThumbs(items){
+      const mode = store.getMode();
+      const box = document.getElementById('thumbs');
+      box.innerHTML = '';
+      for(const it of items){
+        // Expect it = { id, type:'image'|'video', path, thumb, generated:true, nsfw?:bool, duration?, model?, when?, tags?[] }
+        if(it.nsfw && mode!=='nsfw') continue; // NSFW nur im NSFW-Modus
+        if(!it.generated) continue; // Nur generiert
+        const el = document.createElement('div');
+        el.className = 'thumb';
+        el.setAttribute('data-id', it.id);
+        el.innerHTML = `
+          <div class="meta">
+            <span>${(it.type||'').toUpperCase()}</span>
+            ${it.model? `<span>${it.model}</span>`:''}
+            ${it.duration? `<span>${Math.round(it.duration)}s</span>`:''}
+          </div>
+          ${it.type==='video'
+            ? `<video src="${it.thumb||it.path}" muted></video>`
+            : `<img src="${it.thumb||it.path}" alt="Output ${it.id}">`
+          }
+        `;
+        el.addEventListener('click', ()=> openPlayerById(it.id));
+        box.appendChild(el);
+      }
+    }
+
+    /*****************
+     * Overlay Player (nav/zoom) *
+     *****************/
+    const overlay = document.getElementById('overlay');
+    const plClose = document.getElementById('plClose');
+    const plMedia = document.getElementById('plMedia');
+    const plTags  = document.getElementById('plTags');
+    const plMeta  = document.getElementById('plMeta');
+    const plOpenFile = document.getElementById('plOpenFile');
+    const plOpenFolder = document.getElementById('plOpenFolder');
+    const plDownload = document.getElementById('plDownload');
+    const plPrev = document.getElementById('plPrev');
+    const plNext = document.getElementById('plNext');
+    const plFit  = document.getElementById('plFit');
+    const plZoomIn = document.getElementById('plZoomIn');
+    const plZoomOut = document.getElementById('plZoomOut');
+    const plReset = document.getElementById('plReset');
+
+    let currentIdx = -1; // index in visible list (filtered)
+    let visibleList = []; // filtered outputs according to mode
+    let imgState = { zoom:1, panX:0, panY:0, dragging:false, startX:0, startY:0 };
+
+    function rebuildVisibleList(){
+      const mode = store.getMode();
+      visibleList = cache.outputs.filter(o => o.generated && (!o.nsfw || mode==='nsfw'));
+    }
+
+    function openPlayerById(id){
+      rebuildVisibleList();
+      currentIdx = visibleList.findIndex(x=>x.id===id);
+      if(currentIdx<0 && visibleList.length) currentIdx = 0;
+      openCurrent();
+    }
+
+    function openCurrent(){
+      if(currentIdx<0 || currentIdx>=visibleList.length) return;
+      const item = visibleList[currentIdx];
+      document.getElementById('plTitle').textContent = item.title || (item.type==='video'?'Video':'Bild');
+      plMedia.innerHTML = '';
+      imgState = { zoom:1, panX:0, panY:0, dragging:false, startX:0, startY:0 };
+
+      if(item.type==='video'){
+        const v = document.createElement('video');
+        v.src = item.path;
+        v.controls = true; v.autoplay = true; v.playsInline = true;
+        plMedia.appendChild(v);
+        plFit.style.display = 'none';
+        plZoomIn.style.display = plZoomOut.style.display = plReset.style.display = 'none';
+      }else{
+        const img = document.createElement('img');
+        img.src = item.path; img.alt = 'Media';
+        img.style.transform = 'translate(0px,0px) scale(1)';
+        img.style.cursor = 'grab';
+        plMedia.appendChild(img);
+        plFit.style.display = 'inline-block';
+        plZoomIn.style.display = plZoomOut.style.display = plReset.style.display = 'inline-flex';
+        attachPanZoom(img);
+      }
+
+      plTags.innerHTML = '';
+      (item.tags||[]).forEach(t=>{
+        const s = document.createElement('span'); s.textContent = t; plTags.appendChild(s);
+      });
+      plMeta.textContent = `${item.model||''} • ${item.when||''}`;
+      plOpenFile.href = item.path;
+      plOpenFolder.href = item.folder_url || '#';
+      plDownload.href = item.path;
+
+      overlay.classList.add('active');
+    }
+
+    function step(delta){
+      rebuildVisibleList();
+      if(!visibleList.length) return;
+      currentIdx = (currentIdx + delta + visibleList.length) % visibleList.length;
+      openCurrent();
+    }
+
+    function attachPanZoom(img){
+      img.addEventListener('mousedown',(e)=>{
+        imgState.dragging = true; img.style.cursor='grabbing';
+        imgState.startX = e.clientX - imgState.panX; imgState.startY = e.clientY - imgState.panY;
+      });
+      window.addEventListener('mousemove',(e)=>{
+        if(!imgState.dragging) return;
+        imgState.panX = e.clientX - imgState.startX; imgState.panY = e.clientY - imgState.startY;
+        img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`;
+      });
+      window.addEventListener('mouseup',()=>{ imgState.dragging=false; img.style.cursor='grab'; });
+      img.addEventListener('wheel',(e)=>{
+        e.preventDefault();
+        const delta = -Math.sign(e.deltaY)*0.1;
+        imgState.zoom = Math.min(5, Math.max(0.2, imgState.zoom + delta));
+        img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`;
+      }, { passive:false });
+
+      plFit.onclick = ()=>{
+        if(imgState.zoom!==1 || imgState.panX!==0 || imgState.panY!==0){
+          imgState.zoom=1; imgState.panX=0; imgState.panY=0;
+        }else{
+          imgState.zoom=1.35;
+        }
+        img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`;
+      };
+      plZoomIn.onclick = ()=>{ imgState.zoom = Math.min(5, imgState.zoom + 0.15); img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`; };
+      plZoomOut.onclick = ()=>{ imgState.zoom = Math.max(0.2, imgState.zoom - 0.15); img.style.transform = `translate(${imgState.panX}px,${imgState.panY}px) scale(${imgState.zoom})`; };
+      plReset.onclick = ()=>{ imgState.zoom=1; imgState.panX=0; imgState.panY=0; img.style.transform = `translate(0px,0px) scale(1)`; };
+    }
+
+    // Controls + keyboard + backdrop
+    document.getElementById('plClose').onclick = ()=> overlay.classList.remove('active');
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.classList.remove('active'); });
+    plPrev.addEventListener('click', ()=>step(-1));
+    plNext.addEventListener('click', ()=>step(1));
+    window.addEventListener('keydown',(e)=>{
+      if(!overlay.classList.contains('active')) return;
+      if(e.key==='Escape') overlay.classList.remove('active');
+      if(e.key==='ArrowLeft') step(-1);
+      if(e.key==='ArrowRight') step(1);
+    });
+
+    /*****************
+     * Quick Actions *
+     *****************/
+    function initQuickActions(){
+      document.querySelectorAll('.action').forEach(btn=>{
+        const base = btn.getAttribute('data-go');
+        btn.addEventListener('click', ()=>{
+          const mode = store.getMode();
+          const url = new URL(base, window.location.origin);
+          url.searchParams.set('mode', mode);
+          window.location.href = url.toString();
+        });
+      });
+    }
+
+    /*****************
+     * Polling       *
+     *****************/
+    let pollMs = 5000;
+    async function poll(){
+      await Promise.all([loadSystem(), loadJobs(), loadModels(), loadOutputs()]);
+      setTimeout(poll, pollMs);
+    }
+
+    /*****************
+     * Boot          *
+     *****************/
+    document.addEventListener('DOMContentLoaded', ()=>{
+      applyModeUI(store.getMode());
+      initQuickActions();
+      maybeShowConsentOnLoad();
+      poll(); // start polling
+      // Intro anim
+      document.querySelectorAll('.card').forEach((c,i)=>{
+        c.style.opacity='0'; c.style.transform='translateY(12px)';
+        setTimeout(()=>{ c.style.transition='all .45s ease'; c.style.opacity='1'; c.style.transform='translateY(0)'; }, i*80);
+      });
+    });
+  </script>
 </body>
 </html>

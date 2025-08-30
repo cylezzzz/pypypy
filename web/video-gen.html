@@ -1,198 +1,844 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Video Studio – AndioMediaStudio</title>
-<link rel="icon" type="image/png" href="assets/logo/logo.png"/>
-<link rel="stylesheet" href="assets/styles.css"/>
-<style>
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000}
-  .overlay.show{display:flex}
-  .modal{background:#111;color:#fff;max-width:90vw;max-height:90vh;width:960px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
-  .modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #222}
-  .modal .body{padding:12px 16px;overflow:auto}
-  .modal .body video{max-width:100%;max-height:70vh;border-radius:8px}
-  .modal footer{padding:10px 16px;border-top:1px solid #222;display:flex;gap:8px;justify-content:flex-end}
-  .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
-  .row{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-  .note{color:#888;font-size:.9em}
-  .sep{height:1px;background:#222;margin:12px 0}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .hud{font-size:.9em;opacity:.9}
-</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AndioMediaStudio - Video Studio</title>
+
+  <!-- Globale UI (Navbar-Styles etc.) -->
+  <link rel="stylesheet" href="assets/ui.css">
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* ===== Base / Theme ===== */
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --g1:#667eea; --g2:#764ba2;
+      --glass: rgba(255,255,255,.95);
+      --glass2: rgba(255,255,255,.9);
+      --stroke: rgba(255,255,255,.2);
+      --ink:#333; --muted:#666;
+      --ok:#4CAF50; --warn:#FF9800; --err:#F44336;
+      --shadow:0 8px 32px rgba(0,0,0,.12);
+      --radius:20px;
+    }
+    body{
+      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background:linear-gradient(135deg,var(--g1) 0%, var(--g2) 100%);
+      min-height:100vh; color:var(--ink);
+    }
+    .container{max-width:1600px;margin:0 auto;padding:20px}
+
+    /* ===== (Seiteninterne) Header Reste für Karten etc. ===== */
+    .header{
+      background:var(--glass); backdrop-filter: blur(10px);
+      border-radius:var(--radius); padding:18px 22px; margin-bottom:20px;
+      box-shadow:var(--shadow); border:1px solid var(--stroke);
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{height:32px;max-width:32px;border-radius:6px;object-fit:contain}
+    .brand h1{
+      font-size:1.8rem; line-height:1.1;
+      background:linear-gradient(135deg,var(--g1),var(--g2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .brand p{color:var(--muted); font-size:.95rem}
+    .nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .nav a, .nav button{
+      background:var(--glass2); border:1px solid var(--stroke);
+      padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:600;
+      text-decoration:none; color:var(--ink); transition:.25s; display:flex; gap:8px; align-items:center;
+    }
+    .nav a:hover, .nav button:hover{
+      background:linear-gradient(135deg,var(--g1),var(--g2)); color:#fff; transform:translateY(-1px);
+      box-shadow:0 4px 15px rgba(102,126,234,.25);
+    }
+    .mode-toggle{display:flex;align-items:center;gap:8px;padding:6px;border-radius:999px;background:var(--glass);border:1px solid var(--stroke)}
+    .mode-toggle .chip{padding:8px 12px;border-radius:999px;font-weight:700;cursor:pointer;background:#fff;border:1px solid var(--stroke)}
+    .mode-toggle .chip.active.sfw{background:#e7f5ff;color:#005b96;border-color:#bee3ff}
+    .mode-toggle .chip.active.nsfw{background:#ffe7ef;color:#9b0034;border-color:#ffc2d2}
+
+    /* ===== Workspace ===== */
+    .workspace{display:grid; gap:20px; grid-template-columns: 340px 1fr 400px;}
+    @media (max-width: 1280px){ .workspace{grid-template-columns:1fr} }
+    .panel{
+      background:var(--glass); border-radius:var(--radius); padding:18px;
+      box-shadow:var(--shadow); border:1px solid var(--stroke);
+    }
+    .panel h3{display:flex;align-items:center;gap:10px;font-size:1.1rem;margin-bottom:10px}
+    .sub{color:var(--muted); font-size:.9rem; margin:-4px 0 10px}
+    label{font-weight:600; font-size:.92rem; color:#333}
+    select, input[type="text"], input[type="number"], textarea{
+      width:100%; padding:10px; border:2px solid #e0e0e0; border-radius:10px; background:rgba(255,255,255,.95); font-size:.95rem;
+    }
+    textarea{min-height:90px; resize:vertical}
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .grid-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px}
+    .chip{padding:6px 10px; border-radius:999px; background:#eef2ff; border:1px solid #e5e7ff; cursor:pointer; font-weight:700; font-size:.9rem}
+    .chip.active{background:#c7d2fe}
+
+    /* Left: Genre */
+    .genre-list{display:grid; gap:8px}
+    .genre-btn{
+      padding:10px 12px; border-radius:12px; border:1px solid var(--stroke); background:#fff; cursor:pointer; text-align:left; font-weight:700;
+      display:flex; gap:8px; align-items:center; transition:.2s;
+    }
+    .genre-btn.active, .genre-btn:hover{background:#f6f6ff}
+    .genre-section{margin-top:14px; display:none}
+    .genre-section.active{display:block}
+    .hint{font-size:.82rem; color:#777}
+
+    /* Middle: Player & Upload */
+    .upload{border:2px dashed #ddd; border-radius:15px; padding:18px; text-align:center; cursor:pointer; transition:.2s; background:#fff}
+    .upload:hover{border-color:#667eea; background:rgba(102,126,234,.05)}
+    .upload i{font-size:2rem; color:#ccc; margin-bottom:6px}
+    .player{
+      margin-top:12px; background:#111; color:#fff; border-radius:15px; overflow:hidden; border:1px solid #222;
+      display:grid; grid-template-rows: auto 1fr auto;
+      min-height:420px;
+    }
+    .player header, .player footer{ background:#1a1a1a; padding:10px 12px; display:flex; justify-content:space-between; align-items:center }
+    .player .screen{ background:#000; display:flex; align-items:center; justify-content:center; }
+    .player video{ width:100%; height:100%; max-height:60vh; object-fit:contain }
+    .progress{display:none;background:rgba(102,126,234,.1);padding:14px;border-radius:12px;margin-top:12px}
+    .bar{height:8px;background:rgba(102,126,234,.2);border-radius:4px;overflow:hidden;margin-top:8px}
+    .bar i{display:block;height:100%;background:linear-gradient(135deg,var(--g1),var(--g2));width:0%;transition:width .4s}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .btn{padding:10px 12px;border-radius:12px;border:1px solid var(--stroke);background:#fff;cursor:pointer;font-weight:700}
+    .btn.primary{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border:0}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+
+    /* Right: Parameters */
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .tabs{display:flex; gap:8px; margin-top:8px}
+    .tab{padding:8px 12px; border-radius:10px; border:1px solid var(--stroke); background:#fff; cursor:pointer; font-weight:700}
+    .tab.active{background:#f6f6ff}
+    .opt-section{display:none; margin-top:10px}
+    .opt-section.active{display:block}
+  </style>
 </head>
 <body>
-<script src="assets/app.js"></script>
-<script>window.Andio?.navbar?.('video-gen');</script>
 
-<div class="container">
-  <h1>Video Studio</h1>
-  <p class="note">Text→Video & Bild→Video. Player öffnet <strong>nur</strong> für generierte Clips.</p>
+  <!-- Globale Navbar -->
+  <div data-include="navbar"></div>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Generierung</h3>
-      <div class="row">
-        <label for="v-mode">Modus</label>
-        <select id="v-mode"><option value="txt2vid">Text → Video</option><option value="img2vid">Bild → Video</option></select>
-      </div>
+  <div class="container">
+    <!-- Workspace -->
+    <div class="workspace">
+      <!-- LEFT: Genre Panel -->
+      <aside class="panel">
+        <h3><i class="fas fa-list"></i> Genre</h3>
+        <p class="sub">Wähle ein Genre – die passenden Szenenfelder erscheinen darunter.</p>
 
-      <div class="row">
-        <label for="v-model">Modell</label>
-        <select id="v-model">
-          <option value="auto">auto</option>
-          <option value="stable-video-diffusion">Stable Video Diffusion</option>
-          <option value="gen-2">Runway Gen-2</option>
-          <option value="pika">Pika</option>
-        </select>
-      </div>
+        <div class="genre-list" id="genreList">
+          <button class="genre-btn active" data-genre="portrait"><i class="fa-solid fa-user"></i> Portrait / Character</button>
+          <button class="genre-btn" data-genre="fashion"><i class="fa-solid fa-shirt"></i> Fashion / Lookbook</button>
+          <button class="genre-btn" data-genre="product"><i class="fa-solid fa-box-open"></i> Product / Ad</button>
+          <button class="genre-btn" data-genre="landscape"><i class="fa-solid fa-mountain"></i> Landscape / Establishing</button>
+          <button class="genre-btn" data-genre="toon"><i class="fa-solid fa-wand-magic-sparkles"></i> Animation / Toon</button>
+          <button class="genre-btn nsfw-only" data-genre="nsfw"><i class="fa-solid fa-eye-slash"></i> NSFW – Body / Posing</button>
+        </div>
 
-      <div class="row">
-        <label for="v-prompt">Prompt</label>
-        <textarea id="v-prompt" rows="4" placeholder="Szene, Bewegung, Stil, Kamera …"></textarea>
-      </div>
+        <!-- Portrait -->
+        <div class="genre-section active" data-section="portrait">
+          <div class="grid-2">
+            <div>
+              <label>„Talking pose“</label>
+              <select id="por_talking">
+                <option value="off">Aus (stille Pose)</option>
+                <option value="subtle">Leichte Mikro-Bewegungen</option>
+              </select>
+            </div>
+            <div>
+              <label>Kamera-Pfad</label>
+              <select id="por_cam">
+                <option value="orbit_slow">Orbit (slow)</option>
+                <option value="dolly_in">Dolly-In</option>
+                <option value="crane_up">Kranfahrt ↑</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:8px">
+            <div>
+              <label>Licht-Rig</label>
+              <select id="por_light">
+                <option value="3point">3-Punkt</option>
+                <option value="rembrandt">Rembrandt</option>
+                <option value="softbox">Softbox</option>
+              </select>
+            </div>
+            <div>
+              <label>Mimik-Kurven</label>
+              <select id="por_facecurve">
+                <option value="neutral">Neutral</option>
+                <option value="subtle_smile">Subtle Smile</option>
+                <option value="serious">Serious</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-      <div class="grid-2">
-        <label>Negativ <input id="v-neg" type="text" placeholder="Was vermeiden? Artefakte, Flimmern …"/></label>
-        <label>Seed <input id="v-seed" type="number" placeholder="leer = zufällig"/></label>
-      </div>
+        <!-- Fashion -->
+        <div class="genre-section" data-section="fashion">
+          <div class="grid-2">
+            <div>
+              <label>Modus</label>
+              <select id="fas_mode">
+                <option value="turntable">Turntable</option>
+                <option value="catwalk">Catwalk</option>
+                <option value="pose_cuts">Pose-Cuts</option>
+              </select>
+            </div>
+            <div>
+              <label>Stoff-Sim Intensität</label>
+              <select id="fas_fabric">
+                <option value="low">Niedrig</option>
+                <option value="med">Mittel</option>
+                <option value="high">Hoch</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Close-Up-Cuts</label>
+            <select id="fas_cuts">
+              <option value="none">Keine</option>
+              <option value="subtle">Dezent</option>
+              <option value="frequent">Häufig</option>
+            </select>
+          </div>
+        </div>
 
-      <div class="grid-2">
-        <label>Dauer (s) <input id="v-dur" type="number" min="1" max="16" value="6"/></label>
-        <label>FPS <input id="v-fps" type="number" min="6" max="30" value="12"/></label>
-      </div>
+        <!-- Product -->
+        <div class="genre-section" data-section="product">
+          <div class="grid-2">
+            <div>
+              <label>Shots-Liste</label>
+              <select id="pro_shots">
+                <option value="wide_medium_macro">Wide → Medium → Macro</option>
+                <option value="macro_showcase">Macro Showcase</option>
+              </select>
+            </div>
+            <div>
+              <label>MG Overlay</label>
+              <select id="pro_mg">
+                <option value="none">Aus</option>
+                <option value="logo_slogan">Logo + Slogan</option>
+                <option value="spec_bars">Specs Bars</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Reflexion / Schatten</label>
+            <select id="pro_reflect">
+              <option value="soft_shadow">Weicher Schatten</option>
+              <option value="mirror_floor">Spiegelnder Boden</option>
+            </select>
+          </div>
+        </div>
 
-      <div class="grid-2">
-        <label>Auflösung
-          <select id="v-size">
-            <option value="768x432">768×432 (16:9)</option>
-            <option value="960x540">960×540 (16:9)</option>
-            <option value="1024x576">1024×576 (16:9)</option>
-            <option value="768x768">768×768 (1:1)</option>
-            <option value="576x1024">576×1024 (9:16)</option>
+        <!-- Landscape -->
+        <div class="genre-section" data-section="landscape">
+          <div class="grid-2">
+            <div>
+              <label>Time-of-Day</label>
+              <select id="lan_time">
+                <option value="sunset">Sunset</option>
+                <option value="sunrise">Sunrise</option>
+                <option value="night">Night</option>
+              </select>
+            </div>
+            <div>
+              <label>Kamerafahrt</label>
+              <select id="lan_move">
+                <option value="flythrough">Flythrough</option>
+                <option value="hyperlapse">Hyperlapse</option>
+                <option value="parallax">Parallax-Depth</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Wetter/Atmosphäre</label>
+            <input type="text" id="lan_weather" placeholder="Fog, volumetric light, rain">
+          </div>
+        </div>
+
+        <!-- Toon -->
+        <div class="genre-section" data-section="toon">
+          <div class="grid-2">
+            <div>
+              <label>Smear-Frames</label>
+              <select id="toon_smear">
+                <option value="none">Aus</option>
+                <option value="light">Leicht</option>
+                <option value="heavy">Stark</option>
+              </select>
+            </div>
+            <div>
+              <label>Frame-Hold-Stil</label>
+              <select id="toon_hold">
+                <option value="none">Konstant</option>
+                <option value="step2">2-Step</option>
+                <option value="step3">3-Step</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Übergänge</label>
+            <select id="toon_trans">
+              <option value="cut">Cut</option>
+              <option value="wipe">Wipe</option>
+              <option value="match">Match-Cut</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- NSFW (nur im NSFW-Modus sichtbar) -->
+        <div class="genre-section" data-section="nsfw">
+          <div class="grid-2">
+            <div>
+              <label>Kompositions-Guide</label>
+              <select id="nsfw_comp">
+                <option value="neutral">Neutral</option>
+                <option value="classic_boudoir">Classic Boudoir</option>
+                <option value="high_glamour">High Glamour</option>
+              </select>
+            </div>
+            <div>
+              <label>Bedeckungs-Keyframes</label>
+              <select id="nsfw_coverkf">
+                <option value="static">Statisch</option>
+                <option value="progressive">Progressiv (Layer wechseln)</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:8px">
+            <div>
+              <label>Intimacy-Camera</label>
+              <select id="nsfw_cam">
+                <option value="none">Aus</option>
+                <option value="close_over_shoulder">Close, Over-Shoulder</option>
+                <option value="tight_dof">Tight DOF</option>
+              </select>
+            </div>
+            <div>
+              <label>Censor-Overlay</label>
+              <select id="nsfw_censor">
+                <option value="none">Kein Overlay</option>
+                <option value="pixel">Pixel</option>
+                <option value="bar">Schwarzer Balken</option>
+                <option value="blur">Weichzeichner</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Hinweise</label>
+            <input type="text" id="nsfw_notes" placeholder="dezente Erotik, weiches Licht, Hautdetail hoch">
+          </div>
+          <div class="hint">NSFW-Optionen erscheinen nur im NSFW-Modus; keine expliziten Handlungen, Fokus auf Pose/Komposition.</div>
+        </div>
+      </aside>
+
+      <!-- MIDDLE: Player & Prompt -->
+      <main class="panel">
+        <h3><i class="fas fa-video"></i> Vorschau-Player</h3>
+        <div class="upload" id="upload" onclick="refInput.click()">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <div><strong>Referenz hochladen (optional)</strong></div>
+          <small class="sub">Für Motion Transfer (Video/Pose) oder Bild-zu-Video. MP4/WebM/PNG/JPG.</small>
+          <input type="file" id="refInput" accept="video/*,image/*" style="display:none">
+        </div>
+
+        <div class="player" id="playerBox" aria-label="Videoplayer">
+          <header>
+            <strong id="plTitle">Kein Clip</strong>
+            <div class="actions">
+              <button class="btn" id="btnOpenFile" disabled><i class="fas fa-arrow-up-right-from-square"></i> Datei öffnen</button>
+              <button class="btn" id="btnOpenFolder" disabled><i class="fas fa-folder-open"></i> Ordner</button>
+            </div>
+          </header>
+          <div class="screen" id="screen">
+            <div class="sub">Das generierte Video erscheint hier, Uploads dienen nur als Referenz.</div>
+          </div>
+          <footer>
+            <span id="plMeta" class="sub">—</span>
+            <span id="plTags" class="sub">—</span>
+          </footer>
+        </div>
+
+        <div style="margin-top:12px">
+          <label>Prompt (Szenenbeschreibung)</label>
+          <textarea id="prompt" placeholder="z. B. 'fashion turntable with soft rim light, gentle fabric motion, elegant pacing'"></textarea>
+          <div class="chips" id="promptPresets">
+            <span class="chip" data-add="cinematic lighting, contrast control">Cinematisch</span>
+            <span class="chip" data-add="smooth camera orbit, subtle parallax">Sanfte Kamera</span>
+            <span class="chip" data-add="elegant pacing, tasteful composition">Eleganz</span>
+            <span class="chip" data-add="studio environment, seamless backdrop">Studio</span>
+          </div>
+        </div>
+
+        <div class="progress" id="progressBox">
+          <div><strong>Status:</strong> <span id="statusTxt">–</span></div>
+          <div class="bar"><i id="bar"></i></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="btnCancel" disabled><i class="fas fa-ban"></i> Abbrechen</button>
+          <button class="btn primary" id="btnGenerate"><i class="fas fa-wand-magic-sparkles"></i> Video generieren</button>
+          <button class="btn" id="btnSave" disabled><i class="fas fa-floppy-disk"></i> In Galerie speichern</button>
+        </div>
+      </main>
+
+      <!-- RIGHT: Parameters -->
+      <aside class="panel">
+        <h3><i class="fas fa-sliders"></i> Parameter</h3>
+
+        <div class="grid-2">
+          <div>
+            <label>Modell</label>
+            <select id="model">
+              <option value="svd">Stable Video Diffusion</option>
+              <option value="latte">Latte</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div>
+            <label>Seed</label>
+            <input type="number" id="seed" placeholder="Random">
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:8px">
+          <div>
+            <label>Dauer (s)</label>
+            <input type="number" id="duration" value="6" min="1" max="30" step="1">
+          </div>
+          <div>
+            <label>FPS</label>
+            <input type="number" id="fps" value="16" min="8" max="30">
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:8px">
+          <div>
+            <label>Breite</label>
+            <input type="number" id="w" value="576" min="256" step="64">
+          </div>
+          <div>
+            <label>Höhe</label>
+            <input type="number" id="h" value="1024" min="256" step="64">
+          </div>
+        </div>
+
+        <div style="margin-top:8px">
+          <label>Kamera-Keyframes (JSON)</label>
+          <textarea id="camKF" placeholder='[{"t":0,"pos":"front","move":"orbit_slow"},{"t":3,"move":"dolly_in"}]'></textarea>
+          <div class="hint">Einfach lassen, wenn du nur Presets nutzt. Server kann Keyframes optional interpretieren.</div>
+        </div>
+
+        <div style="margin-top:8px">
+          <label>Übergänge</label>
+          <select id="trans">
+            <option value="cut">Cut</option>
+            <option value="cross">Crossfade</option>
+            <option value="wipe">Wipe</option>
           </select>
-        </label>
-        <label>Sampler
-          <select id="v-sampler"><option value="euler">Euler</option><option value="dpmpp_2m">DPM++ 2M</option><option value="dpmpp_sde">DPM++ SDE</option><option value="ddim">DDIM</option></select>
-        </label>
-      </div>
-
-      <div class="grid-2">
-        <label>Guidance (CFG) <input id="v-cfg" type="number" min="1" max="20" step="0.5" value="6.5"/></label>
-        <label>Steps <input id="v-steps" type="number" min="1" max="80" step="1" value="28"/></label>
-      </div>
-
-      <details class="card">
-        <summary>Erweitert</summary>
-        <div class="grid-2">
-          <label>Motion Strength <input id="v-motion" type="range" min="0" max="1" step="0.05" value="0.7"/></label>
-          <label>Camera Strength <input id="v-cam" type="range" min="0" max="1" step="0.05" value="0.4"/></label>
         </div>
-        <div class="grid-2">
-          <label>Highres Upscale
-            <select id="v-hires"><option value="off">Aus</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
-          </label>
-          <label>Loop
-            <select id="v-loop"><option value="off">Aus</option><option value="pingpong">Ping-Pong</option><option value="seamless">Seamless</option></select>
-          </label>
+
+        <!-- Advanced Tabs -->
+        <div style="margin-top:10px">
+          <div class="tabs">
+            <button class="tab active" data-tab="none">Basis</button>
+            <button class="tab" data-tab="transfer">Motion Transfer</button>
+            <button class="tab" data-tab="lipsync">Lip-Sync</button>
+          </div>
+
+          <div class="opt-section active" data-opt="none">
+            <div class="sub">Standard-Video aus Prompt/Genre ohne Transfer oder Lip-Sync.</div>
+          </div>
+
+          <div class="opt-section" data-opt="transfer">
+            <div class="sub">Bewegung aus Referenz-Video übernehmen (optional). Lade oben ein Video hoch.</div>
+            <div class="grid-3">
+              <div>
+                <label>Dichte</label>
+                <input type="number" id="tr_density" value="0.7" min="0" max="1" step="0.05">
+              </div>
+              <div>
+                <label>Amplitude</label>
+                <input type="number" id="tr_amp" value="0.8" min="0" max="1" step="0.05">
+              </div>
+              <div>
+                <label>Timing</label>
+                <select id="tr_timing">
+                  <option value="match">Match</option>
+                  <option value="loose">Loose</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="opt-section" data-opt="lipsync">
+            <div class="sub">Audio + Bild → Talking Head. Lade oben Audio (WAV/MP3) und ein Referenzbild hoch.</div>
+            <div class="grid-3">
+              <div>
+                <label>Viseme-Glättung</label>
+                <input type="number" id="ls_smooth" value="0.6" min="0" max="1" step="0.05">
+              </div>
+              <div>
+                <label>Latenz (ms)</label>
+                <input type="number" id="ls_latency" value="80" min="0" max="300" step="10">
+              </div>
+              <div>
+                <label>Emotion-Bias</label>
+                <select id="ls_emotion">
+                  <option value="neutral">Neutral</option>
+                  <option value="warm">Warm</option>
+                  <option value="serious">Serious</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
-      </details>
 
-      <div class="sep"></div>
-
-      <div class="row" id="v-ref-row"><label for="v-ref">Referenzbild</label><input id="v-ref" type="file" accept="image/*"/></div>
-
-      <div class="row">
-        <button id="v-random">Random</button>
-        <button id="v-generate" class="primary">Generieren</button>
-        <button id="v-clear" class="secondary">Zurücksetzen</button>
-        <span id="hud" class="hud"></span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Vorschau & Historie</h3>
-      <div id="v-preview" class="cards"></div>
+        <!-- NSFW Bindings: Bedeckung-Keyframes etc. -->
+        <div class="nsfw-only" style="margin-top:10px">
+          <label>Bedeckungs-Keyframes (JSON)</label>
+          <textarea id="nsfwKf" placeholder='[{"t":0,"top":"on"},{"t":2,"top":"off"}]'></textarea>
+          <div class="grid-2" style="margin-top:8px">
+            <div>
+              <label>Intimacy-Camera Preset</label>
+              <select id="nsfwCamPreset">
+                <option value="none">Aus</option>
+                <option value="close_over_shoulder">Close / Over-Shoulder</option>
+                <option value="tight_dof">Tight DOF</option>
+              </select>
+            </div>
+            <div>
+              <label>Censor-Overlay</label>
+              <select id="nsfwCensor">
+                <option value="none">Kein Overlay</option>
+                <option value="pixel">Pixel</option>
+                <option value="bar">Schwarzer Balken</option>
+                <option value="blur">Weichzeichner</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   </div>
-</div>
 
-<!-- Overlay Player -->
-<div id="v-overlay" class="overlay" aria-hidden="true">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="Player">
-    <header><strong id="v-ov-title">Player</strong><button id="v-ov-close" aria-label="Schließen">✕</button></header>
-    <div class="body"><video id="v-ov-vid" controls playsinline></video></div>
-    <footer><a id="v-ov-download" class="secondary" download>Download</a><button id="v-ov-close2">Schließen</button></footer>
-  </div>
-</div>
-
-<footer>© AndioMediaStudio</footer>
-
-<script>
-(()=> {
-  const $=s=>document.querySelector(s);
-  const els={ model:$('#v-model'), mode:$('#v-mode'), prompt:$('#v-prompt'), neg:$('#v-neg'), seed:$('#v-seed'),
-    dur:$('#v-dur'), fps:$('#v-fps'), size:$('#v-size'), sampler:$('#v-sampler'), cfg:$('#v-cfg'),
-    steps:$('#v-steps'), motion:$('#v-motion'), cam:$('#v-cam'), hires:$('#v-hires'), loop:$('#v-loop'),
-    ref:$('#v-ref'), refRow:$('#v-ref-row'), preview:$('#v-preview'), hud:$('#hud') };
-
-  els.mode.addEventListener('change', ()=> els.refRow.style.display = els.mode.value==='img2vid' ? '' : 'none');
-  els.refRow.style.display='none';
-
-  $('#v-random').addEventListener('click', ()=>{
-    const idea='cinematic night street, soft rain reflections, slow dolly, shallow depth of field';
-    els.prompt.value = (els.prompt.value.trim()? els.prompt.value+'\n' : '') + idea;
-  });
-
-  const overlay = (()=> {
-    const el=$('#v-overlay'), vid=$('#v-ov-vid'), title=$('#v-ov-title'), dl=$('#v-ov-download');
-    const close=()=>{el.classList.remove('show');el.setAttribute('aria-hidden','true');vid.pause();}
-    $('#v-ov-close').onclick=close; $('#v-ov-close2').onclick=close; el.addEventListener('click',(e)=>{ if(e.target===el) close(); });
-    return { open: (item)=>{ if(!item||!item.generated) return; title.textContent=item.name||'Player'; dl.href=item.url; dl.download=item.name||'output.mp4'; vid.src=item.url; el.classList.add('show'); el.setAttribute('aria-hidden','false'); } };
-  })();
-
-  const pickUrl=o=>o?.url||o?.result?.url||o?.data?.url||null;
-  async function postMultipart(endpoint,payload,files){
-    const fd=new FormData(); fd.append('payload', new Blob([JSON.stringify(payload)],{type:'application/json'}));
-    for(const [n,f] of Object.entries(files||{})){ if(f) fd.append(n,f,f.name||n); }
-    const r=await fetch(endpoint,{method:'POST',body:fd}); if(!r.ok) throw new Error(`HTTP ${r.status}`); return await r.json();
-  }
-  async function pollJob(id,{interval=1000,timeout=10*60*1000}={}){
-    const t0=Date.now(); while(true){
-      const r=await fetch(`/api/jobs/${id}`); if(!r.ok) throw new Error(`Job ${id}: HTTP ${r.status}`);
-      const d=await r.json(); const st=(d.status||d.state||'').toLowerCase();
-      if(['succeeded','success','done','finished'].includes(st)) return d;
-      if(['failed','error'].includes(st)) throw new Error(d.error||'Job fehlgeschlagen');
-      if(Date.now()-t0>timeout) throw new Error('Timeout'); await new Promise(rs=>setTimeout(rs,interval));
-    }
-  }
-  function setBusy(b,msg){ $('#v-generate').disabled=b; $('#v-clear').disabled=b; els.hud.textContent=msg||''; }
-  function pushResult(item){ const btn=document.createElement('button'); btn.className='btn'; btn.textContent=item.name||'Clip'; btn.addEventListener('click',()=>overlay.open(item)); els.preview.prepend(btn); }
-
-  $('#v-generate').addEventListener('click', async ()=>{
-    const payload={
-      mode: els.mode.value, model: els.model.value, prompt: els.prompt.value.trim(), negative: els.neg.value.trim(),
-      seed: els.seed.value? +els.seed.value : null, duration:+els.dur.value, fps:+els.fps.value, size:els.size.value,
-      sampler: els.sampler.value, cfg:+els.cfg.value, steps:+els.steps.value,
-      motion_strength:+els.motion.value, camera_strength:+els.cam.value, hires:els.hires.value, loop:els.loop.value
+  <script>
+    /**************
+     * Persistence
+     **************/
+    const store = {
+      k:{ mode:'andio.mode', consent:'andio.consent' },
+      getMode(){ return localStorage.getItem(this.k.mode)||'sfw' },
+      setMode(m){ localStorage.setItem(this.k.mode,m) },
+      consentOK(){ try{ return !!(JSON.parse(localStorage.getItem(this.k.consent)||'{}')).ok } catch { return false } }
     };
-    if(payload.mode==='img2vid' && !els.ref.files?.[0]){ alert('Bitte Referenzbild wählen.'); return; }
-    try{
-      setBusy(true,'Starte Job …');
-      const start=await postMultipart('/api/video/generate', payload, {ref: els.ref.files?.[0]});
-      const direct=pickUrl(start); if(direct){ pushResult({name:'video_'+Date.now(), url:direct, generated:true}); setBusy(false,'Fertig (Direkt)'); return; }
-      const jobId=start.jobId||start.id||start.job; if(!jobId) throw new Error('Kein jobId');
-      setBusy(true,'Warte auf Ergebnis…');
-      const job=await pollJob(jobId);
-      const url=pickUrl(job); if(!url) throw new Error('Kein Ergebnis-URL');
-      pushResult({name:'video_'+Date.now(), url, generated:true}); setBusy(false,'Fertig');
-    }catch(e){ console.error(e); setBusy(false,'Fehler'); alert('Video-Fehler: '+(e?.message||e)); }
-  });
 
-  $('#v-clear').addEventListener('click', ()=>{ ['v-prompt','v-neg','v-seed'].forEach(id=>document.getElementById(id).value=''); els.preview.innerHTML=''; });
-})();
-</script>
+    // SFW/NSFW toggle
+    const btnSFW = document.getElementById('btnSFW');
+    const btnNSFW = document.getElementById('btnNSFW');
+    function applyModeUI(mode){
+      btnSFW?.classList.toggle('active', mode==='sfw');
+      btnNSFW?.classList.toggle('active', mode==='nsfw');
+      btnSFW?.setAttribute('aria-pressed', mode==='sfw');
+      btnNSFW?.setAttribute('aria-pressed', mode==='nsfw');
+      // NSFW UI sicht-/unsichtbar
+      document.querySelectorAll('.nsfw-only').forEach(el=>{ el.style.display = (mode==='nsfw') ? '' : 'none'; });
+      const nsfwGenreBtn = document.querySelector('.genre-btn[data-genre="nsfw"]');
+      if(nsfwGenreBtn) nsfwGenreBtn.style.display = (mode==='nsfw') ? '' : 'none';
+      // Falls aktives Genre nsfw ist und wir in sfw wechseln → auf portrait zurück
+      const activeGenreBtn = document.querySelector('.genre-btn.active');
+      if(activeGenreBtn?.dataset.genre==='nsfw' && mode!=='nsfw'){
+        document.querySelector('.genre-btn[data-genre="portrait"]')?.click();
+      }
+      if(mode==='nsfw' && !store.consentOK()){ store.setMode('sfw'); applyModeUI('sfw'); }
+    }
+    btnSFW?.addEventListener('click', ()=>{ store.setMode('sfw'); applyModeUI('sfw'); });
+    btnNSFW?.addEventListener('click', ()=>{ if(store.consentOK()){ store.setMode('nsfw'); applyModeUI('nsfw'); } else { alert('NSFW erfordert Altersbestätigung im Dashboard.'); } });
+
+    /**************
+     * Genre logic
+     **************/
+    document.getElementById('genreList').addEventListener('click', (e)=>{
+      const btn = e.target.closest('.genre-btn'); if(!btn) return;
+      if(btn.classList.contains('nsfw-only') && store.getMode()!=='nsfw'){ alert('NSFW-Genre nur im NSFW-Modus.'); return; }
+      document.querySelectorAll('.genre-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+      const g = btn.dataset.genre;
+      document.querySelectorAll('.genre-section').forEach(sec=>sec.classList.toggle('active', sec.getAttribute('data-section')===g));
+    });
+
+    /**************
+     * Prompt chips
+     **************/
+    document.getElementById('promptPresets').addEventListener('click', (e)=>{
+      const chip = e.target.closest('.chip'); if(!chip) return;
+      const t = document.getElementById('prompt'); const add = chip.getAttribute('data-add');
+      t.value = t.value ? (t.value + ', ' + add) : add;
+    });
+
+    /**************
+     * Optional Tabs (Advanced)
+     **************/
+    document.querySelectorAll('.tab').forEach(tab=>{
+      tab.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+        tab.classList.add('active');
+        const sel = tab.dataset.tab;
+        document.querySelectorAll('.opt-section').forEach(sec=>{
+          const show = (sec.getAttribute('data-opt')===sel) || (sel==='none' && sec.getAttribute('data-opt')==='none');
+          sec.classList.toggle('active', show);
+        });
+      });
+    });
+
+    /**************
+     * Upload (ref)
+     **************/
+    const refInput = document.getElementById('refInput');
+    const upload = document.getElementById('upload');
+    const screen = document.getElementById('screen');
+    let refFileData = null;
+    upload.addEventListener('dragover', e=>{ e.preventDefault(); upload.style.borderColor='#667eea'; upload.style.background='rgba(102,126,234,.05)'; });
+    upload.addEventListener('dragleave', ()=>{ upload.style.borderColor='#ddd'; upload.style.background='#fff'; });
+    upload.addEventListener('drop', e=>{
+      e.preventDefault(); upload.style.borderColor='#ddd'; upload.style.background='#fff';
+      const f = e.dataTransfer.files?.[0]; if(f) handleRef(f);
+    });
+    refInput.addEventListener('change', e=>{ const f=e.target.files?.[0]; if(f) handleRef(f); });
+    function handleRef(file){
+      const reader = new FileReader();
+      reader.onload = e=>{
+        refFileData = e.target.result;
+        if(file.type.startsWith('video/')){
+          screen.innerHTML = `<video src="${refFileData}" muted loop autoplay></video>`;
+        }else{
+          screen.innerHTML = `<img src="${refFileData}" alt="Referenz" style="max-width:100%;max-height:100%;object-fit:contain">`;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /**************
+     * API helpers
+     **************/
+    async function api(path, opts){ try{ const r=await fetch(path, opts); if(!r.ok) return null; return await r.json(); }catch{return null;} }
+
+    /**************
+     * Generate flow
+     **************/
+    const btnGenerate = document.getElementById('btnGenerate');
+    const btnCancel   = document.getElementById('btnCancel');
+    const btnSave     = document.getElementById('btnSave');
+    const progressBox = document.getElementById('progressBox');
+    const statusTxt   = document.getElementById('statusTxt');
+    const bar         = document.getElementById('bar');
+    const plTitle     = document.getElementById('plTitle');
+    const plMeta      = document.getElementById('plMeta');
+    const btnOpenFile = document.getElementById('btnOpenFile');
+    const btnOpenFolder = document.getElementById('btnOpenFolder');
+
+    let currentJobId=null, pollTimer=null, lastItem=null;
+
+    btnGenerate.addEventListener('click', async ()=>{
+      if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+      btnGenerate.disabled=true; btnCancel.disabled=false; btnSave.disabled=true;
+      progressBox.style.display='block'; bar.style.width='0%'; statusTxt.textContent='Starte …';
+
+      const payload = buildPayload();
+      const form = new FormData();
+      form.append('params', new Blob([JSON.stringify(payload)], {type:'application/json'}));
+      if(refFileData){
+        const blob = dataURLtoBlob(refFileData);
+        const name = refFileData.startsWith('data:video/') ? 'reference.mp4' : 'reference.png';
+        form.append('reference', blob, name);
+      }
+
+      const start = await fetch('/api/generate/video', { method:'POST', body:form }).catch(()=>null);
+      if(!start || !start.ok){
+        statusTxt.textContent='Fehler beim Starten.';
+        btnGenerate.disabled=false; btnCancel.disabled=true; return;
+      }
+      const resp = await start.json().catch(()=>null);
+      currentJobId = resp?.job_id || resp?.id;
+      if(!currentJobId){
+        statusTxt.textContent='Keine Job-ID erhalten.';
+        btnGenerate.disabled=false; btnCancel.disabled=true; return;
+      }
+      statusTxt.textContent='Wird generiert …';
+      pollTimer = setInterval(pollJob, 1000);
+    });
+
+    btnCancel.addEventListener('click', async ()=>{
+      if(!currentJobId) return;
+      await api(`/api/jobs/${currentJobId}/cancel`);
+      statusTxt.textContent='Abgebrochen';
+      finishJob(false);
+    });
+
+    async function pollJob(){
+      const j = await api(`/api/jobs/${currentJobId}`);
+      if(!j){ statusTxt.textContent='Warte auf Server …'; return; }
+      const pct = Math.max(0, Math.min(100, Math.round(j.progress||0)));
+      bar.style.width = pct + '%';
+      statusTxt.textContent = (j.status||'running');
+
+      if(j.status==='completed' || pct>=100){
+        clearInterval(pollTimer); pollTimer=null;
+        const out = await api(`/api/outputs?id=${encodeURIComponent(currentJobId)}`);
+        const item = Array.isArray(out) ? out[0] : out;
+        if(item && item.path){
+          screen.innerHTML = `<video controls src="${item.path}"></video>`;
+          plTitle.textContent = item.title || 'Clip';
+          plMeta.textContent = `${item.model||''} • ${item.duration? Math.round(item.duration)+'s':''}`;
+          btnOpenFile.disabled=false; btnOpenFolder.disabled=false;
+          btnOpenFile.onclick = ()=> window.open(item.path, '_blank');
+          btnOpenFolder.onclick= ()=> item.folder_url ? window.open(item.folder_url, '_blank') : null;
+          lastItem = item; btnSave.disabled=false; statusTxt.textContent='Fertig';
+
+          /* ⬇️ Globale Overlay-Vorschau (einheitlicher Player) */
+          openOverlay({
+            kind: 'video',
+            src: item.path,
+            name: item.title || 'Render',
+            date: new Date().toISOString(),
+            format: (item.format || 'MP4').toUpperCase(),
+            nsfw: (localStorage.getItem('andio.mode') === 'nsfw'),
+            gen: item.model || 'Video Studio'
+          });
+        } else {
+          statusTxt.textContent='Fertig – kein Output gefunden.';
+        }
+        btnGenerate.disabled=false; btnCancel.disabled=true;
+      }
+      if(j.status==='failed'){
+        clearInterval(pollTimer); pollTimer=null;
+        statusTxt.textContent='Fehlgeschlagen';
+        btnGenerate.disabled=false; btnCancel.disabled=true;
+      }
+    }
+
+    async function finishJob(success){
+      if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+      btnGenerate.disabled=false; btnCancel.disabled=true; btnSave.disabled=!success;
+    }
+
+    btnSave.addEventListener('click', async ()=>{
+      if(!lastItem) return;
+      await api(`/api/outputs/save?id=${encodeURIComponent(lastItem.id||currentJobId)}`);
+      alert('In Galerie gespeichert.');
+    });
+
+    function dataURLtoBlob(dataurl){
+      const arr=dataurl.split(','), mime=arr[0].match(/:(.*?);/)[1];
+      const bstr=atob(arr[1]); let n=bstr.length; const u8=new Uint8Array(n);
+      while(n--){ u8[n]=bstr.charCodeAt(n); } return new Blob([u8],{type:mime});
+    }
+
+    /**************
+     * Build payload
+     **************/
+    function buildPayload(){
+      const mode = store.getMode();
+      const genre = document.querySelector('.genre-btn.active')?.dataset.genre || 'portrait';
+      const base = {
+        mode, genre,
+        prompt: document.getElementById('prompt').value.trim(),
+        model: document.getElementById('model').value,
+        width: Number(document.getElementById('w').value||576),
+        height: Number(document.getElementById('h').value||1024),
+        fps: Number(document.getElementById('fps').value||16),
+        duration_s: Number(document.getElementById('duration').value||6),
+        seed: document.getElementById('seed').value ? Number(document.getElementById('seed').value) : null,
+        transitions: document.getElementById('trans').value,
+        cam_keyframes: parseJSONSafe(document.getElementById('camKF').value),
+        options: {}
+      };
+
+      const tab = document.querySelector('.tab.active')?.dataset.tab || 'none';
+      if(tab==='transfer'){
+        base.options.transfer = {
+          density: Number(document.getElementById('tr_density').value||0.7),
+          amplitude: Number(document.getElementById('tr_amp').value||0.8),
+          timing: document.getElementById('tr_timing').value
+        };
+      } else if(tab==='lipsync'){
+        base.options.lipsync = {
+          smooth: Number(document.getElementById('ls_smooth').value||0.6),
+          latency_ms: Number(document.getElementById('ls_latency').value||80),
+          emotion: document.getElementById('ls_emotion').value
+        };
+      }
+
+      switch(genre){
+        case 'portrait':
+          base.options.portrait = {
+            talking: document.getElementById('por_talking').value,
+            cam:     document.getElementById('por_cam').value,
+            light:   document.getElementById('por_light').value,
+            facecurve: document.getElementById('por_facecurve').value
+          }; break;
+        case 'fashion':
+          base.options.fashion = {
+            mode: document.getElementById('fas_mode').value,
+            fabric: document.getElementById('fas_fabric').value,
+            cuts: document.getElementById('fas_cuts').value
+          }; break;
+        case 'product':
+          base.options.product = {
+            shots: document.getElementById('pro_shots').value,
+            mg: document.getElementById('pro_mg').value,
+            reflect: document.getElementById('pro_reflect').value
+          }; break;
+        case 'landscape':
+          base.options.landscape = {
+            time: document.getElementById('lan_time').value,
+            move: document.getElementById('lan_move').value,
+            weather: document.getElementById('lan_weather').value.trim()
+          }; break;
+        case 'toon':
+          base.options.toon = {
+            smear: document.getElementById('toon_smear').value,
+            hold: document.getElementById('toon_hold').value,
+            trans: document.getElementById('toon_trans').value
+          }; break;
+        case 'nsfw':
+          base.options.nsfw = {
+            comp: document.getElementById('nsfw_comp').value,
+            cover_kf: parseJSONSafe(document.getElementById('nsfwKf').value),
+            cam_preset: document.getElementById('nsfwCamPreset').value,
+            censor: document.getElementById('nsfwCensor').value,
+            notes: document.getElementById('nsfw_notes')?.value?.trim() || ''
+          }; break;
+      }
+      return base;
+    }
+
+    function parseJSONSafe(t){
+      try{ const v = JSON.parse(t||'null'); return v; }catch{return null;}
+    }
+
+    /**************
+     * Boot
+     **************/
+    document.addEventListener('DOMContentLoaded', ()=>{
+      applyModeUI(store.getMode());
+      // NSFW-UI initial
+      document.querySelectorAll('.nsfw-only').forEach(el=>{ el.style.display = (store.getMode()==='nsfw') ? '' : 'none'; });
+      const nsfwBtn = document.querySelector('.genre-btn[data-genre="nsfw"]');
+      if(nsfwBtn) nsfwBtn.style.display = (store.getMode()==='nsfw') ? '' : 'none';
+    });
+  </script>
+
+  <!-- Loader für Partials (lädt partials/navbar.html) -->
+  <script src="assets/include.js"></script>
+  <!-- Globaler Overlay-Player (einheitlich für alle Seiten) -->
+  <script src="assets/overlay-player.js"></script>
 </body>
 </html>

@@ -1,238 +1,795 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Katalog / Store – AndioMediaStudio</title>
-  <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
-  <link rel="stylesheet" href="assets/styles.css"/>
-  <style>
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-    .toolbar input[type="search"]{min-width:220px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-    .thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#222;border:1px solid #222}
-    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
-    .badge{font-size:.8em;background:#222;color:#ccc;border:1px solid #333;border-radius:999px;padding:2px 8px}
-    .muted{color:#888}
-    .pill{font-size:.8em;border-radius:999px;padding:2px 8px;border:1px solid #333}
-    .right{margin-left:auto}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AndioMediaStudio - Catalog</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .nav-tab:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .catalog-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+        }
+        
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        
+        .main-catalog {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .search-bar {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 1rem;
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+        
+        .search-bar:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .filter-section {
+            margin-bottom: 25px;
+        }
+        
+        .filter-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-option:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .filter-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .catalog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .catalog-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .view-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .view-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .view-btn:hover, .view-btn.active {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .model-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+        
+        .model-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+            border-color: #667eea;
+        }
+        
+        .model-preview {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #ccc;
+        }
+        
+        .model-info {
+            margin-bottom: 15px;
+        }
+        
+        .model-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .model-type {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .model-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .model-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .category-tab {
+            padding: 10px 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .category-tab:hover, .category-tab.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
+        .upload-section {
+            background: rgba(102, 126, 234, 0.05);
+            border: 2px dashed rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-section:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .upload-section i {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .status-available { background: #4CAF50; }
+        .status-downloading { background: #ff9800; animation: pulse 2s infinite; }
+        .status-error { background: #f44336; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @media (max-width: 1200px) {
+            .catalog-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .sidebar {
+                max-height: 300px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .model-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .category-tabs {
+                flex-direction: column;
+            }
+            
+            .catalog-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+        }
+    </style>
 </head>
 <body>
-  <script src="assets/app.js"></script>
-  <script>window.Andio && Andio.navbar && Andio.navbar('catalog');</script>
-
-  <div class="container">
-    <h1>Katalog / Store</h1>
-    <p class="muted">API-first (<code>/api/catalog</code>), sonst statische Fallbacks. Install/Entfernen nutzt API; wenn nicht vorhanden, wird lokal markiert.</p>
-
-    <div class="card toolbar">
-      <button id="btn-refresh">Aktualisieren</button>
-      <select id="filter-family" title="Familie">
-        <option value="">Familie: Alle</option>
-        <option value="sd15">SD 1.5</option>
-        <option value="sdxl">SDXL</option>
-        <option value="svd">SVD (Video)</option>
-        <option value="flux">FLUX</option>
-        <option value="lora">LoRA</option>
-      </select>
-      <select id="filter-state" title="Status">
-        <option value="">Status: Alle</option>
-        <option value="installed">Installiert</option>
-        <option value="available">Verfügbar</option>
-      </select>
-      <input id="search" type="search" placeholder="Suche nach Name/ID/Tag …"/>
-      <span class="right muted" id="count"></span>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-th-large"></i> Catalog</h1>
+            <p>KI-Modelle, Assets & Ressourcen verwalten</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <a href="index.html" class="nav-tab"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="create.html" class="nav-tab"><i class="fas fa-image"></i> Bildgenerierung</a>
+            <a href="video.html" class="nav-tab"><i class="fas fa-video"></i> Video Lab</a>
+            <a href="wandrobe.html" class="nav-tab"><i class="fas fa-tshirt"></i> Wandrobe</a>
+            <a href="editor.html" class="nav-tab"><i class="fas fa-edit"></i> Editor</a>
+            <a href="motion.html" class="nav-tab"><i class="fas fa-running"></i> Motion</a>
+            <a href="agent_test.html" class="nav-tab"><i class="fas fa-robot"></i> Agent Test</a>
+            <a href="#" class="nav-tab active"><i class="fas fa-th-large"></i> Catalog</a>
+        </div>
+        
+        <div class="catalog-layout">
+            <div class="sidebar">
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <i class="fas fa-filter"></i> Filter
+                    </div>
+                    <div class="filter-options">
+                        <label class="filter-option">
+                            <input type="checkbox" checked> Verfügbar
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox"> Wird heruntergeladen
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox"> Nicht installiert
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <i class="fas fa-tags"></i> Typ
+                    </div>
+                    <div class="filter-options">
+                        <label class="filter-option">
+                            <input type="checkbox" checked> Bildgenerierung
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" checked> Video
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" checked> Audio
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox"> ControlNet
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox"> LoRA
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox"> Upscaler
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <i class="fas fa-star"></i> Bewertung
+                    </div>
+                    <div class="filter-options">
+                        <label class="filter-option">
+                            <input type="checkbox"> ⭐⭐⭐⭐⭐ 5 Sterne
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox"> ⭐⭐⭐⭐ 4+ Sterne
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox"> ⭐⭐⭐ 3+ Sterne
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-catalog">
+                <input type="text" class="search-bar" placeholder="🔍 Modelle, LoRAs, Assets durchsuchen...">
+                
+                <div class="upload-section" onclick="document.getElementById('uploadInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>Eigene Modelle hochladen</h3>
+                    <p>Drag & Drop oder klicken zum Hochladen von .safetensors, .ckpt, .pt Dateien</p>
+                    <input type="file" id="uploadInput" multiple accept=".safetensors,.ckpt,.pt,.bin" style="display: none;">
+                </div>
+                
+                <div class="category-tabs">
+                    <div class="category-tab active" onclick="filterCategory('all', this)">Alle</div>
+                    <div class="category-tab" onclick="filterCategory('image', this)">Bildmodelle</div>
+                    <div class="category-tab" onclick="filterCategory('video', this)">Video</div>
+                    <div class="category-tab" onclick="filterCategory('audio', this)">Audio</div>
+                    <div class="category-tab" onclick="filterCategory('lora', this)">LoRAs</div>
+                    <div class="category-tab" onclick="filterCategory('controlnet', this)">ControlNet</div>
+                </div>
+                
+                <div class="catalog-header">
+                    <div class="catalog-title">KI-Modell Bibliothek</div>
+                    <div class="view-controls">
+                        <div class="view-btn active" onclick="toggleView('grid', this)">
+                            <i class="fas fa-th"></i>
+                        </div>
+                        <div class="view-btn" onclick="toggleView('list', this)">
+                            <i class="fas fa-list"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="model-grid" id="modelGrid">
+                    <div class="model-card">
+                        <div class="model-preview">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div class="model-info">
+                            <div class="model-name">Stable Diffusion XL Base</div>
+                            <div class="model-type">Bildgenerierung</div>
+                            <div class="model-description">Hochqualitative Bildgenerierung mit verbesserter Prompt-Verständnis</div>
+                            <div class="model-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-download"></i> 2.3M
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-star"></i> 4.8
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-hdd"></i> 6.9 GB
+                                </div>
+                            </div>
+                        </div>
+                        <div class="model-actions">
+                            <div class="action-btn primary">
+                                <span class="status-indicator status-available"></span>
+                                Installiert
+                            </div>
+                            <div class="action-btn" onclick="openModelDetails('sdxl-base')">Details</div>
+                        </div>
+                    </div>
+                    
+                    <div class="model-card">
+                        <div class="model-preview">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="model-info">
+                            <div class="model-name">Stable Video Diffusion</div>
+                            <div class="model-type">Video</div>
+                            <div class="model-description">Text und Bild zu Video Generierung mit hoher Qualität</div>
+                            <div class="model-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-download"></i> 856K
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-star"></i> 4.6
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-hdd"></i> 9.2 GB
+                                </div>
+                            </div>
+                        </div>
+                        <div class="model-actions">
+                            <div class="action-btn primary">
+                                <span class="status-indicator status-available"></span>
+                                Installiert
+                            </div>
+                            <div class="action-btn" onclick="openModelDetails('svd')">Details</div>
+                        </div>
+                    </div>
+                    
+                    <div class="model-card">
+                        <div class="model-preview">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <div class="model-info">
+                            <div class="model-name">FLUX.1 [dev]</div>
+                            <div class="model-type">Bildgenerierung</div>
+                            <div class="model-description">Cutting-edge Bildgenerierung mit überlegener Qualität</div>
+                            <div class="model-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-download"></i> 1.1M
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-star"></i> 4.9
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-hdd"></i> 11.9 GB
+                                </div>
+                            </div>
+                        </div>
+                        <div class="model-actions">
+                            <div class="action-btn" onclick="downloadModel('flux')">
+                                <span class="status-indicator status-downloading"></span>
+                                Herunterladen
+                            </div>
+                            <div class="action-btn" onclick="openModelDetails('flux')">Details</div>
+                        </div>
+                    </div>
+                    
+                    <div class="model-card">
+                        <div class="model-preview">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="model-info">
+                            <div class="model-name">Wav2Lip</div>
+                            <div class="model-type">Audio/Video</div>
+                            <div class="model-description">Präzise Audio-zu-Video Lip-Synchronisation</div>
+                            <div class="model-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-download"></i> 543K
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-star"></i> 4.7
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-hdd"></i> 44.7 MB
+                                </div>
+                            </div>
+                        </div>
+                        <div class="model-actions">
+                            <div class="action-btn primary">
+                                <span class="status-indicator status-available"></span>
+                                Installiert
+                            </div>
+                            <div class="action-btn" onclick="openModelDetails('wav2lip')">Details</div>
+                        </div>
+                    </div>
+                    
+                    <div class="model-card">
+                        <div class="model-preview">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                        </div>
+                        <div class="model-info">
+                            <div class="model-name">Real-ESRGAN x4</div>
+                            <div class="model-type">Upscaler</div>
+                            <div class="model-description">KI-Upscaling für hochauflösende Bildverbesserung</div>
+                            <div class="model-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-download"></i> 789K
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-star"></i> 4.5
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-hdd"></i> 67.1 MB
+                                </div>
+                            </div>
+                        </div>
+                        <div class="model-actions">
+                            <div class="action-btn" onclick="downloadModel('real-esrgan')">
+                                <i class="fas fa-download"></i> Installieren
+                            </div>
+                            <div class="action-btn" onclick="openModelDetails('real-esrgan')">Details</div>
+                        </div>
+                    </div>
+                    
+                    <div class="model-card">
+                        <div class="model-preview">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <div class="model-info">
+                            <div class="model-name">ControlNet OpenPose</div>
+                            <div class="model-type">ControlNet</div>
+                            <div class="model-description">Pose-gesteuerte Bildgenerierung für präzise Körperhaltungen</div>
+                            <div class="model-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-download"></i> 634K
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-star"></i> 4.6
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-hdd"></i> 1.4 GB
+                                </div>
+                            </div>
+                        </div>
+                        <div class="model-actions">
+                            <div class="action-btn primary">
+                                <span class="status-indicator status-available"></span>
+                                Installiert
+                            </div>
+                            <div class="action-btn" onclick="openModelDetails('controlnet-openpose')">Details</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div id="list" class="grid"></div>
-  </div>
-
-  <footer>© AndioMediaStudio</footer>
-
-  <script>
-  const FALLBACK_COVER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
-
-  function dedupeById(list){
-    const m=new Map();
-    for(const x of (list||[])){ const k=(x.id||x.name||'').toLowerCase(); if(!k) continue; if(!m.has(k)) m.set(k,x); }
-    return [...m.values()];
-  }
-  async function getJSON(url){
-    try{ const r=await fetch(url,{cache:'no-cache'}); if(r.ok) return await r.json(); }catch(_){}
-    return null;
-  }
-
-  async function loadFromApi(){
-    const d = await getJSON('/api/catalog');
-    if(!d) return null;
-    let items = [];
-    if (Array.isArray(d)) items = d;
-    if (Array.isArray(d.models)) items = d.models;
-    const a = (d.available||[]);
-    const i = (d.installed||[]);
-    if (a.length || i.length){
-      const mark = (arr,flag)=>arr.map(x=>Object.assign({},x,{_api:true,installed: !!flag}));
-      items = dedupeById([ ...mark(i,true), ...mark(a,false) ]);
-    }
-    return items;
-  }
-
-  async function loadFromStatic(){
-    const a = await getJSON('assets/catalog.json');
-    const b = await getJSON('assets/catalog/community.json');
-    const c = await getJSON('assets/catalog/andio-official.json');
-    let items = [];
-    if (a){ 
-      if (Array.isArray(a.models)) items.push(...a.models);
-      if (Array.isArray(a.featured)) items.push(...a.featured);
-    }
-    if (Array.isArray(b)) items.push(...b);
-    if (Array.isArray(c)) items.push(...c);
-    items = dedupeById(items);
-    items = items.map(x=>Object.assign({},x,{installed: !!x.is_installed}));
-    return items;
-  }
-
-  function markInstalledByLocal(items){
-    return items.map(x=>{
-      const id = x.id || x.name;
-      const local = localStorage.getItem('model:installed:'+id);
-      return Object.assign({}, x, { installed: local ? local === '1' : !!x.installed });
-    });
-  }
-  function saveInstalledLocal(id, installed){
-    try{ localStorage.setItem('model:installed:'+id, installed ? '1' : '0'); }catch(_){}
-  }
-
-  function familyBadge(f){
-    if(!f) return '';
-    const up = String(f).toUpperCase();
-    return `<span class="badge">${up}</span>`;
-  }
-  function tagsRow(tags){
-    return (tags||[]).slice(0,6).map(t=>`<span class="pill">${t}</span>`).join(' ');
-  }
-
-  function matchFilters(x, q, fam, state){
-    if (fam && String(x.family||'').toLowerCase() !== fam) return false;
-    if (state==='installed' && !x.installed) return false;
-    if (state==='available' && x.installed) return false;
-    if (q){
-      const s = (x.id+' '+(x.name||'')+' '+(x.tags||[]).join(' ')).toLowerCase();
-      if (!s.includes(q.toLowerCase())) return false;
-    }
-    return true;
-  }
-
-  function render(items){
-    const list = document.getElementById('list');
-    const q = document.getElementById('search').value.trim();
-    const fam = document.getElementById('filter-family').value;
-    const state = document.getElementById('filter-state').value;
-    list.innerHTML='';
-    const shown = items.filter(x=>matchFilters(x,q,fam,state));
-    document.getElementById('count').textContent = `${shown.length} / ${items.length}`;
-
-    for(const m of shown){
-      const card = document.createElement('div');
-      card.className='card';
-
-      const img = document.createElement('img');
-      img.className='thumb';
-      const cover = m.cover || m.img || m.example || 'assets/placeholders/model-cover.png';
-      img.src = cover;
-      img.alt = m.name || m.id || 'Model-Cover';
-      img.onerror = ()=>{ img.src = FALLBACK_COVER; };
-      card.appendChild(img);
-
-      const h3 = document.createElement('h3');
-      h3.textContent = m.name || m.id;
-      card.appendChild(h3);
-
-      const meta = document.createElement('div');
-      meta.className='row';
-      meta.innerHTML = `${familyBadge(m.family)} <span class="muted">${m.id||''}</span>`;
-      card.appendChild(meta);
-
-      const tg = document.createElement('div');
-      tg.className='row';
-      tg.innerHTML = tagsRow(m.tags);
-      card.appendChild(tg);
-
-      const actions = document.createElement('div');
-      actions.className='row';
-
-      const useBtn = document.createElement('button');
-      useBtn.textContent='ID kopieren';
-      useBtn.addEventListener('click', async ()=>{
-        try{ await navigator.clipboard.writeText(m.id||m.name||''); useBtn.textContent='Kopiert ✓'; setTimeout(()=>useBtn.textContent='ID kopieren',1200);}catch(_){}
-      });
-      actions.appendChild(useBtn);
-
-      const instBtn = document.createElement('button');
-      const uninstallBtn = document.createElement('button');
-      instBtn.textContent = m.installed ? 'Neu installieren' : 'Installieren';
-      uninstallBtn.textContent = 'Entfernen';
-      uninstallBtn.className='secondary';
-
-      async function callInstallApi(id, uninstall=false){
-        const url = uninstall ? '/api/models/uninstall' : '/api/models/install';
-        const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id})});
-        if (!r.ok) throw new Error('HTTP '+r.status);
-        return await r.json().catch(()=>({ok:true}));
-      }
-
-      instBtn.addEventListener('click', async ()=>{
-        const id = m.id || m.name;
-        instBtn.disabled = true;
-        try{
-          let ok = false;
-          try{ await callInstallApi(id,false); ok = true; }
-          catch(e){ ok = true; } // Fallback: lokal markieren
-          if (ok){ m.installed = true; saveInstalledLocal(id,true); render(_STATE.items); }
-        }catch(e){
-          alert('Install fehlgeschlagen: '+e.message);
-        }finally{ instBtn.disabled = false; }
-      });
-
-      uninstallBtn.addEventListener('click', async ()=>{
-        const id = m.id || m.name;
-        uninstallBtn.disabled = true;
-        try{
-          let ok=false;
-          try{ await callInstallApi(id,true); ok = true; }
-          catch(e){ ok = true; }
-          if (ok){ m.installed = false; saveInstalledLocal(id,false); render(_STATE.items); }
-        }catch(e){
-          alert('Entfernen fehlgeschlagen: '+e.message);
-        }finally{ uninstallBtn.disabled = false; }
-      });
-
-      actions.appendChild(instBtn);
-      actions.appendChild(uninstallBtn);
-      card.appendChild(actions);
-
-      document.getElementById('list').appendChild(card);
-    }
-  }
-
-  const _STATE = { items: [] };
-
-  async function loadAll(){
-    let items = await loadFromApi();
-    if (!items || !items.length) items = await loadFromStatic();
-    items = markInstalledByLocal(items);
-    _STATE.items = items;
-    render(items);
-  }
-
-  document.getElementById('btn-refresh').addEventListener('click', loadAll);
-  document.getElementById('search').addEventListener('input', ()=>render(_STATE.items));
-  document.getElementById('filter-family').addEventListener('change', ()=>render(_STATE.items));
-  document.getElementById('filter-state').addEventListener('change', ()=>render(_STATE.items));
-
-  loadAll().finally(()=>{ window.Andio && Andio.polish && Andio.polish(); });
-  </script>
+    
+    <script>
+        let currentView = 'grid';
+        let currentCategory = 'all';
+        
+        function filterCategory(category, element) {
+            currentCategory = category;
+            document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
+            element.classList.add('active');
+            
+            // Filter logic would go here
+            console.log('Filtering by category:', category);
+        }
+        
+        function toggleView(view, element) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            
+            const grid = document.getElementById('modelGrid');
+            if (view === 'list') {
+                grid.classList.add('list-view');
+            } else {
+                grid.classList.remove('list-view');
+            }
+        }
+        
+        function downloadModel(modelId) {
+            const btn = event.currentTarget;
+            const indicator = btn.querySelector('.status-indicator');
+            
+            btn.innerHTML = '<span class="status-indicator status-downloading"></span>Lädt herunter...';
+            btn.style.pointerEvents = 'none';
+            
+            // Simulate download
+            setTimeout(() => {
+                btn.innerHTML = '<span class="status-indicator status-available"></span>Installiert';
+                btn.classList.add('primary');
+                btn.style.pointerEvents = '';
+            }, 3000);
+        }
+        
+        function openModelDetails(modelId) {
+            alert(`Modell-Details für ${modelId} werden geöffnet...`);
+        }
+        
+        // Search functionality
+        document.querySelector('.search-bar').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.model-card');
+            
+            cards.forEach(card => {
+                const name = card.querySelector('.model-name').textContent.toLowerCase();
+                const description = card.querySelector('.model-description').textContent.toLowerCase();
+                
+                if (name.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // File upload
+        document.getElementById('uploadInput').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                alert(`${files.length} Datei(en) zum Upload ausgewählt`);
+                // Upload logic would go here
+            }
+        });
+        
+        // Drag and drop
+        const uploadSection = document.querySelector('.upload-section');
+        
+        uploadSection.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadSection.style.borderColor = '#667eea';
+            uploadSection.style.background = 'rgba(102, 126, 234, 0.15)';
+        });
+        
+        uploadSection.addEventListener('dragleave', function(e) {
+            uploadSection.style.borderColor = 'rgba(102, 126, 234, 0.3)';
+            uploadSection.style.background = 'rgba(102, 126, 234, 0.05)';
+        });
+        
+        uploadSection.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                alert(`${files.length} Datei(en) per Drag & Drop hinzugefügt`);
+            }
+            uploadSection.style.borderColor = 'rgba(102, 126, 234, 0.3)';
+            uploadSection.style.background = 'rgba(102, 126, 234, 0.05)';
+        });
+    </script>
 </body>
 </html>

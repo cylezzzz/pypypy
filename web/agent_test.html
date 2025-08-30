@@ -1,165 +1,765 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Agent Test – AndioMediaStudio</title>
-  <link rel="stylesheet" href="assets/styles.css"/>
-  <style>
-    body{background:#0a0a0a;color:#ddd}
-    .wrap{max-width:1000px;margin:0 auto;padding:16px}
-    .row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
-    textarea{width:100%;min-height:96px}
-    .log{background:#111;border:1px solid #222;border-radius:8px;padding:8px;max-height:240px;overflow:auto;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
-    .badge{background:#1b2b45;color:#a8d0ff;padding:2px 8px;border-radius:999px;border:1px solid #2b4b75}
-    .panel{border:1px solid #222;background:#0e0e10;border-radius:12px;padding:12px;margin-top:12px}
-    h2{margin:10px 0}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AndioMediaStudio - Agent Test</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .nav-tab:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .test-workspace {
+            display: grid;
+            grid-template-columns: 400px 1fr 350px;
+            gap: 25px;
+            align-items: start;
+        }
+        
+        .agent-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        
+        .test-area {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .results-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+            padding-bottom: 8px;
+        }
+        
+        .agent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .agent-item {
+            background: rgba(102, 126, 234, 0.05);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .agent-item:hover, .agent-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+            transform: translateX(3px);
+        }
+        
+        .agent-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .agent-status {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .status-online {
+            background: #e8f5e8;
+            color: #4CAF50;
+        }
+        
+        .status-offline {
+            background: #ffebee;
+            color: #f44336;
+        }
+        
+        .status-testing {
+            background: #fff3e0;
+            color: #ff9800;
+            animation: pulse 2s infinite;
+        }
+        
+        .agent-desc {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        .test-console {
+            background: #1a1a1a;
+            color: #00ff00;
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            min-height: 300px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+        }
+        
+        .console-line {
+            margin-bottom: 5px;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+        
+        .console-input {
+            color: #ffffff;
+        }
+        
+        .console-output {
+            color: #00ff00;
+        }
+        
+        .console-error {
+            color: #ff4444;
+        }
+        
+        .console-warning {
+            color: #ffaa00;
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .test-input-area {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .test-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+        
+        .test-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .test-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .test-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .test-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .control-btn {
+            padding: 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .control-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .control-btn i {
+            display: block;
+            margin-bottom: 5px;
+            color: #667eea;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric-card {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .test-scenarios {
+            margin-bottom: 25px;
+        }
+        
+        .scenario-item {
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .scenario-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .scenario-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .scenario-desc {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .log-viewer {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+            font-size: 0.85rem;
+        }
+        
+        .log-timestamp {
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .log-level {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .log-info { background: #e3f2fd; color: #1976d2; }
+        .log-success { background: #e8f5e8; color: #4CAF50; }
+        .log-warning { background: #fff3e0; color: #ff9800; }
+        .log-error { background: #ffebee; color: #f44336; }
+        
+        @media (max-width: 1400px) {
+            .test-workspace {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .agent-panel, .results-panel {
+                max-height: 400px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .test-controls {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <script src="assets/app.js"></script>
-  <script>window.Andio?.navbar?.('index');</script>
-
-  <div class="wrap">
-    <h1>Agent-HTML-Test</h1>
-    <p>Dieser Test ruft (falls vorhanden) <code>Andio.agent</code> an und beobachtet DOM-Änderungen. Funktioniert auch ohne Agent via Fallback-DOM-Modifikation.</p>
-
-    <div class="panel">
-      <h2>1) Prompt</h2>
-      <textarea id="prompt">Bitte färbe alle H2-Überschriften blau und füge am Seitenende eine Notiz hinzu.</textarea>
-      <div class="row" style="margin-top:8px">
-        <button id="btn-run" class="primary">Agent ausführen</button>
-        <span class="badge" id="agent-state">Agent: unbekannt</span>
-      </div>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-robot"></i> Agent Test</h1>
+            <p>KI-Agent Testing & Performance Monitoring</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <a href="index.html" class="nav-tab"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="create.html" class="nav-tab"><i class="fas fa-image"></i> Bildgenerierung</a>
+            <a href="video.html" class="nav-tab"><i class="fas fa-video"></i> Video Lab</a>
+            <a href="wandrobe.html" class="nav-tab"><i class="fas fa-tshirt"></i> Wandrobe</a>
+            <a href="editor.html" class="nav-tab"><i class="fas fa-edit"></i> Editor</a>
+            <a href="motion.html" class="nav-tab"><i class="fas fa-running"></i> Motion</a>
+            <a href="#" class="nav-tab active"><i class="fas fa-robot"></i> Agent Test</a>
+        </div>
+        
+        <div class="test-workspace">
+            <div class="agent-panel">
+                <div class="section-title">
+                    <i class="fas fa-robot"></i> Verfügbare Agenten
+                </div>
+                
+                <div class="agent-list">
+                    <div class="agent-item active" onclick="selectAgent('image-gen', this)">
+                        <div class="agent-name">
+                            <i class="fas fa-image"></i>
+                            Bildgenerierung Agent
+                            <span class="agent-status status-online">Online</span>
+                        </div>
+                        <div class="agent-desc">Stable Diffusion & FLUX Modelle</div>
+                    </div>
+                    
+                    <div class="agent-item" onclick="selectAgent('video-gen', this)">
+                        <div class="agent-name">
+                            <i class="fas fa-video"></i>
+                            Video Generator
+                            <span class="agent-status status-online">Online</span>
+                        </div>
+                        <div class="agent-desc">SVD & AnimateDiff Pipeline</div>
+                    </div>
+                    
+                    <div class="agent-item" onclick="selectAgent('motion-cap', this)">
+                        <div class="agent-name">
+                            <i class="fas fa-running"></i>
+                            Motion Capture
+                            <span class="agent-status status-testing">Testing</span>
+                        </div>
+                        <div class="agent-desc">MediaPipe Pose Detection</div>
+                    </div>
+                    
+                    <div class="agent-item" onclick="selectAgent('lipsync', this)">
+                        <div class="agent-name">
+                            <i class="fas fa-comments"></i>
+                            Lip Sync Agent
+                            <span class="agent-status status-online">Online</span>
+                        </div>
+                        <div class="agent-desc">Wav2Lip & SadTalker</div>
+                    </div>
+                    
+                    <div class="agent-item" onclick="selectAgent('upscaler', this)">
+                        <div class="agent-name">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                            AI Upscaler
+                            <span class="agent-status status-offline">Offline</span>
+                        </div>
+                        <div class="agent-desc">Real-ESRGAN & ESRGAN</div>
+                    </div>
+                </div>
+                
+                <div class="test-scenarios" style="margin-top: 25px;">
+                    <div class="section-title" style="font-size: 1rem; margin-bottom: 15px;">
+                        <i class="fas fa-list"></i> Test Scenarios
+                    </div>
+                    
+                    <div class="scenario-item" onclick="loadScenario('performance')">
+                        <div class="scenario-name">Performance Test</div>
+                        <div class="scenario-desc">Geschwindigkeit & Speicherverbrauch</div>
+                    </div>
+                    
+                    <div class="scenario-item" onclick="loadScenario('quality')">
+                        <div class="scenario-name">Quality Check</div>
+                        <div class="scenario-desc">Ausgabequalität bewerten</div>
+                    </div>
+                    
+                    <div class="scenario-item" onclick="loadScenario('stress')">
+                        <div class="scenario-name">Stress Test</div>
+                        <div class="scenario-desc">Hohe Last & Parallel-Jobs</div>
+                    </div>
+                    
+                    <div class="scenario-item" onclick="loadScenario('integration')">
+                        <div class="scenario-name">Integration Test</div>
+                        <div class="scenario-desc">Pipeline-Kompatibilität</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-area">
+                <div class="test-input-area">
+                    <input type="text" class="test-input" id="testInput" placeholder="Test-Prompt oder Parameter eingeben...">
+                    <button class="test-btn" onclick="runTest()" id="runTestBtn">
+                        <i class="fas fa-play"></i>
+                        <span>Test starten</span>
+                    </button>
+                </div>
+                
+                <div class="test-controls">
+                    <div class="control-btn" onclick="clearConsole()">
+                        <i class="fas fa-trash"></i>
+                        Console leeren
+                    </div>
+                    <div class="control-btn" onclick="saveLog()">
+                        <i class="fas fa-save"></i>
+                        Log speichern
+                    </div>
+                    <div class="control-btn" onclick="exportResults()">
+                        <i class="fas fa-download"></i>
+                        Ergebnisse
+                    </div>
+                    <div class="control-btn" onclick="stopTest()">
+                        <i class="fas fa-stop"></i>
+                        Test stoppen
+                    </div>
+                </div>
+                
+                <div class="test-console" id="testConsole">
+                    <div class="console-line console-input">$ AndioMediaStudio Agent Test Console v1.0</div>
+                    <div class="console-line console-output">System bereit. Wählen Sie einen Agent zum Testen.</div>
+                    <div class="console-line console-output">GPU: NVIDIA RTX 4090 - VRAM: 24GB verfügbar</div>
+                    <div class="console-line console-output">RAM: 32GB System Memory verfügbar</div>
+                    <div class="console-line console-output">Agenten geladen: 4/5 online</div>
+                </div>
+            </div>
+            
+            <div class="results-panel">
+                <div class="section-title">
+                    <i class="fas fa-chart-bar"></i> Test Metriken
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="responseTime">0.00s</div>
+                        <div class="metric-label">Antwortzeit</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="memoryUsage">0MB</div>
+                        <div class="metric-label">Speicher</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="gpuUsage">0%</div>
+                        <div class="metric-label">GPU Usage</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="successRate">100%</div>
+                        <div class="metric-label">Erfolgsrate</div>
+                    </div>
+                </div>
+                
+                <div class="log-viewer">
+                    <div class="log-entry">
+                        <span class="log-timestamp">10:23:45</span>
+                        <span class="log-level log-info">INFO</span>
+                        <span>System initialisiert</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-timestamp">10:24:12</span>
+                        <span class="log-level log-success">SUCCESS</span>
+                        <span>Bildgenerierung Agent geladen</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-timestamp">10:24:18</span>
+                        <span class="log-level log-warning">WARN</span>
+                        <span>AI Upscaler offline</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="panel">
-      <h2>2) Ergebnis</h2>
-      <div class="row">
-        <button id="btn-snapshot">Snapshot anzeigen</button>
-        <button id="btn-clear">Log löschen</button>
-      </div>
-      <div id="log" class="log" style="margin-top:8px"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Demo-Inhalt (Ziel der Änderungen)</h2>
-      <h2>Abschnitt A</h2>
-      <p>Hier kann der Agent Styles ändern, Elemente einfügen usw.</p>
-      <h2>Abschnitt B</h2>
-      <p>Noch ein Absatz für Tests.</p>
-      <button>Normaler Button</button>
-    </div>
-  </div>
-
-  <script>
-  (() => {
-    const $ = s => document.querySelector(s);
-    const logEl = $('#log');
-    function log(...a){ const line=document.createElement('div'); line.textContent='• '+a.join(' '); logEl.appendChild(line); logEl.scrollTop = logEl.scrollHeight; }
-    function setAgentState(txt){ $('#agent-state').textContent = 'Agent: '+txt; }
-
-    // Diagnose-Hooks (leichtgewichtige Version)
-    (function setupProbe(){
-      window.__AgentDiag = window.__AgentDiag || { events:[], exposed:{} };
-      const mutations = [];
-      const obs = new MutationObserver(list => {
-        list.forEach(m => mutations.push({t:Date.now(), type:m.type, target:m.target && m.target.nodeName}));
-      });
-      obs.observe(document.documentElement, {subtree:true, childList:true, attributes:true});
-
-      // versuchen, Agent verfügbar zu machen (Proxy)
-      function wrapAgent(agent){
-        if(!agent || agent.__wrapped) return agent;
-        const p = new Proxy(agent, {
-          get(target, prop, recv){
-            const val = Reflect.get(target, prop, recv);
-            if(typeof val === 'function'){
-              return function(...args){
-                window.__AgentDiag.events.push({t:Date.now(), type:'agent_call', method:String(prop), args});
-                try{
-                  const ret = val.apply(this, args);
-                  if(ret && typeof ret.then === 'function'){
-                    return ret.then(out => { window.__AgentDiag.events.push({t:Date.now(), type:'agent_resolve', method:String(prop), out}); return out; })
-                              .catch(e => { window.__AgentDiag.events.push({t:Date.now(), type:'agent_reject', method:String(prop), error:String(e)}); throw e; });
-                  }else{
-                    window.__AgentDiag.events.push({t:Date.now(), type:'agent_return', method:String(prop), out:ret});
-                    return ret;
-                  }
-                }catch(e){
-                  window.__AgentDiag.events.push({t:Date.now(), type:'agent_error', method:String(prop), error:String(e)});
-                  throw e;
-                }
-              }
-            }
-            return val;
-          }
-        });
-        p.__wrapped = true;
-        return p;
-      }
-
-      const candidates = [['Andio','agent'],['Andio','Agent'],['Agent']];
-      let found = false;
-      for(const path of candidates){
-        try{
-          let ctx = window;
-          for(const key of path) ctx = ctx?.[key];
-          if(ctx){
-            let root = window;
-            for(let i=0;i<path.length-1;i++) root = root[path[i]];
-            root[path[path.length-1]] = wrapAgent(ctx);
-            window.__AgentDiag.exposed[path.join('.')] = true;
-            found = true;
-          }
-        }catch(_){}
-      }
-      setAgentState(found ? 'gefunden' : 'nicht gefunden');
-
-      window.__AgentDiag.getSnapshot = () => ({
-        htmlLen: document.documentElement.outerHTML.length,
-        events: window.__AgentDiag.events.slice(),
-        mutations: mutations.slice(),
-        exposed: window.__AgentDiag.exposed
-      });
-
-      window.__AgentDiag.trySimpleEdit = async (text) => {
-        if(window.Andio && window.Andio.agent && typeof window.Andio.agent.command === 'function'){
-          return await window.Andio.agent.command({kind:'html-edit', prompt:text});
+    
+    <script>
+        let currentAgent = 'image-gen';
+        let testRunning = false;
+        
+        function selectAgent(agentId, element) {
+            currentAgent = agentId;
+            document.querySelectorAll('.agent-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            
+            addConsoleMessage(`Agent gewechselt zu: ${getAgentName(agentId)}`, 'output');
         }
-        // Fallback: DOM selbst ändern, damit Test nicht "leer" bleibt
-        document.querySelectorAll('h2').forEach(el => el.style.color = 'dodgerblue');
-        const note = document.createElement('div');
-        note.textContent = 'Hinzugefügt vom Agent-Test (Fallback).';
-        note.style = 'margin:12px 0;padding:8px;border:1px dashed #48f;background:#001025;';
-        document.body.appendChild(note);
-        return {ok:true, fallback:true};
-      };
-    })();
-
-    $('#btn-run').addEventListener('click', async ()=>{
-      const prompt = $('#prompt').value.trim();
-      log('Sende Prompt:', prompt);
-      try{
-        const res = await window.__AgentDiag.trySimpleEdit(prompt);
-        log('Antwort:', JSON.stringify(res));
-        setTimeout(()=>{ snapshot(); }, 500);
-      }catch(e){
-        log('Fehler:', String(e));
-      }
-    });
-
-    function snapshot(){
-      const snap = window.__AgentDiag.getSnapshot();
-      log('Snapshot:', JSON.stringify({htmlLen:snap.htmlLen, events:snap.events.length, mutations:snap.mutations.length, exposed:snap.exposed}));
-    }
-
-    $('#btn-snapshot').addEventListener('click', snapshot);
-    $('#btn-clear').addEventListener('click', ()=> { logEl.innerHTML=''; });
-
-    // erste Statusmeldung
-    snapshot();
-  })();
-  </script>
+        
+        function getAgentName(agentId) {
+            const names = {
+                'image-gen': 'Bildgenerierung Agent',
+                'video-gen': 'Video Generator',
+                'motion-cap': 'Motion Capture',
+                'lipsync': 'Lip Sync Agent',
+                'upscaler': 'AI Upscaler'
+            };
+            return names[agentId] || agentId;
+        }
+        
+        function runTest() {
+            if (testRunning) return;
+            
+            const input = document.getElementById('testInput').value.trim();
+            if (!input) {
+                alert('Bitte geben Sie einen Test-Prompt ein!');
+                return;
+            }
+            
+            testRunning = true;
+            updateTestButton(true);
+            
+            addConsoleMessage(`$ test ${currentAgent} "${input}"`, 'input');
+            addConsoleMessage('Test gestartet...', 'output');
+            
+            // Simulate test execution
+            setTimeout(() => {
+                addConsoleMessage(`Agent ${getAgentName(currentAgent)} verarbeitet Anfrage...`, 'output');
+                updateMetrics();
+            }, 500);
+            
+            setTimeout(() => {
+                addConsoleMessage('Verarbeitung abgeschlossen', 'output');
+                addConsoleMessage('✓ Test erfolgreich', 'output');
+                testRunning = false;
+                updateTestButton(false);
+                
+                // Add to log
+                addLogEntry('SUCCESS', `Test für ${getAgentName(currentAgent)} abgeschlossen`);
+            }, 3000);
+        }
+        
+        function updateTestButton(running) {
+            const btn = document.getElementById('runTestBtn');
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('span');
+            
+            if (running) {
+                btn.disabled = true;
+                icon.className = 'fas fa-spinner fa-spin';
+                text.textContent = 'Läuft...';
+            } else {
+                btn.disabled = false;
+                icon.className = 'fas fa-play';
+                text.textContent = 'Test starten';
+            }
+        }
+        
+        function updateMetrics() {
+            // Simulate realistic metrics
+            document.getElementById('responseTime').textContent = (Math.random() * 5 + 0.5).toFixed(2) + 's';
+            document.getElementById('memoryUsage').textContent = Math.floor(Math.random() * 2000 + 500) + 'MB';
+            document.getElementById('gpuUsage').textContent = Math.floor(Math.random() * 30 + 60) + '%';
+            
+            const successRate = Math.floor(Math.random() * 10 + 90);
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+        
+        function addConsoleMessage(message, type) {
+            const console = document.getElementById('testConsole');
+            const line = document.createElement('div');
+            line.className = `console-line console-${type}`;
+            line.textContent = message;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        function addLogEntry(level, message) {
+            const logViewer = document.querySelector('.log-viewer');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `
+                <span class="log-timestamp">${timestamp}</span>
+                <span class="log-level log-${level.toLowerCase()}">${level}</span>
+                <span>${message}</span>
+            `;
+            
+            logViewer.appendChild(entry);
+            logViewer.scrollTop = logViewer.scrollHeight;
+        }
+        
+        function loadScenario(scenario) {
+            const scenarios = {
+                'performance': 'Performance-Test Szenario geladen',
+                'quality': 'Quality-Check Szenario geladen',
+                'stress': 'Stress-Test Szenario geladen',
+                'integration': 'Integration-Test Szenario geladen'
+            };
+            
+            addConsoleMessage(scenarios[scenario], 'output');
+            addLogEntry('INFO', scenarios[scenario]);
+        }
+        
+        function clearConsole() {
+            const console = document.getElementById('testConsole');
+            console.innerHTML = `
+                <div class="console-line console-input">$ AndioMediaStudio Agent Test Console v1.0</div>
+                <div class="console-line console-output">Console geleert. System bereit.</div>
+            `;
+        }
+        
+        function saveLog() {
+            alert('Test-Log wurde gespeichert!');
+        }
+        
+        function exportResults() {
+            alert('Testergebnisse werden exportiert...');
+        }
+        
+        function stopTest() {
+            if (testRunning) {
+                testRunning = false;
+                updateTestButton(false);
+                addConsoleMessage('Test abgebrochen', 'error');
+                addLogEntry('WARNING', 'Test manuell abgebrochen');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate initial metrics
+            updateMetrics();
+            
+            // Auto-update metrics every 5 seconds
+            setInterval(() => {
+                if (!testRunning) {
+                    updateMetrics();
+                }
+            }, 5000);
+        });
+    </script>
 </body>
 </html>

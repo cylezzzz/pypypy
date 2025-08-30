@@ -1,247 +1,938 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Editor – AndioMediaStudio</title>
-<link rel="icon" href="assets/logo/logo.png"/>
-<link rel="stylesheet" href="assets/styles.css"/>
-<style>
-  .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-  .canvas-wrap{position:relative;background:#111;border-radius:8px;overflow:hidden;min-height:420px;display:flex;align-items:center;justify-content:center}
-  canvas{max-width:100%;max-height:65vh;background:#000}
-  .badge{position:absolute;background:#2b5fd9;color:#fff;border-radius:999px;padding:2px 8px;font-size:12px;transform:translate(-50%,-50%);pointer-events:none;border:1px solid rgba(255,255,255,.3)}
-  .row{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
-  .note{color:#888;font-size:.9em}
-  .result-list{display:flex;flex-direction:column;gap:8px}
-  .small{font-size:.9em;opacity:.85}
-  .hud{font-size:.9em;opacity:.9}
-  button[disabled]{opacity:.6;pointer-events:none}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AndioMediaStudio - Editor</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --pri1:#667eea;--pri2:#764ba2;--ink:#222;--muted:#666;--panel:rgba(255,255,255,.95);
+      --bd:rgba(255,255,255,.22);--glow:rgba(0,0,0,.12);--err:#d93025;--ok:#0f9d58;--warn:#f9ab00
+    }
+    body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,var(--pri1) 0%,var(--pri2) 100%);min-height:100vh;color:var(--ink);overflow-x:hidden}
+    .container{max-width:1900px;margin:0 auto;padding:15px}
+    .header{background:var(--panel);backdrop-filter:blur(10px);border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 8px 32px var(--glow);border:1px solid var(--bd)}
+    .header h1{font-size:2.2rem;background:linear-gradient(135deg,var(--pri1),var(--pri2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+    .nav-tabs{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+    .nav-tab{background:rgba(255,255,255,.9);border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:600;transition:.3s;text-decoration:none;color:var(--ink);font-size:.9rem}
+    .nav-tab:hover{background:linear-gradient(135deg,var(--pri1),var(--pri2));color:#fff;transform:translateY(-1px)}
+    .nav-tab.active{background:linear-gradient(135deg,var(--pri1),var(--pri2));color:#fff}
+
+    /* Layout */
+    .editor-layout{display:grid;grid-template-areas:"toolbar toolbar toolbar" "panels canvas properties" "timeline timeline timeline";grid-template-columns:280px 1fr 320px;grid-template-rows:auto 1fr 240px;gap:15px;height:calc(100vh - 200px)}
+    .toolbar,.panel,.canvas-area,.properties-panel,.timeline{background:var(--panel);backdrop-filter:blur(10px);border-radius:15px;padding:16px;box-shadow:0 4px 20px var(--glow);border:1px solid var(--bd)}
+    .toolbar{grid-area:toolbar}
+    .panels{grid-area:panels;display:flex;flex-direction:column;gap:15px;min-width:0}
+    .panel{flex:1;overflow:auto}
+    .canvas-area{grid-area:canvas;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    .properties-panel{grid-area:properties;overflow:auto}
+    .timeline{grid-area:timeline}
+
+    /* Toolbar */
+    .tool-groups{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+    .group-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800}
+    .tool-group{display:flex;gap:8px;align-items:center}
+    .tool-separator{width:1px;height:30px;background:#e0e0e0;margin:0 6px}
+    .tool-btn{width:40px;height:40px;border:1px solid #e0e0e0;border-radius:8px;background:rgba(255,255,255,.9);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;color:#666}
+    .tool-btn:hover,.tool-btn.active{background:rgba(102,126,234,.1);border-color:var(--pri1);color:var(--pri1)}
+    .btn{border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,var(--pri1),var(--pri2));color:#fff}
+    .btn.ghost{background:rgba(102,126,234,.08);color:var(--pri1);border:1px solid rgba(102,126,234,.25)}
+    .btn[disabled]{opacity:.6;cursor:not-allowed}
+
+    /* Panels common */
+    .panel-title{font-weight:800;margin-bottom:12px;color:var(--ink);display:flex;align-items:center;gap:8px;font-size:1rem;border-bottom:2px solid rgba(102,126,234,.1);padding-bottom:8px}
+    .subtle{font-size:.82rem;color:var(--muted)}
+
+    /* Upload & Assets */
+    .upload-area{border:2px dashed #ddd;border-radius:12px;padding:26px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:12px}
+    .upload-area:hover,.upload-area.dragover{border-color:var(--pri1);background:rgba(102,126,234,.06)}
+    .upload-area i{font-size:2rem;color:#bbb;margin-bottom:8px}
+    .asset-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .asset-card{border:1px solid rgba(102,126,234,.18);border-radius:10px;padding:8px;background:rgba(102,126,234,.05);display:flex;align-items:center;gap:8px;font-size:.85rem}
+    .badge{font-size:.7rem;padding:2px 8px;border-radius:999px;background:rgba(102,126,234,.14);color:var(--pri1);font-weight:700}
+
+    /* Layers */
+    .layers-list{display:flex;flex-direction:column;gap:8px}
+    .layer-item{background:rgba(102,126,234,.06);border:1px solid rgba(102,126,234,.25);border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:.2s}
+    .layer-item:hover,.layer-item.active{background:rgba(102,126,234,.12);border-color:var(--pri1)}
+    .layer-info{display:flex;align-items:center;gap:8px;flex:1}
+    .layer-thumbnail{width:30px;height:30px;background:#f0f0f0;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#666}
+    .layer-controls{display:flex;gap:4px}
+    .layer-control{width:24px;height:24px;border:none;border-radius:4px;background:transparent;cursor:pointer;color:#666;font-size:.8rem}
+    .layer-control:hover{background:rgba(102,126,234,.12);color:var(--pri1)}
+
+    /* Canvas */
+    .canvas-workspace{width:100%;height:100%;background:repeating-linear-gradient(45deg,#f8f9fa,#f8f9fa 10px,#fff 10px,#fff 20px);border-radius:10px;position:relative;overflow:hidden}
+    .canvas-placeholder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted)}
+    .canvas-placeholder i{font-size:3rem;margin-bottom:10px;color:#ccc}
+    .media-preview{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 4px 20px var(--glow)}
+    .hud{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.55);color:#fff;padding:8px 10px;border-radius:8px;font-size:.8rem;display:none}
+    .hud.error{background:rgba(217,48,37,.9)}
+    .hud.show{display:block}
+
+    /* Region Annotator (NSFW) */
+    .region-layer{position:absolute;inset:0;pointer-events:none}
+    .region{position:absolute;border:2px dashed rgba(255,0,0,.9);background:rgba(255,0,0,.08);pointer-events:auto}
+    .handle{position:absolute;width:10px;height:10px;background:#fff;border:2px solid #ff3b30;border-radius:2px}
+    .handle.nw{left:-6px;top:-6px}.handle.ne{right:-6px;top:-6px}.handle.sw{left:-6px;bottom:-6px}.handle.se{right:-6px;bottom:-6px}
+    .region .label{position:absolute;left:0;top:-22px;background:#ff3b30;color:#fff;font-size:.72rem;font-weight:800;padding:2px 6px;border-radius:4px}
+
+    /* Properties */
+    .property-group{margin-bottom:16px}
+    .property-label{font-weight:700;margin-bottom:6px;color:var(--ink);font-size:.92rem}
+    .slider-control{position:relative;margin:10px 0}
+    .slider{width:100%;height:4px;border-radius:2px;background:#e0e0e0;outline:none;-webkit-appearance:none}
+    .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,var(--pri1),var(--pri2));cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+    .slider-value{position:absolute;right:0;top:-18px;font-size:.78rem;color:var(--pri1);font-weight:800}
+    .filter-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+    .filter-item{background:rgba(102,126,234,.08);border:1px solid rgba(102,126,234,.25);border-radius:6px;padding:8px;text-align:center;cursor:pointer;transition:.2s;font-size:.82rem}
+    .filter-item:hover{background:rgba(102,126,234,.14)}
+    .switch-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+
+    /* Timeline */
+    .playback-controls{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+    .playback-btn{width:36px;height:36px;border:none;border-radius:18px;background:linear-gradient(135deg,var(--pri1),var(--pri2));color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+    .playback-btn:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(102,126,234,.3)}
+    .timeline-tracks{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .timeline-track{height:52px;background:rgba(102,126,234,.12);border-radius:8px;position:relative;overflow:hidden;display:flex;align-items:center;padding:0 10px}
+    .track-label{width:90px;font-size:.8rem;font-weight:800;color:var(--ink)}
+    .track-content{flex:1;height:100%;position:relative}
+    .timeline-clip{position:absolute;height:80%;background:linear-gradient(135deg,var(--pri1),var(--pri2));border-radius:4px;top:10%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.72rem;font-weight:800;cursor:grab}
+    .timeline-clip:active{cursor:grabbing}
+
+    /* Mode bar */
+    .mode-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .mode-pill{border-radius:999px;padding:6px 10px;font-weight:800;font-size:.78rem;border:1px solid rgba(102,126,234,.25);cursor:pointer;background:rgba(102,126,234,.08);color:var(--pri1)}
+    .mode-pill.active{background:linear-gradient(135deg,var(--pri1),var(--pri2));color:#fff;border-color:transparent}
+    .note{font-size:.8rem;color:var(--muted)}
+    .legend{display:flex;gap:8px;align-items:center}
+    .led{width:8px;height:8px;border-radius:999px;background:var(--warn);box-shadow:0 0 0 2px rgba(249,171,0,.15)}
+    .led.on{background:var(--ok)}
+    .tools-list{display:flex;flex-direction:column;gap:6px}
+    .tool-item{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid rgba(102,126,234,.18);border-radius:8px;background:rgba(102,126,234,.05);cursor:pointer}
+    .tool-item:hover{background:rgba(102,126,234,.1)}
+    .tool-item .hint{margin-left:auto;font-size:.74rem;color:var(--muted)}
+    .tool-item[aria-disabled="true"]{opacity:.6;cursor:not-allowed}
+    .group-head{margin-top:6px;margin-bottom:4px;font-size:.78rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+
+    @media (max-width:1400px){
+      .editor-layout{grid-template-areas:"toolbar toolbar" "canvas canvas" "panels properties" "timeline timeline";grid-template-columns:1fr 1fr;grid-template-rows:auto 420px 320px 220px}
+    }
+    @media (max-width:900px){
+      .editor-layout{grid-template-areas:"toolbar" "canvas" "panels" "properties" "timeline";grid-template-columns:1fr;grid-template-rows:auto 300px auto auto 200px}
+      .tool-groups{justify-content:center}
+      .container{padding:10px}
+    }
+  </style>
 </head>
 <body>
-<script src="assets/app.js"></script>
-<script>window.Andio?.navbar?.('editor');</script>
-
-<div class="container">
-  <h1>Editor</h1>
-  <p class="note">Bild laden → Bereiche (#1, #2, …) aufziehen → je Bereich Prompt → <strong>Generieren</strong>. Der Player öffnet nur bei generierten Ergebnissen.</p>
-
-  <div class="grid">
-    <div>
-      <div class="toolbar card">
-        <input id="ed-file" type="file" accept="image/*"/>
-        <select id="ed-mode" title="Modus">
-          <option value="inpaint">Generieren (Inpainting)</option>
-          <option value="remove">Entfernen</option>
-          <option value="filter">Filter/Variante</option>
-          <option value="pose">Pose</option>
-        </select>
-        <button id="ed-clear" class="secondary">Markierungen löschen</button>
-        <button id="ed-generate">Generieren</button>
-        <span id="hud" class="hud"></span>
+  <div class="container">
+    <div class="header">
+      <h1><i class="fas fa-edit"></i> Media Editor</h1>
+      <p>Professioneller Editor für Bild-/Video-/Audio-Bearbeitung mit KI-Integration</p>
+      <div class="mode-bar" style="margin-top:10px">
+        <span class="note"><i class="fa-solid fa-shield-heart"></i> Inhaltsmodus:</span>
+        <button class="mode-pill" id="sfwBtn" onclick="setMode('sfw')" aria-pressed="true">SFW</button>
+        <button class="mode-pill" id="nsfwBtn" onclick="setMode('nsfw')" aria-pressed="false">NSFW</button>
+        <span class="note" id="modeHint">Sichere Werkzeuge aktiviert. Empfindliche Tools sind ausgeblendet.</span>
+        <span class="legend"><span class="led" id="apiLed" aria-hidden="true"></span><span class="note" id="apiStatus">Backend nicht verbunden</span></span>
       </div>
-
-      <div class="canvas-wrap card" id="ed-cwrap">
-        <canvas id="ed-canvas" width="1024" height="1024"></canvas>
-      </div>
-
-      <p class="note">Rechteck ziehen: Maus drücken → ziehen → loslassen. Mehrere Bereiche sind möglich. Zum Entfernen: „Markierungen löschen“.</p>
     </div>
 
-    <div>
-      <div class="card">
-        <h3>Globale Einstellungen</h3>
-        <div class="row">
-          <label>Negativ</label>
-          <input id="ed-neg" type="text" placeholder="z. B. Unschärfe, Verzerrungen"/>
-        </div>
-        <div class="row">
-          <label>Guidance</label><input id="ed-cfg" type="number" min="0" max="20" step="0.5" value="7.5" style="max-width:120px"/>
-          <label>Steps</label><input id="ed-steps" type="number" min="1" max="150" value="30" style="max-width:120px"/>
-          <label>Seed</label><input id="ed-seed" type="number" placeholder="leer=zufällig" style="max-width:140px"/>
+    <div class="nav-tabs">
+      <a href="index.html" class="nav-tab"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="images.html" class="nav-tab"><i class="fas fa-image"></i> Image Studio</a>
+      <a href="video-gen.html" class="nav-tab"><i class="fas fa-video"></i> Video Studio</a>
+      <a href="wandrobe.html" class="nav-tab"><i class="fas fa-tshirt"></i> Wardrobe</a>
+      <a href="#" class="nav-tab active"><i class="fas fa-edit"></i> Editor</a>
+      <a href="motion.html" class="nav-tab"><i class="fas fa-running"></i> Motion</a>
+    </div>
+
+    <div class="editor-layout">
+      <!-- Toolbar -->
+      <div class="toolbar" role="toolbar" aria-label="Editor-Werkzeuge">
+        <div class="tool-groups">
+          <span class="group-label">Auswahl/Transform</span>
+          <div class="tool-group" role="group" aria-label="Auswahl und Transform">
+            <button class="tool-btn" title="Verschieben (M)" onclick="selectTool('move',event)" aria-pressed="false"><i class="fas fa-arrows-alt"></i></button>
+            <button class="tool-btn active" title="Auswählen (V)" onclick="selectTool('select',event)" aria-pressed="true"><i class="fas fa-mouse-pointer"></i></button>
+            <button class="tool-btn" title="Zuschneiden (C)" onclick="selectTool('crop',event)"><i class="fas fa-crop"></i></button>
+            <button class="tool-btn" title="Formen" onclick="selectTool('shape',event)"><i class="fa-regular fa-square"></i></button>
+          </div>
+
+          <div class="tool-separator" aria-hidden="true"></div>
+
+          <span class="group-label">Malen/Maske</span>
+          <div class="tool-group" role="group" aria-label="Malen, Maske, Text">
+            <button class="tool-btn" title="Pinsel (B)" onclick="selectTool('brush',event)"><i class="fas fa-paint-brush"></i></button>
+            <button class="tool-btn" title="Radierer (E)" onclick="selectTool('eraser',event)"><i class="fas fa-eraser"></i></button>
+            <button class="tool-btn" title="Lasso" onclick="selectTool('lasso',event)"><i class="fa-solid fa-object-ungroup"></i></button>
+            <button class="tool-btn" title="Maske" onclick="selectTool('mask',event)"><i class="fa-solid fa-mask"></i></button>
+            <button class="tool-btn" title="Text (T)" onclick="selectTool('text',event)"><i class="fas fa-font"></i></button>
+          </div>
+
+          <div class="tool-separator" aria-hidden="true"></div>
+
+          <span class="group-label">Historie</span>
+          <div class="tool-group" role="group" aria-label="Historie">
+            <button class="tool-btn" title="Rückgängig" onclick="undo()"><i class="fas fa-undo"></i></button>
+            <button class="tool-btn" title="Wiederholen" onclick="redo()"><i class="fas fa-redo"></i></button>
+          </div>
+
+          <div class="tool-separator" aria-hidden="true"></div>
+
+          <span class="group-label">Ansicht</span>
+          <div class="tool-group" role="group" aria-label="Ansicht">
+            <button class="tool-btn" title="Einpassen" onclick="fitToScreen()"><i class="fas fa-expand-arrows-alt"></i></button>
+            <button class="tool-btn" title="100%" onclick="zoom100()"><i class="fas fa-search"></i></button>
+          </div>
+
+          <div class="tool-separator" aria-hidden="true"></div>
+
+          <span class="group-label">Projekt</span>
+          <div class="tool-group" role="group" aria-label="Projekt">
+            <button class="btn ghost" onclick="saveProject()"><i class="fas fa-save"></i> Speichern</button>
+            <button class="btn primary" onclick="exportProject()"><i class="fas fa-download"></i> Export</button>
+          </div>
         </div>
       </div>
 
-      <div id="ed-regions" class="card">
-        <h3>Bereiche (#)</h3>
-        <div id="ed-fields" class="result-list"></div>
+      <!-- Left column -->
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-title"><i class="fas fa-folder-open"></i> Dateien</div>
+          <div class="upload-area" onclick="document.getElementById('fileInput').click()" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" role="button" aria-label="Medien hochladen">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <h4>Medien hochladen</h4>
+            <p class="subtle">Bilder, Videos, Audio (Drag & Drop oder klicken)</p>
+            <input type="file" id="fileInput" accept="image/*,video/*,audio/*" multiple style="display:none" onchange="handleFileSelect(event)" />
+          </div>
+          <div class="asset-list" id="assetList" aria-live="polite"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title"><i class="fa-solid fa-wand-magic-sparkles"></i> KI-Tools</div>
+
+          <div class="group-head">Reparieren</div>
+          <div class="tools-list">
+            <button class="tool-item" onclick="runAITool('background-remove')" id="tool-bg-remove"><i class="fas fa-cut"></i><span>Hintergrund entfernen</span><span class="hint">Segmentierung</span></button>
+            <button class="tool-item" onclick="runAITool('denoise')" id="tool-denoise"><i class="fas fa-wave-square"></i><span>Rauschen entfernen</span></button>
+            <button class="tool-item" onclick="runAITool('deband')" id="tool-deband"><i class="fas fa-bars-staggered"></i><span>Banding reduzieren</span></button>
+          </div>
+
+          <div class="group-head">Verbessern</div>
+          <div class="tools-list">
+            <button class="tool-item" onclick="runAITool('upscale')" id="tool-upscale"><i class="fas fa-expand-arrows-alt"></i><span>Upscaling (x2/x4)</span><span class="hint">Qualität</span></button>
+            <button class="tool-item" onclick="runAITool('enhance')" id="tool-enhance"><i class="fas fa-sparkles"></i><span>Details & Schärfe</span></button>
+            <button class="tool-item" onclick="runAITool('colorize')" id="tool-colorize"><i class="fas fa-palette"></i><span>Kolorierung</span></button>
+          </div>
+
+          <div class="group-head">Style</div>
+          <div class="tools-list">
+            <button class="tool-item" onclick="runAITool('style-transfer')" id="tool-style"><i class="fas fa-paint-brush"></i><span>Style Transfer</span></button>
+          </div>
+
+          <div class="group-head nsfw-only" style="display:none">NSFW Spezial (lokal – Bild)</div>
+          <div class="tools-list nsfw-only" style="display:none">
+            <button class="tool-item" onclick="nsfwAnnotatorEnable()" id="tool-nsfw-annot"><i class="fa-solid fa-vector-square"></i><span>Region-Annotator</span><span class="hint">Boxen zeichnen</span></button>
+            <button class="tool-item" onclick="nsfwApply('mosaic')" id="tool-nsfw-mosaic"><i class="fa-solid fa-grip"></i><span>Mosaic/Pixelate</span><span class="hint">Bild lokal</span></button>
+            <button class="tool-item" onclick="nsfwApply('blackbar')" id="tool-nsfw-bar"><i class="fa-solid fa-square-minus"></i><span>Black Bar</span></button>
+            <button class="tool-item" onclick="nsfwAutoDetect()" id="tool-nsfw-detect"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Auto-NSFW-Detect</span><span class="hint">Backend</span></button>
+          </div>
+
+          <p class="subtle" style="margin-top:8px">Hinweis: KI-Tools für Video/Audio & Auto-Detect erfordern ein Backend. Lokale NSFW-Bearbeitung (Mosaic/Bar) funktioniert sofort für Bilder.</p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title"><i class="fa-solid fa-layer-group"></i> Layers</div>
+          <div class="layers-list" id="layersList" aria-live="polite">
+            <div class="layer-item active">
+              <div class="layer-info">
+                <div class="layer-thumbnail"><i class="fas fa-image"></i></div>
+                <span>Hintergrund</span>
+              </div>
+              <div class="layer-controls">
+                <button class="layer-control" title="Sichtbar" onclick="toggleLayerVisibility(this)"><i class="fas fa-eye"></i></button>
+                <button class="layer-control" title="Gesperrt" onclick="toggleLayerLock(this)"><i class="fas fa-lock-open"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div id="ed-history" class="card">
-        <h3>Ergebnisse</h3>
-        <div id="ed-results" class="result-list"></div>
+      <!-- Canvas center -->
+      <div class="canvas-area">
+        <div class="canvas-workspace" id="canvas" aria-label="Arbeitsfläche">
+          <div class="canvas-placeholder" id="canvasPlaceholder">
+            <i class="fas fa-image"></i>
+            <h3>Laden Sie Medien hoch</h3>
+            <p>Drag & Drop oder klicken Sie auf „Medien hochladen“</p>
+          </div>
+          <div class="hud" id="hud"></div>
+          <!-- Region Annotator Layer -->
+          <div class="region-layer" id="regionLayer" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Properties right -->
+      <div class="properties-panel">
+        <div class="panel-title"><i class="fas fa-sliders-h"></i> Eigenschaften</div>
+
+        <div class="property-group">
+          <div class="property-label">Transformationen</div>
+          <div class="slider-control"><label style="font-size:.8rem">Größe</label>
+            <input type="range" min="10" max="200" value="100" class="slider" id="scaleSlider" oninput="updateProperty('scale',this.value)">
+            <span class="slider-value" id="scaleValue">100%</span></div>
+          <div class="slider-control"><label style="font-size:.8rem">Rotation</label>
+            <input type="range" min="-180" max="180" value="0" class="slider" id="rotationSlider" oninput="updateProperty('rotation',this.value)">
+            <span class="slider-value" id="rotationValue">0°</span></div>
+        </div>
+
+        <div class="property-group">
+          <div class="property-label">Farbanpassungen</div>
+          <div class="slider-control"><label style="font-size:.8rem">Helligkeit</label>
+            <input type="range" min="0" max="200" value="100" class="slider" id="brightnessSlider" oninput="updateProperty('brightness',this.value)">
+            <span class="slider-value" id="brightnessValue">100%</span></div>
+          <div class="slider-control"><label style="font-size:.8rem">Kontrast</label>
+            <input type="range" min="0" max="200" value="100" class="slider" id="contrastSlider" oninput="updateProperty('contrast',this.value)">
+            <span class="slider-value" id="contrastValue">100%</span></div>
+          <div class="slider-control"><label style="font-size:.8rem">Sättigung</label>
+            <input type="range" min="0" max="200" value="100" class="slider" id="saturationSlider" oninput="updateProperty('saturation',this.value)">
+            <span class="slider-value" id="saturationValue">100%</span></div>
+        </div>
+
+        <div class="property-group">
+          <div class="property-label">Effekte</div>
+          <div class="slider-control"><label style="font-size:.8rem">Unschärfe</label>
+            <input type="range" min="0" max="20" value="0" class="slider" id="blurSlider" oninput="updateProperty('blur',this.value)">
+            <span class="slider-value" id="blurValue">0px</span></div>
+          <div class="slider-control"><label style="font-size:.8rem">Transparenz</label>
+            <input type="range" min="0" max="100" value="100" class="slider" id="opacitySlider" oninput="updateProperty('opacity',this.value)">
+            <span class="slider-value" id="opacityValue">100%</span></div>
+        </div>
+
+        <div class="property-group">
+          <div class="property-label">Filter</div>
+          <div class="filter-grid">
+            <button class="filter-item" onclick="applyFilter('grayscale')">Graustufen</button>
+            <button class="filter-item" onclick="applyFilter('sepia')">Sepia</button>
+            <button class="filter-item" onclick="applyFilter('vintage')">Vintage</button>
+            <button class="filter-item" onclick="applyFilter('dramatic')">Dramatisch</button>
+            <button class="filter-item" onclick="applyFilter('warm')">Warm</button>
+            <button class="filter-item" onclick="applyFilter('cool')">Kühl</button>
+          </div>
+        </div>
+
+        <div class="property-group">
+          <div class="property-label">Schnelle Aktionen</div>
+          <div class="switch-row"><span>Auto-Tonwert</span><input type="checkbox" onchange="quickAction('autotone',this.checked)"></div>
+          <div class="switch-row"><span>Auto-Weißabgleich</span><input type="checkbox" onchange="quickAction('autowb',this.checked)"></div>
+          <div class="switch-row nsfw-only" style="display:none"><span>Sensorik-Overlay</span><input type="checkbox" onchange="quickAction('censor',this.checked)"></div>
+        </div>
+
+        <div class="property-group nsfw-only" id="nsfwProp" style="display:none">
+          <div class="panel-title" style="border-bottom:none;padding:0;margin:0 0 8px 0"><i class="fa-solid fa-user-shield"></i> NSFW Spezial</div>
+          <div class="switch-row"><span>Annotator aktiv</span><input type="checkbox" id="annotatorToggle" onchange="nsfwAnnotatorToggle(this.checked)"></div>
+          <div class="slider-control"><label style="font-size:.8rem">Mosaic Stärke</label>
+            <input type="range" min="8" max="80" value="24" class="slider" id="mosaicSlider">
+            <span class="slider-value" id="mosaicValue">24px</span></div>
+          <div class="switch-row"><span>Regionen auf Bild backen</span><input type="checkbox" id="bakeCheckbox" checked></div>
+          <div class="switch-row"><button class="btn ghost" onclick="nsfwClearRegions()"><i class="fa-solid fa-broom"></i> Regionen löschen</button><button class="btn primary" onclick="nsfwApply('mosaic')"><i class="fa-solid fa-grip"></i> Mosaik anwenden</button></div>
+          <p class="subtle">Für Video/Audio ist eine Server-Pipeline erforderlich (z. B. ffmpeg + Filter). Lokal werden nur Bilder bearbeitet.</p>
+        </div>
+      </div>
+
+      <!-- Timeline bottom -->
+      <div class="timeline">
+        <div class="panel-title"><i class="fas fa-film"></i> Timeline</div>
+        <div class="playback-controls">
+          <button class="playback-btn" onclick="playPause()" title="Play/Pause"><i class="fas fa-play" id="playIcon"></i></button>
+          <button class="playback-btn" onclick="stop()" title="Stop"><i class="fas fa-stop"></i></button>
+          <button class="playback-btn" onclick="previousFrame()" title="Vorheriger Frame"><i class="fas fa-step-backward"></i></button>
+          <button class="playback-btn" onclick="nextFrame()" title="Nächster Frame"><i class="fas fa-step-forward"></i></button>
+          <span style="margin-left:12px;font-size:.9rem;color:var(--muted)"><span id="currentTime">00:00</span> / <span id="totalTime">00:00</span></span>
+        </div>
+        <div class="timeline-tracks">
+          <div class="timeline-track"><div class="track-label">Video 1</div><div class="track-content"><div class="timeline-clip" style="left:0%;width:60%">Main Clip</div></div></div>
+          <div class="timeline-track"><div class="track-label">Audio 1</div><div class="track-content"><div class="timeline-clip" style="left:0%;width:60%;background:linear-gradient(135deg,#4CAF50,#45a049)">Audio Track</div></div></div>
+          <div class="timeline-track"><div class="track-label">Overlay</div><div class="track-content"><div class="timeline-clip" style="left:20%;width:30%;background:linear-gradient(135deg,#ff9800,#f57c00)">Text</div></div></div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<footer>© AndioMediaStudio</footer>
+  <script>
+    let currentTool='select',currentMedia=null,isPlaying=false,contentMode='sfw';
+    let backendOK=false;
 
-<!-- Minimaler Overlay-Viewer nur für generierte Inhalte -->
-<div id="ov" style="position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000">
-  <div style="background:#111;max-width:90vw;max-height:90vh;border-radius:12px;padding:12px;border:1px solid #222;display:flex;flex-direction:column">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <strong>Player</strong>
-      <button id="ov-close">✕</button>
-    </div>
-    <img id="ov-img" alt="Bild" style="max-width:86vw;max-height:72vh;border-radius:8px"/>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-      <a id="ov-dl" class="secondary" download>Download</a>
-      <button id="ov-close2">Schließen</button>
-    </div>
-  </div>
-</div>
+    // NSFW Annotator state
+    let annotatorEnabled=false;
+    let regions=[]; // {id,x,y,w,h}
+    let dragState=null; // {type:'move'|'resize'|'new', id, startX,startY, startRect, handle}
+    const regionLayer=()=>document.getElementById('regionLayer');
 
-<script>
-(()=> {
-  const $=s=>document.querySelector(s);
-  const hud = $('#hud');
-  const c = $('#ed-canvas'), ctx = c.getContext('2d'), cwrap = $('#ed-cwrap');
-  let img=null, dragging=false, start=null;
-  const regions=[]; // {id,x,y,w,h,form:{what,style}}
-
-  function nextId(){ return regions.length? Math.max(...regions.map(r=>r.id))+1 : 1; }
-  function draw(){
-    ctx.clearRect(0,0,c.width,c.height);
-    if (img) ctx.drawImage(img,0,0,c.width,c.height);
-    ctx.strokeStyle='#2b5fd9'; ctx.setLineDash([6,4]); ctx.lineWidth=2;
-    regions.forEach(r=> ctx.strokeRect(r.x,r.y,r.w,r.h));
-    rebuildBadges();
-  }
-  function rebuildBadges(){
-    [...cwrap.querySelectorAll('.badge')].forEach(b=>b.remove());
-    regions.forEach(r=>{
-      const b=document.createElement('div'); b.className='badge'; b.textContent='#'+r.id;
-      b.style.left=(r.x+r.w/2)+'px'; b.style.top=(r.y+r.h/2)+'px';
-      cwrap.appendChild(b);
-    });
-  }
-
-  $('#ed-file').addEventListener('change', ()=>{
-    const f=$('#ed-file').files?.[0]; if(!f) return;
-    const im=new Image(); im.onload=()=>{
-      img=im;
-      const ratio=Math.min(1024/im.width,1024/im.height,1);
-      c.width=Math.floor(im.width*ratio); c.height=Math.floor(im.height*ratio);
-      draw();
-    };
-    im.src=URL.createObjectURL(f);
-  });
-
-  c.addEventListener('mousedown', e=>{
-    if(!img) return;
-    dragging=true;
-    const r=c.getBoundingClientRect(); start={x:e.clientX-r.left,y:e.clientY-r.top};
-  });
-  c.addEventListener('mousemove', e=>{
-    if(!dragging) return;
-    const r=c.getBoundingClientRect(); const x=e.clientX-r.left, y=e.clientY-r.top;
-    draw(); ctx.strokeStyle='#2b5fd9'; ctx.setLineDash([6,4]); ctx.strokeRect(start.x,start.y,x-start.x,y-start.y);
-  });
-  c.addEventListener('mouseup', e=>{
-    if(!dragging) return; dragging=false;
-    const r=c.getBoundingClientRect(); const x1=Math.min(start.x,e.clientX-r.left), y1=Math.min(start.y,e.clientY-r.top);
-    const w=Math.abs(e.clientX-r.left-start.x), h=Math.abs(e.clientY-r.top-start.y); if(w<6||h<6) return;
-    const item={id:nextId(),x:x1,y:y1,w,h,form:{what:'',style:''}}; regions.push(item); draw(); addField(item);
-  });
-
-  $('#ed-clear').addEventListener('click', ()=>{ regions.splice(0,regions.length); draw(); $('#ed-fields').innerHTML=''; });
-
-  function addField(r){
-    const el=document.createElement('div'); el.className='card';
-    el.innerHTML=`
-      <strong>#${r.id}</strong>
-      <div class="row"><input data-k="what" placeholder="Was? z. B. BH-Träger entfernen / Satinband hinzufügen" style="width:100%"></div>
-      <div class="row"><input data-k="style" placeholder="Stil/Hinweise (Studio-Licht, realistisch …)" style="width:100%"></div>
-    `;
-    ['what','style'].forEach(k=>{
-      const input=el.querySelector(`[data-k="${k}"]`);
-      input.value=r.form[k]||'';
-      input.addEventListener('input',()=>{ r.form[k]=input.value; });
-    });
-    $('#ed-fields').appendChild(el);
-  }
-
-  // ------- API helpers (echte Calls, Polling) -------
-  const pickUrl = (obj)=> obj?.url || obj?.result?.url || obj?.data?.url || null;
-
-  async function postMultipart(endpoint, payload, files){
-    const fd=new FormData();
-    fd.append('payload', new Blob([JSON.stringify(payload)], {type:'application/json'}));
-    for(const [name,file] of Object.entries(files||{})){ if(file) fd.append(name, file, file.name||name); }
-    const res=await fetch(endpoint,{method:'POST', body:fd});
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  }
-  async function pollJob(jobId, {interval=1000, timeout=10*60*1000}={}){
-    const t0=Date.now();
-    while(true){
-      const r=await fetch(`/api/jobs/${jobId}`); if(!r.ok) throw new Error(`Job ${jobId}: HTTP ${r.status}`);
-      const data=await r.json();
-      const st=(data.status||data.state||'').toLowerCase();
-      if(['succeeded','success','done','finished','ok'].includes(st)){ return data; }
-      if(['failed','error'].includes(st)){ const msg=data.error||'Job fehlgeschlagen'; throw new Error(msg); }
-      if(Date.now()-t0>timeout) throw new Error('Timeout beim Warten auf das Ergebnis.');
-      await new Promise(r=>setTimeout(r, interval));
+    // -------- Mode handling (SFW/NSFW) --------
+    function setMode(mode){
+      contentMode=mode;
+      localStorage.setItem('andio.mode',mode);
+      const sfwBtn=document.getElementById('sfwBtn');
+      const nsfwBtn=document.getElementById('nsfwBtn');
+      sfwBtn.classList.toggle('active',mode==='sfw'); sfwBtn.setAttribute('aria-pressed',mode==='sfw');
+      nsfwBtn.classList.toggle('active',mode==='nsfw'); nsfwBtn.setAttribute('aria-pressed',mode==='nsfw');
+      document.querySelectorAll('.nsfw-only').forEach(el=>el.style.display=mode==='nsfw'?'':'none');
+      document.getElementById('modeHint').textContent = mode==='sfw'
+        ? 'Sichere Werkzeuge aktiviert. Empfindliche Tools sind ausgeblendet.'
+        : 'NSFW-Modus: zusätzliche Tools sichtbar.';
+      document.getElementById('nsfwProp').style.display = (mode==='nsfw') ? '' : 'none';
     }
-  }
 
-  async function generate(){
-    if(!img){ alert('Bitte erst ein Bild laden.'); return; }
-    const file=$('#ed-file').files?.[0];
-    const payload={
-      mode: $('#ed-mode').value,
-      neg: $('#ed-neg').value.trim(),
-      cfg: +$('#ed-cfg').value,
-      steps: +$('#ed-steps').value,
-      seed: $('#ed-seed').value? +$('#ed-seed').value : null,
-      // Koordinaten im Canvasmaßstab (0..width/height)
-      regions: regions.map(r=>({id:r.id,x:r.x,y:r.y,w:r.w,h:r.h,form:r.form||{}})),
-      canvas_size: {w:c.width,h:c.height}
-    };
-    try{
-      setBusy(true,'Starte Job …');
-      const startResp = await postMultipart('/api/editor/run', payload, {image:file});
-      const directUrl = pickUrl(startResp);
-      if(directUrl){
-        pushResult(directUrl); setBusy(false,'Fertig (Direkt)');
-        return;
+    // -------- Tool selection --------
+    function selectTool(tool,e){
+      currentTool=tool;
+      document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+      if(e && e.currentTarget){ e.currentTarget.classList.add('active'); e.currentTarget.setAttribute('aria-pressed','true'); }
+      const c=document.getElementById('canvas');
+      c.style.cursor={move:'move',select:'default',crop:'crosshair',brush:'crosshair',eraser:'crosshair',text:'text',lasso:'crosshair',shape:'crosshair',mask:'crosshair'}[tool]||'default';
+    }
+
+    // -------- Upload / Assets --------
+    function handleFileSelect(ev){
+      const files=ev.target.files;
+      Array.from(files).forEach(f=>{
+        if(f.type.startsWith('image/')||f.type.startsWith('video/')||f.type.startsWith('audio/')) loadMedia(f);
+      })
+    }
+    function dragOverHandler(ev){ev.preventDefault();ev.currentTarget.classList.add('dragover')}
+    function dropHandler(ev){
+      ev.preventDefault();ev.currentTarget.classList.remove('dragover');
+      const files=ev.dataTransfer.files;
+      Array.from(files).forEach(f=>{
+        if(f.type.startsWith('image/')||f.type.startsWith('video/')||f.type.startsWith('audio/')) loadMedia(f)
+      });
+    }
+
+    function loadMedia(file){
+      const reader=new FileReader();
+      reader.onload=e=>{
+        currentMedia=e.target.result;
+        const canvas=document.getElementById('canvas');
+        let html='';
+        if(file.type.startsWith('image/')){
+          html = `<img src="${e.target.result}" class="media-preview" id="currentMedia" alt="${file.name}">`;
+        } else if(file.type.startsWith('video/')){
+          html = `<video src="${e.target.result}" class="media-preview" id="currentMedia" controls></video>`;
+        } else {
+          html = `<audio src="${e.target.result}" id="currentMedia" controls></audio>`;
+        }
+        const hudHTML = canvas.querySelector('.hud') ? canvas.querySelector('.hud').outerHTML : '<div class="hud" id="hud"></div>';
+        const regionHTML = '<div class="region-layer" id="regionLayer" style="display:none"></div>';
+        canvas.innerHTML = html + hudHTML + regionHTML;
+
+        regions=[]; // reset
+        annotatorEnabled=false;
+        bindMediaEvents();
+        addLayer(file.name,file.type.split('/')[0]);
+        addAsset(file.name,file.type.split('/')[0]);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function addAsset(name,type){
+      const list=document.getElementById('assetList');
+      const icon = type==='video' ? 'fa-video' : type==='audio' ? 'fa-music' : 'fa-image';
+      const card=document.createElement('div');
+      card.className='asset-card';
+      card.innerHTML=`<i class="fa-solid ${icon}"></i><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${name}">${name}</span><span class="badge">${type}</span>`;
+      list.appendChild(card)
+    }
+
+    function addLayer(name,type){
+      const list=document.getElementById('layersList');
+      const item=document.createElement('div');
+      item.className='layer-item';
+      item.innerHTML=`
+        <div class="layer-info">
+          <div class="layer-thumbnail"><i class="fas fa-${type==='video'?'video':type==='audio'?'music':'image'}"></i></div>
+          <span>${name}</span>
+        </div>
+        <div class="layer-controls">
+          <button class="layer-control" title="Sichtbar" onclick="toggleLayerVisibility(this)"><i class="fas fa-eye"></i></button>
+          <button class="layer-control" title="Gesperrt" onclick="toggleLayerLock(this)"><i class="fas fa-lock-open"></i></button>
+          <button class="layer-control" title="Löschen" onclick="deleteLayer(this)"><i class="fas fa-trash"></i></button>
+        </div>`;
+      list.appendChild(item)
+    }
+
+    function toggleLayerVisibility(btn){const i=btn.querySelector('i');if(i.classList.contains('fa-eye')){i.className='fas fa-eye-slash';btn.title='Ausgeblendet'}else{i.className='fas fa-eye';btn.title='Sichtbar'}}
+    function toggleLayerLock(btn){const i=btn.querySelector('i');if(i.classList.contains('fa-lock-open')){i.className='fas fa-lock';btn.title='Gesperrt'}else{i.className='fas fa-lock-open';btn.title='Entsperrt'}}
+    function deleteLayer(btn){if(confirm('Layer löschen?')) btn.closest('.layer-item').remove()}
+
+    // -------- Properties / Filters --------
+    function updateProperty(prop,val){
+      const m=document.getElementById('currentMedia'); if(!m) return;
+      const span=document.getElementById(prop+'Value');
+      const prev = m.style.transform || '';
+      switch(prop){
+        case 'scale':
+          span.textContent=val+'%';
+          m.style.transform = (prev.replace(/scale\([^)]*\)/,'').trim() + ` scale(${val/100})`).trim();
+          break;
+        case 'rotation':
+          span.textContent=val+'°';
+          m.style.transform = (prev.replace(/rotate\([^)]*\)/,'').trim() + ` rotate(${val}deg)`).trim();
+          break;
+        case 'brightness':
+          span.textContent=val+'%'; updateFilter('brightness',`brightness(${val}%)`); break;
+        case 'contrast':
+          span.textContent=val+'%'; updateFilter('contrast',`contrast(${val}%)`); break;
+        case 'saturation':
+          span.textContent=val+'%'; updateFilter('saturate',`saturate(${val}%)`); break;
+        case 'blur':
+          span.textContent=val+'px'; updateFilter('blur',`blur(${val}px)`); break;
+        case 'opacity':
+          span.textContent=val+'%'; m.style.opacity=val/100; break;
       }
-      const jobId = startResp.jobId || startResp.id || startResp.job || null;
-      if(!jobId) throw new Error('Kein jobId im API-Response.');
-      setBusy(true,`Warte auf Ergebnis… (Job ${jobId})`);
-      const jobResp = await pollJob(jobId);
-      const url = pickUrl(jobResp);
-      if(!url) throw new Error('Kein Ergebnis-URL im Job-Response.');
-      pushResult(url);
-      setBusy(false,'Fertig');
-    }catch(err){
-      console.error(err);
-      setBusy(false,'Fehler');
-      alert('Editor-Fehler: '+(err?.message||err));
     }
-  }
+    function updateFilter(type,value){
+      const m=document.getElementById('currentMedia'); if(!m) return;
+      let f=m.style.filter||''; const rx=new RegExp(`${type}\\([^)]*\\)`,'g');
+      f=f.replace(rx,''); m.style.filter=(f+' '+value).trim()
+    }
+    function applyFilter(name){
+      const m=document.getElementById('currentMedia'); if(!m) return;
+      const map={
+        grayscale:'grayscale(100%)',
+        sepia:'sepia(100%)',
+        vintage:'sepia(50%) contrast(120%) brightness(110%)',
+        dramatic:'contrast(150%) brightness(90%) saturate(120%)',
+        warm:'sepia(30%) saturate(140%) brightness(110%)',
+        cool:'hue-rotate(180deg) saturate(120%)'
+      };
+      m.style.filter=map[name]||''
+    }
+    function quickAction(name,on){console.log('quickAction',name,on)}
 
-  function setBusy(b,msg){ $('#ed-generate').disabled=b; $('#ed-clear').disabled=b; hud.textContent=msg||''; }
-  function pushResult(url){
-    const btn=document.createElement('button'); btn.className='btn'; btn.textContent='Result '+new Date().toLocaleTimeString();
-    const item={url,generated:true};
-    btn.addEventListener('click', ()=> openOverlay(item));
-    $('#ed-results').prepend(btn);
-  }
+    // -------- Timeline Playback --------
+    function bindMediaEvents(){
+      const m=document.getElementById('currentMedia');
+      if(!m) return;
+      const total=document.getElementById('totalTime'); const cur=document.getElementById('currentTime');
+      function fmt(s){const mm=String(Math.floor(s/60)).padStart(2,'0');const ss=String(Math.floor(s%60)).padStart(2,'0');return `${mm}:${ss}`}
+      if(m.tagName==='VIDEO' || m.tagName==='AUDIO'){
+        m.onloadedmetadata=()=>{ total.textContent=fmt(m.duration||0) };
+        m.ontimeupdate=()=>{ cur.textContent=fmt(m.currentTime||0) };
+      } else { total.textContent='00:00'; cur.textContent='00:00'; }
+    }
+    function playPause(){
+      isPlaying=!isPlaying;
+      const icon=document.getElementById('playIcon');
+      const m=document.getElementById('currentMedia');
+      if(isPlaying){icon.className='fas fa-pause'; if(m&&(m.tagName==='VIDEO'||m.tagName==='AUDIO')) m.play()}
+      else {icon.className='fas fa-play'; if(m&&(m.tagName==='VIDEO'||m.tagName==='AUDIO')) m.pause()}
+    }
+    function stop(){isPlaying=false;document.getElementById('playIcon').className='fas fa-play';const m=document.getElementById('currentMedia');if(m&&(m.tagName==='VIDEO'||m.tagName==='AUDIO')){m.pause();m.currentTime=0}}
+    function previousFrame(){const m=document.getElementById('currentMedia');if(m&&m.tagName==='VIDEO')m.currentTime=Math.max(0,m.currentTime-1/30)}
+    function nextFrame(){const m=document.getElementById('currentMedia');if(m&&m.tagName==='VIDEO')m.currentTime=Math.min(m.duration,m.currentTime+1/30)}
 
-  // Overlay (nur generated)
-  function openOverlay(item){
-    if(!item.generated) return;
-    $('#ov-img').src=item.url; $('#ov-dl').href=item.url; $('#ov-dl').download='output.png';
-    $('#ov').style.display='flex';
-  }
-  $('#ov-close').onclick=()=> $('#ov').style.display='none';
-  $('#ov-close2').onclick=()=> $('#ov').style.display='none';
-  $('#ed-generate').addEventListener('click', generate);
-})();
-</script>
+    // -------- Project IO (transparent) --------
+    function saveProject(){alert('Speichern: Projektdatei/JSON noch zu verdrahten. (Kein Fake-Save)')}
+    function exportProject(){alert('Export: Pipeline (z. B. PNG/JPEG/ffmpeg) noch zu verdrahten. (Kein Fake-Export)')}
+
+    // -------- KI-Tools API (no fake) --------
+    async function runAITool(name){
+      const hud = document.getElementById('hud');
+      const m=document.getElementById('currentMedia');
+      if(!m){ showHud('Bitte zuerst ein Medium laden.', 'error'); return; }
+      if((m.tagName==='VIDEO'||m.tagName==='AUDIO') && (name==='background-remove'||name==='style-transfer'||name==='upscale'||name==='denoise'||name==='deband'||name==='enhance'||name==='colorize')){
+        if(!backendOK){ showHud('Backend nötig für Video/Audio. /api/health nicht erreichbar.', 'error'); return; }
+      }
+      const payload = { tool: name, mode: contentMode, mime: detectMime(m), dataURL: captureSource(m) };
+
+      setToolsDisabled(true);
+      showHud('KI-Verarbeitung läuft …');
+
+      try{
+        const res = await fetch('/api/editor/tools', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        if(!res.ok){
+          const txt = await res.text().catch(()=>res.statusText);
+          throw new Error(`Fehler ${res.status}: ${txt}`);
+        }
+        const out = await res.json();
+        if(!out || !out.dataURL){ throw new Error('Antwort ohne dataURL'); }
+        applyOutput(out);
+        showHud('Fertig.', null, 1200);
+      } catch(err){
+        console.error(err);
+        showHud('KI-Tool fehlgeschlagen: '+ (err?.message || err), 'error');
+      } finally {
+        setToolsDisabled(false);
+      }
+    }
+
+    function setToolsDisabled(disabled){
+      document.querySelectorAll('.tool-item').forEach(b=>b.setAttribute('aria-disabled', disabled?'true':'false'));
+      document.querySelectorAll('.tool-item').forEach(b=>b.disabled = !!disabled);
+    }
+
+    function showHud(msg, type=null, autoHideMs=0){
+      const hud=document.getElementById('hud');
+      hud.textContent = msg;
+      hud.className = 'hud show' + (type==='error' ? ' error' : '');
+      if(autoHideMs>0){ setTimeout(()=>{hud.className='hud'}, autoHideMs); }
+    }
+
+    function detectMime(el){
+      if(el.tagName==='IMG') return 'image/png';
+      if(el.tagName==='VIDEO') return 'video/webm';
+      if(el.tagName==='AUDIO') return 'audio/wav';
+      return 'application/octet-stream';
+    }
+
+    function captureSource(el){
+      if(el.tagName==='IMG') return el.src;
+      return el.currentSrc || el.src;
+    }
+
+    function applyOutput(out){
+      const canvas=document.getElementById('canvas');
+      const prevHud = canvas.querySelector('.hud').outerHTML;
+      const prevRegion = canvas.querySelector('#regionLayer').outerHTML;
+      if(out.mime?.startsWith('image/')){
+        canvas.innerHTML = `<img src="${out.dataURL}" class="media-preview" id="currentMedia" alt="KI Ausgabe">` + prevHud + prevRegion;
+      } else if(out.mime?.startsWith('video/')){
+        canvas.innerHTML = `<video src="${out.dataURL}" class="media-preview" id="currentMedia" controls></video>` + prevHud + prevRegion;
+      } else if(out.mime?.startsWith('audio/')){
+        canvas.innerHTML = `<audio src="${out.dataURL}" id="currentMedia" controls></audio>` + prevHud + prevRegion;
+      } else {
+        showHud('Unbekanntes Ausgabemedium.', 'error');
+      }
+      bindMediaEvents();
+    }
+
+    // -------- Backend Healthcheck --------
+    async function healthcheck(){
+      try{
+        const res = await fetch('/api/health');
+        backendOK = res.ok;
+      } catch{
+        backendOK = false;
+      }
+      const led = document.getElementById('apiLed');
+      const st  = document.getElementById('apiStatus');
+      if(backendOK){ led.classList.add('on'); st.textContent='Backend verbunden'; }
+      else { led.classList.remove('on'); st.textContent='Backend nicht verbunden'; }
+    }
+
+    // -------- NSFW: Region Annotator (lokal) --------
+    function nsfwAnnotatorEnable(){
+      if(contentMode!=='nsfw'){ setMode('nsfw'); }
+      nsfwAnnotatorToggle(true);
+    }
+    function nsfwAnnotatorToggle(on){
+      annotatorEnabled = !!on;
+      const layer = regionLayer();
+      layer.style.display = annotatorEnabled ? 'block' : 'none';
+      if(annotatorEnabled){
+        layer.addEventListener('mousedown', regionMouseDown);
+        layer.addEventListener('mousemove', regionMouseMove);
+        window.addEventListener('mouseup', regionMouseUp);
+      } else {
+        layer.removeEventListener('mousedown', regionMouseDown);
+        layer.removeEventListener('mousemove', regionMouseMove);
+        window.removeEventListener('mouseup', regionMouseUp);
+      }
+      document.getElementById('annotatorToggle').checked = annotatorEnabled;
+    }
+    function nsfwClearRegions(){
+      regions=[]; regionLayer().innerHTML='';
+    }
+
+    function nsfwApply(kind){
+      const m=document.getElementById('currentMedia');
+      if(!m){ showHud('Kein Medium geladen.', 'error'); return; }
+      if(m.tagName!=='IMG'){ showHud('Lokale NSFW-Bearbeitung unterstützt aktuell nur Bilder. Für Video bitte Backend nutzen.', 'error'); return; }
+      if(regions.length===0){ showHud('Keine Regionen markiert.', 'error'); return; }
+
+      if(kind==='mosaic') return bakeMosaic();
+      if(kind==='blackbar') return drawBars();
+    }
+
+    function nsfwAutoDetect(){
+      const m=document.getElementById('currentMedia');
+      if(!m){ showHud('Kein Medium geladen.', 'error'); return; }
+      if(!backendOK){ showHud('Backend für Auto-Detect nicht erreichbar (/api/health).', 'error'); return; }
+      showHud('Auto-Detect läuft …');
+      fetch('/api/nsfw/detect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dataURL:captureSource(m)})})
+        .then(r=>r.json())
+        .then(out=>{
+          if(!out?.boxes?.length){ showHud('Keine sensitiven Regionen erkannt.'); return; }
+          // Erwartet: boxes = [{x,y,w,h}] in Prozent oder Pixel; wir nehmen Prozent [0..1]
+          const layer = regionLayer(); layer.innerHTML='';
+          regions = out.boxes.map((b,i)=>({
+            id:`auto-${i}`,
+            x:b.x, y:b.y, w:b.w, h:b.h, unit:b.unit||'rel'
+          }));
+          renderRegions();
+          showHud(`${regions.length} Region(en) markiert.`, null, 1500);
+        })
+        .catch(err=>{ console.error(err); showHud('Auto-Detect fehlgeschlagen.', 'error'); });
+    }
+
+    // ---- Region drawing / interaction
+    function canvasRect(){
+      const canvas = document.getElementById('canvas');
+      const media = document.getElementById('currentMedia');
+      if(!media) return {x:0,y:0,w:0,h:0};
+      const cb = canvas.getBoundingClientRect();
+      const mb = media.getBoundingClientRect();
+      // Arbeitsfläche = sichtbarer Media-Bereich (zentriert im Canvas)
+      const x = mb.left - cb.left, y = mb.top - cb.top, w = mb.width, h = mb.height;
+      return {x,y,w,h};
+    }
+    function toRel(r){ // px -> rel [0..1] bezogen auf sichtbares Bild
+      const c=canvasRect(); return {x:(r.x-c.x)/c.w, y:(r.y-c.y)/c.h, w:r.w/c.w, h:r.h/c.h}
+    }
+    function toPx(r){ // rel -> px
+      const c=canvasRect(); return {x:c.x + r.x*c.w, y:c.y + r.y*c.h, w:r.w*c.w, h:r.h*c.h}
+    }
+
+    function regionMouseDown(e){
+      if(!annotatorEnabled) return;
+      const layer = regionLayer();
+      const rect = layer.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+      // Prüfen ob auf Handle geklickt
+      const target = e.target;
+      if(target.classList.contains('handle')){
+        const id = target.parentElement.dataset.id;
+        const region = regions.find(r=>r.id===id);
+        dragState = {type:'resize', id, startX:mx, startY:my, startRect:{...region}, handle:target.classList.contains('nw')?'nw':target.classList.contains('ne')?'ne':target.classList.contains('sw')?'sw':'se'};
+        e.preventDefault(); return;
+      }
+      if(target.classList.contains('region')){
+        const id = target.dataset.id;
+        const region = regions.find(r=>r.id===id);
+        dragState = {type:'move', id, startX:mx, startY:my, startRect:{...region}};
+        e.preventDefault(); return;
+      }
+
+      // Neue Region
+      dragState = {type:'new', startX:mx, startY:my};
+      const tempId = 'r'+Date.now();
+      const regionEl = document.createElement('div');
+      regionEl.className='region';
+      regionEl.dataset.id = tempId;
+      regionEl.style.left = mx+'px';
+      regionEl.style.top = my+'px';
+      regionEl.style.width = '0px';
+      regionEl.style.height = '0px';
+      const label = document.createElement('div'); label.className='label'; label.textContent='Region';
+      regionEl.appendChild(label);
+      ['nw','ne','sw','se'].forEach(p=>{const h=document.createElement('div');h.className='handle '+p;regionEl.appendChild(h);});
+      layer.appendChild(regionEl);
+      dragState.tempId = tempId;
+      e.preventDefault();
+    }
+
+    function regionMouseMove(e){
+      if(!dragState) return;
+      const layer = regionLayer();
+      const rect = layer.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+      if(dragState.type==='new'){
+        const x = Math.min(dragState.startX, mx);
+        const y = Math.min(dragState.startY, my);
+        const w = Math.abs(mx - dragState.startX);
+        const h = Math.abs(my - dragState.startY);
+        const el = [...layer.children].find(c=>c.dataset.id===dragState.tempId);
+        if(el){ el.style.left=x+'px'; el.style.top=y+'px'; el.style.width=w+'px'; el.style.height=h+'px'; }
+      }
+      if(dragState.type==='move'){
+        const region = regions.find(r=>r.id===dragState.id);
+        const dx = (mx - dragState.startX), dy = (my - dragState.startY);
+        const px = toPx(dragState.startRect);
+        const newPx = {x:px.x+dx, y:px.y+dy, w:px.w, h:px.h};
+        const rel = toRel(newPx);
+        Object.assign(region, rel);
+        renderRegions();
+      }
+      if(dragState.type==='resize'){
+        const r = regions.find(r=>r.id===dragState.id) || dragState.startRect;
+        const px = toPx(dragState.startRect);
+        let x=px.x, y=px.y, w=px.w, h=px.h;
+        const dx = mx - dragState.startX, dy = my - dragState.startY;
+        const hnd = dragState.handle;
+        if(hnd==='nw'){ x+=dx; y+=dy; w-=dx; h-=dy; }
+        if(hnd==='ne'){ y+=dy; w+=dx; h-=dy; }
+        if(hnd==='sw'){ x+=dx; w-=dx; h+=dy; }
+        if(hnd==='se'){ w+=dx; h+=dy; }
+        const rel = toRel({x,y,w,h});
+        if(regions.find(r=>r.id===dragState.id)) Object.assign(regions.find(r=>r.id===dragState.id), rel);
+        renderRegionsDirect(rel, dragState.id);
+      }
+    }
+
+    function regionMouseUp(e){
+      if(!dragState) return;
+      const layer = regionLayer();
+      if(dragState.type==='new'){
+        const el = [...layer.children].find(c=>c.dataset.id===dragState.tempId);
+        if(el){
+          const left = parseFloat(el.style.left), top=parseFloat(el.style.top), w=parseFloat(el.style.width), h=parseFloat(el.style.height);
+          if(w>8 && h>8){
+            const rel = toRel({x:left,y:top,w,h});
+            const id = 'r'+Date.now();
+            regions.push({id, ...rel});
+            el.dataset.id = id;
+          } else {
+            el.remove();
+          }
+        }
+      }
+      // Normalize
+      renderRegions();
+      dragState=null;
+    }
+
+    function renderRegions(){
+      const layer = regionLayer();
+      if(!layer) return;
+      layer.innerHTML='';
+      regions.forEach(r=>{
+        const p = toPx(r);
+        const el = document.createElement('div');
+        el.className='region'; el.dataset.id=r.id;
+        el.style.left = p.x+'px'; el.style.top=p.y+'px'; el.style.width=p.w+'px'; el.style.height=p.h+'px';
+        const label = document.createElement('div'); label.className='label'; label.textContent=r.label||'Region';
+        el.appendChild(label);
+        ['nw','ne','sw','se'].forEach(pos=>{const h=document.createElement('div');h.className='handle '+pos;el.appendChild(h);});
+        layer.appendChild(el);
+      });
+    }
+    function renderRegionsDirect(rel, id){
+      const layer = regionLayer();
+      const el = [...layer.children].find(c=>c.dataset.id===id);
+      if(!el) return;
+      const p = toPx(rel);
+      el.style.left=p.x+'px'; el.style.top=p.y+'px'; el.style.width=p.w+'px'; el.style.height=p.h+'px';
+    }
+
+    // ---- NSFW bake: mosaic (pixelate) & bars
+    function bakeMosaic(){
+      const img = document.getElementById('currentMedia');
+      const mos = parseInt(document.getElementById('mosaicSlider').value,10) || 24;
+      document.getElementById('mosaicValue').textContent = mos+'px';
+
+      // Offscreen Canvas
+      const off = document.createElement('canvas');
+      const ctx = off.getContext('2d');
+      // Erzeuge Canvas in tatsächlicher Bildgröße
+      const source = new Image();
+      source.onload = ()=>{
+        off.width = source.width; off.height = source.height;
+        ctx.drawImage(source,0,0);
+
+        regions.forEach(r=>{
+          const sx = Math.max(0, Math.floor(r.x * source.width));
+          const sy = Math.max(0, Math.floor(r.y * source.height));
+          const sw = Math.max(1, Math.floor(r.w * source.width));
+          const sh = Math.max(1, Math.floor(r.h * source.height));
+
+          // Pixelate: runterschalen, dann hoch mit imageSmoothing=false
+          const tmp = document.createElement('canvas');
+          const tctx = tmp.getContext('2d');
+          const block = Math.max(4, mos);
+          const dw = Math.max(1, Math.floor(sw / block));
+          const dh = Math.max(1, Math.floor(sh / block));
+          tmp.width = dw; tmp.height = dh;
+          tctx.imageSmoothingEnabled = false;
+          // Ausschnitt klein zeichnen
+          tctx.drawImage(off, sx, sy, sw, sh, 0, 0, dw, dh);
+          // zurück groß zeichnen
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(tmp, 0, 0, dw, dh, sx, sy, sw, sh);
+        });
+
+        const outURL = off.toDataURL('image/png');
+        img.src = outURL;
+        showHud('Mosaik angewendet.', null, 1200);
+        if(!document.getElementById('bakeCheckbox').checked){
+          // Falls nicht backen gewünscht war, könnte man stattdessen Overlays behalten.
+        }
+      };
+      source.src = img.src;
+    }
+
+    function drawBars(){
+      const img = document.getElementById('currentMedia');
+      const off = document.createElement('canvas');
+      const ctx = off.getContext('2d');
+      const source = new Image();
+      source.onload = ()=>{
+        off.width = source.width; off.height = source.height;
+        ctx.drawImage(source,0,0);
+        ctx.fillStyle = 'black';
+        regions.forEach(r=>{
+          const sx = Math.max(0, Math.floor(r.x * source.width));
+          const sy = Math.max(0, Math.floor(r.y * source.height));
+          const sw = Math.max(1, Math.floor(r.w * source.width));
+          const sh = Math.max(1, Math.floor(r.h * source.height));
+          ctx.fillRect(sx, sy, sw, sh);
+        });
+        img.src = off.toDataURL('image/png');
+        showHud('Black Bars angewendet.', null, 1200);
+      };
+      source.src = img.src;
+    }
+
+    // -------- Shortcuts --------
+    document.addEventListener('keydown',e=>{
+      if(e.ctrlKey||e.metaKey){
+        if(e.key==='z'){e.preventDefault();undo()}
+        if(e.key==='y'){e.preventDefault();redo()}
+        if(e.key==='s'){e.preventDefault();saveProject()}
+      }
+      if(contentMode==='nsfw' && annotatorEnabled){
+        if(e.key==='Delete'){ nsfwClearRegions(); }
+      }
+      switch(e.key){
+        case'v':selectTool('select');break;
+        case'm':selectTool('move');break;
+        case'c':selectTool('crop');break;
+        case'b':selectTool('brush');break;
+        case'e':selectTool('eraser');break;
+        case't':selectTool('text');break;
+      }
+    });
+
+    // -------- Init --------
+    document.addEventListener('DOMContentLoaded',()=>{
+      ['dragenter','dragover','dragleave','drop'].forEach(evt=>{
+        document.addEventListener(evt,e=>{e.preventDefault();e.stopPropagation()},false)
+      });
+      setMode(localStorage.getItem('andio.mode') || 'sfw');
+      healthcheck();
+      setInterval(healthcheck, 5000);
+
+      // Mosaic slider label
+      const ms=document.getElementById('mosaicSlider'); const mv=document.getElementById('mosaicValue');
+      if(ms && mv){ ms.addEventListener('input',()=>{ mv.textContent = ms.value+'px'; }); }
+    });
+
+    // -------- Placeholders klar deklariert --------
+    function undo(){ alert('Rückgängig: History-Stack implementieren (transparent).'); }
+    function redo(){ alert('Wiederholen: History-Stack implementieren.'); }
+    function fitToScreen(){ const m=document.getElementById('currentMedia'); if(m){ m.style.maxWidth='100%'; m.style.maxHeight='100%'; } }
+    function zoom100(){ const m=document.getElementById('currentMedia'); if(m){ m.style.transform=(m.style.transform||'').replace(/scale\\([^)]*\\)/,'').trim(); } }
+  </script>
 </body>
 </html>

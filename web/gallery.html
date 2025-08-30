@@ -4,76 +4,147 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Gallery · AndioMediaStudio</title>
-  <link rel="stylesheet" href="assets/styles.css"/>
   <link rel="icon" type="image/png" href="assets/logo/logo.png"/>
-  <style>
-    :root { --gap:12px; }
-    .toolbar { display:flex; gap:var(--gap); flex-wrap:wrap; align-items:center; }
-    .toolbar .grow { flex: 1 1 260px; }
-    .grid { display:grid; gap:var(--gap); grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-    .thumb { border:1px solid #ffffff22; border-radius:10px; overflow:hidden; background:#0f0f0f; cursor:pointer; }
-    .thumb .wrap { position:relative; aspect-ratio:1/1; background:#111; display:flex; align-items:center; justify-content:center; }
-    .thumb img, .thumb video { width:100%; height:100%; object-fit:cover; display:block; }
-    .thumb .badge { position:absolute; left:8px; top:8px; }
-    .thumb .meta { padding:8px; display:flex; flex-direction:column; gap:6px; }
-    .muted { opacity:.75; font-size:12px; }
-    .chip { border:1px solid #ffffff22; padding:2px 8px; border-radius:999px; font-size:11px; }
-    .chips { display:flex; gap:6px; flex-wrap:wrap; }
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <!-- Globale UI (fixe Navbar Styles etc.) -->
+  <link rel="stylesheet" href="assets/ui.css"/>
 
-    /* Overlay */
-    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.8); display:none; align-items:center; justify-content:center; z-index:9999; }
-    .overlay.active { display:flex; }
-    .overlay .frame { width:min(92vw, 1200px); max-height:88vh; background:#0c0c0c; border-radius:14px; overflow:hidden; border:1px solid #ffffff22; display:flex; flex-direction:column; }
-    .overlay header, .overlay footer { padding:10px 12px; background:#0f0f0f; border-bottom:1px solid #ffffff16; display:flex; align-items:center; gap:10px; }
-    .overlay footer { border-top:1px solid #ffffff16; border-bottom:none; justify-content:space-between; }
-    .overlay .content { padding:0; display:flex; align-items:center; justify-content:center; background:#000; }
-    .overlay video, .overlay img { max-width:100%; max-height:74vh; display:block; }
-    .links a.active { color:#2b57ff; }
+  <style>
+    /* ===== Theme (angepasst an Editor) ===== */
+    *{box-sizing:border-box}
+    :root{
+      --pri1:#667eea; --pri2:#764ba2;
+      --ink:#222; --muted:#666;
+      --panel:rgba(255,255,255,.95);
+      --bd:rgba(255,255,255,.22);
+      --glow:rgba(0,0,0,.12);
+      --bd2:#e8e8e8;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+      color:var(--ink);
+      background:linear-gradient(135deg,var(--pri1) 0%, var(--pri2) 100%);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* ===== Shell ===== */
+    .container{max-width:1400px;margin:0 auto;padding:16px}
+
+    h1{
+      font-size:1.6rem; margin:10px 0 14px;
+      background:linear-gradient(135deg,var(--pri1),var(--pri2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+
+    .card{
+      background:var(--panel); border:1px solid var(--bd);
+      border-radius:14px; box-shadow:0 4px 20px var(--glow);
+      padding:12px 14px; margin-bottom:12px;
+    }
+
+    /* ===== Toolbar ===== */
+    .toolbar{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+    .input,.select,.btn{
+      height:38px; border-radius:10px; border:1px solid var(--bd2); background:#fff;
+      padding:0 10px; font-size:14px;
+      box-shadow:0 1px 0 rgba(0,0,0,.02) inset;
+    }
+    .input{min-width:260px}
+    .select{background:#fff}
+    .btn{display:inline-flex; align-items:center; gap:8px; cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,var(--pri1),var(--pri2)); color:#fff; border-color:transparent}
+    .btn.danger{background:#B00020; color:#fff; border-color:#b00020}
+    .btn.ghost{background:rgba(102,126,234,.08); color:var(--pri1); border:1px solid rgba(102,126,234,.25)}
+    .grow{flex:1 1 280px}
+    .muted{opacity:.75; font-size:12px}
+
+    /* ===== Grid / Thumbs ===== */
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    }
+    .thumb{
+      position:relative; cursor:pointer;
+      background:var(--panel); border:1px solid var(--bd); border-radius:12px;
+      box-shadow:0 4px 20px var(--glow); overflow:hidden; transition:.2s transform, .2s box-shadow;
+    }
+    .thumb:hover{ transform:translateY(-2px); box-shadow:0 8px 24px var(--glow) }
+    .wrap{
+      position:relative; aspect-ratio:1/1; background:#111;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .wrap img,.wrap video{ width:100%; height:100%; object-fit:cover; display:block }
+    .wrap video{ position:absolute; inset:0; opacity:0; transition:.2s opacity; pointer-events:none }
+    .thumb.video:hover .wrap video{ opacity:1 }
+
+    .badge{
+      position:absolute; top:8px; left:8px;
+      padding:4px 8px; border-radius:999px;
+      background:rgba(0,0,0,.55); color:#fff; border:1px solid rgba(255,255,255,.18);
+      font-size:11px; font-weight:700;
+    }
+    .badge.right{ left:auto; right:8px }
+    .play{
+      position:absolute; right:8px; bottom:8px;
+      width:36px;height:36px;border-radius:999px;
+      background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.2);
+      color:#fff; display:flex; align-items:center; justify-content:center;
+    }
+    .row-actions{
+      position:absolute; top:8px; right:8px; display:flex; gap:8px;
+    }
+    .icon-btn{
+      width:36px;height:36px;border-radius:999px; border:1px solid rgba(255,255,255,.22);
+      background:rgba(0,0,0,.55); color:#fff; display:inline-flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    .icon-btn:hover{ background:rgba(0,0,0,.7) }
+
+    .meta{ padding:10px 12px; display:flex; flex-direction:column; gap:6px }
+    .chips{ display:flex; gap:6px; flex-wrap:wrap }
+    .chip{
+      border:1px solid rgba(102,126,234,.25);
+      background:rgba(102,126,234,.08);
+      color:var(--pri1);
+      padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700;
+    }
+
+    footer.page{ color:#fff; text-align:center; padding:30px 0; opacity:.9 }
+    code{ background:rgba(255,255,255,.6); padding:2px 6px; border-radius:6px }
   </style>
 </head>
 <body data-page="gallery">
-  <!-- Player-Overlay -->
-  <div id="player-overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Preview">
-    <div class="frame">
-      <header>
-        <strong id="ovTitle">Preview</strong>
-        <span class="chips" id="ovBadges"></span>
-        <span class="right muted" id="ovInfo"></span>
-        <button id="ovClose" class="btn">Schließen</button>
-      </header>
-      <div class="content" id="ovContent"></div>
-      <footer>
-        <div class="row">
-          <button id="ovPrev" class="btn">◀</button>
-          <button id="ovNext" class="btn">▶</button>
-        </div>
-        <div class="row">
-          <a href="catalog.html" class="btn">In Store öffnen</a>
-          <a id="ovDownload" class="btn primary" download>Download</a>
-        </div>
-      </footer>
-    </div>
-  </div>
+  <!-- Globale fixe Navbar -->
+  <header class="andio-navbar" role="banner">
+    <nav class="andio-nav" role="navigation" aria-label="Hauptnavigation">
+      <!-- Brand -->
+      <a href="index.html" class="brand-link" aria-label="Startseite">
+        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo" />
+        <span class="wordmark">Andio Media Studio</span>
+      </a>
 
-  <!-- Header / Navi -->
-  <header class="header" role="banner">
-    <nav role="navigation" aria-label="Hauptnavigation">
-      <div class="brand">
-        <a href="index.html" class="brand-link" aria-label="Zur Startseite">
-          <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo"/>
-          <span class="wordmark">Andio Media Studio</span>
-        </a>
+      <!-- Links -->
+      <div class="nav-links" role="menubar">
+        <a role="menuitem" href="index.html"      data-link="index">Übersicht</a>
+        <a role="menuitem" href="images.html"     data-link="images">Image Studio</a>
+        <a role="menuitem" href="video-gen.html"  data-link="video-gen">Video Studio</a>
+        <a role="menuitem" href="wandrobe.html"   data-link="wardrobe">Wardrobe</a>
+        <a role="menuitem" href="avatar.html"     data-link="avatar">Avatar Studio</a>
+        <a role="menuitem" href="motion.html"     data-link="motion">Motion</a>
+        <a role="menuitem" href="gallery.html"    data-link="gallery" aria-current="page" class="active">Gallery</a>
+        <a role="menuitem" href="catalog.html"    data-link="catalog">Store</a>
+        <a role="menuitem" href="editor.html"     data-link="editor">Editor</a>
       </div>
-      <div class="spacer"></div>
-      <div class="links" role="menubar">
-        <a role="menuitem" href="index.html" data-link="index">Übersicht</a>
-        <a role="menuitem" href="images.html" data-link="images">Image Studio</a>
-        <a role="menuitem" href="video-gen.html" data-link="video-gen">Video Studio</a>
-        <a role="menuitem" href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
-        <a role="menuitem" href="motion.html" data-link="motion">Motion</a>
-        <a role="menuitem" href="gallery.html" data-link="gallery" aria-current="page">Gallery</a>
-        <a role="menuitem" href="catalog.html" data-link="catalog">Store</a>
-        <a role="menuitem" href="editor.html" data-link="editor">Editor</a>
+
+      <!-- Rechts: globaler SFW/NSFW-Schalter -->
+      <div class="nav-actions">
+        <label class="modechip" title="SFW/NSFW umschalten">
+          <span id="navModeLabel">SFW</span>
+          <input id="navModeToggle" type="checkbox" />
+          <span>NSFW</span>
+        </label>
       </div>
     </nav>
   </header>
@@ -100,82 +171,88 @@
           <option value="name_asc">Name A–Z</option>
         </select>
       </div>
-      <div class="muted">Bilder/Videos aus <code>/outputs</code> (Server) oder <code>assets/outputs.json</code> (Fallback). Thumbnails werden angezeigt.</div>
+      <div class="muted">Quellen: <code>/api/outputs</code> (Server) oder <code>assets/outputs.json</code> (Fallback). Thumbnails werden automatisch genutzt.</div>
     </div>
 
+    <!-- Grid -->
     <section id="grid" class="grid" aria-live="polite"></section>
     <div id="empty" class="muted" style="display:none">Keine Ergebnisse.</div>
   </div>
 
-  <footer>© AndioMediaStudio</footer>
+  <footer class="page">© Andio Media Studio</footer>
 
-  <script src="assets/app.js"></script>
+  <!-- Globaler Overlay-Player (einmalig, zentral) -->
+  <script src="assets/overlay-player.js"></script>
+
   <script>
-    // Navbar active
-    (function(){
-      const a = document.querySelector('.links a[data-link="gallery"]');
-      if(a){ a.classList.add('active'); a.setAttribute('aria-current','page'); }
-    })();
+    // Navbar-Active kommt aus Markup-Klasse "active" (siehe Links)
 
     const $ = (q,r=document)=> r.querySelector(q);
     const el = {
       grid: $('#grid'), empty: $('#empty'),
       q: $('#q'), kind: $('#kind'), sfw: $('#sfw'), sort: $('#sort'),
-      overlay: $('#player-overlay'), ovTitle: $('#ovTitle'), ovBadges: $('#ovBadges'),
-      ovInfo: $('#ovInfo'), ovContent: $('#ovContent'), ovClose: $('#ovClose'),
-      ovPrev: $('#ovPrev'), ovNext: $('#ovNext'), ovDownload: $('#ovDownload'),
     };
 
+    // Demo-Fallback
     const demo = [
-      { id:'demo-img', kind:'image', src:'assets/placeholders/demo.jpg', thumb:'assets/placeholders/demo.jpg', nsfw:false, name:'Demo Bild', tags:['demo'], date:'2025-08-20T10:00:00Z' },
-      { id:'demo-vid', kind:'video', src:'assets/placeholders/demo.mp4',  thumb:'assets/placeholders/demo.jpg', nsfw:false, name:'Demo Video', tags:['demo'], date:'2025-08-21T10:00:00Z' },
+      { id:'demo-img', kind:'image', src:'assets/placeholders/demo.jpg', thumb:'assets/placeholders/demo.jpg', nsfw:false, name:'Demo Bild', tags:['demo'], date:'2025-08-20T10:00:00Z', format:'JPG' },
+      { id:'demo-vid', kind:'video', src:'assets/placeholders/demo.mp4',  thumb:'assets/placeholders/demo.jpg', nsfw:false, name:'Demo Video', tags:['demo'], date:'2025-08-21T10:00:00Z', format:'MP4' },
     ];
 
-    const state = { items:[], filtered:[], idx:null };
+    const state = { items:[], filtered:[] };
 
-    async function fetchJson(url){
-      const r = await fetch(url, { cache: 'no-cache' });
+    async function fetchJson(url, init){
+      const r = await fetch(url, Object.assign({ cache:'no-cache' }, init||{}));
       if(!r.ok) throw new Error('HTTP '+r.status);
-      return r.json();
+      if(r.status===204) return null;
+      const ct = r.headers.get('content-type')||'';
+      return ct.includes('application/json') ? r.json() : r.text();
     }
 
+    // Laden aus API oder Fallback
     async function loadOutputs(){
-      try {
-        // 1) Offizieller Endpoint aus deinem Backend
+      try{
         const data = await fetchJson('/api/outputs');
-        // Erwartetes Format (flexibel): Array von {kind:'image'|'video', src, thumb?, nsfw?, name?, tags?, date?}
         state.items = normalizeOutputs(data);
-        apply();
-        return;
-      } catch(_){}
+        apply(); return;
+      }catch(_){}
 
-      try {
-        // 2) Lokaler Fallback
+      try{
         const data = await fetchJson('assets/outputs.json');
         state.items = normalizeOutputs(data);
-        apply();
-        return;
-      } catch(_){}
+        apply(); return;
+      }catch(_){}
 
-      // 3) Demo
       state.items = demo;
       apply();
     }
 
     function normalizeOutputs(data){
       if(!Array.isArray(data)) return demo;
-      return data.map((x,i)=>({
-        id: x.id || ('it'+i),
-        kind: x.kind || (/\.(mp4|webm|mov)$/i.test(x.src)?'video':'image'),
-        src: x.src,
-        thumb: x.thumb || x.src,
-        nsfw: !!x.nsfw,
-        name: x.name || x.file || ('Output '+(i+1)),
-        tags: x.tags || [],
-        date: x.date || new Date().toISOString(),
-      })).filter(x=> !!x.src);
+      return data.map((x,i)=>{
+        const src = x.src || x.path || x.url;
+        const ext = (x.format || fileExt(src) || '').toUpperCase();
+        return {
+          id: x.id || x.slug || ('it'+i),
+          kind: x.kind || (/\.(mp4|webm|mov|mkv)$/i.test(src)?'video':'image'),
+          src, thumb: x.thumb || x.preview || src,
+          nsfw: !!x.nsfw,
+          name: x.name || x.file || ('Output '+(i+1)),
+          tags: x.tags || [],
+          date: x.date || x.mtime || new Date().toISOString(),
+          format: ext || (/\.(mp4|webm|mov|mkv)$/i.test(src)?'VIDEO':'IMG'),
+          gen: x.model || x.generator || x.pipeline || null
+        };
+      }).filter(x=>!!x.src);
     }
 
+    function fileExt(p){
+      if(!p) return '';
+      const m = p.split('?')[0].match(/\.([a-z0-9]+)$/i);
+      return m ? m[1] : '';
+    }
+
+    // Filter + Sort
     function apply(){
       const q = el.q.value.trim().toLowerCase();
       const k = el.kind.value;
@@ -185,7 +262,7 @@
         if(k && it.kind!==k) return false;
         if(sfw==='sfw' && it.nsfw) return false;
         if(q){
-          const hay = (it.name+' '+(it.tags||[]).join(' ')).toLowerCase();
+          const hay = (it.name+' '+(it.gen||'')+' '+(it.tags||[]).join(' ')).toLowerCase();
           if(!hay.includes(q)) return false;
         }
         return true;
@@ -193,8 +270,8 @@
 
       const s = el.sort.value;
       arr.sort((a,b)=>{
-        if(s==='date_desc') return new Date(b.date)-new Date(a.date);
-        if(s==='date_asc')  return new Date(a.date)-new Date(b.date);
+        if(s==='date_desc') return new Date(b.date) - new Date(a.date);
+        if(s==='date_asc')  return new Date(a.date) - new Date(b.date);
         if(s==='name_asc')  return a.name.localeCompare(b.name);
         return 0;
       });
@@ -203,67 +280,88 @@
       renderGrid();
     }
 
+    // Grid-Render mit Hover-Videovorschau & Actions
     function renderGrid(){
       el.grid.innerHTML = '';
       el.empty.style.display = state.filtered.length? 'none':'';
-      state.filtered.forEach((it, idx)=>{
+      state.filtered.forEach((it)=>{
         const card = document.createElement('div');
-        card.className = 'thumb';
+        card.className = 'thumb'+(it.kind==='video'?' video':'');
         const wrap = document.createElement('div');
         wrap.className = 'wrap';
 
+        // Poster immer als IMG
+        const poster = document.createElement('img');
+        poster.loading='lazy'; poster.src = it.thumb || it.src; poster.alt = it.name;
+        wrap.append(poster);
+
+        // Video-Hover
         if(it.kind==='video'){
           const v = document.createElement('video');
-          v.muted = true; v.playsInline = true; v.preload='metadata';
-          v.src = it.thumb || it.src;
+          v.muted = true; v.playsInline = true; v.preload='metadata'; v.src = it.src;
           wrap.append(v);
-          const badge = document.createElement('span'); badge.className='badge'; badge.textContent='Video';
-          wrap.append(badge);
-        } else {
-          const img = document.createElement('img');
-          img.loading='lazy'; img.src = it.thumb || it.src; img.alt = it.name;
-          wrap.append(img);
-          const badge = document.createElement('span'); badge.className='badge'; badge.textContent=it.nsfw?'NSFW':'SFW';
-          wrap.append(badge);
+          const play = document.createElement('div'); play.className='play'; play.innerHTML='<i class="fa fa-play"></i>'; wrap.append(play);
+          card.addEventListener('mouseenter', ()=>{ v.currentTime=0; v.play().catch(()=>{}); });
+          card.addEventListener('mouseleave', ()=>{ v.pause(); });
         }
+
+        // Badges
+        const badgeFmt = document.createElement('span'); badgeFmt.className='badge'; badgeFmt.textContent = it.format || (it.kind==='video'?'VIDEO':'IMG');
+        const badgeMode = document.createElement('span'); badgeMode.className='badge right'; badgeMode.textContent = it.nsfw?'NSFW':'SFW';
+        wrap.append(badgeFmt, badgeMode);
+
+        // Quick Actions
+        const actions = document.createElement('div'); actions.className='row-actions';
+        const btnDl = document.createElement('a'); btnDl.className='icon-btn'; btnDl.title='Download'; btnDl.href=it.src; btnDl.download='';
+        btnDl.innerHTML='<i class="fa fa-download"></i>'; btnDl.addEventListener('click',e=>e.stopPropagation());
+        const btnDel = document.createElement('button'); btnDel.className='icon-btn'; btnDel.title='Löschen';
+        btnDel.innerHTML='<i class="fa fa-trash"></i>'; btnDel.addEventListener('click', async (e)=>{ e.stopPropagation(); await deleteItem(it.id,it.src); });
+        actions.append(btnDl, btnDel);
+        wrap.append(actions);
 
         const meta = document.createElement('div'); meta.className='meta';
         const name = document.createElement('div'); name.textContent = it.name;
         const row = document.createElement('div'); row.className='chips';
-        (it.tags||[]).forEach(t=> { const c=document.createElement('span'); c.className='chip'; c.textContent=t; row.append(c); });
+        const cf=document.createElement('span'); cf.className='chip'; cf.textContent=it.format || (it.kind==='video'?'VIDEO':'IMG');
+        row.append(cf);
+        if(it.gen){ const cg=document.createElement('span'); cg.className='chip'; cg.textContent=it.gen; row.append(cg); }
         const dt = document.createElement('div'); dt.className='muted'; dt.textContent = new Date(it.date).toLocaleString();
 
-        meta.append(name, row, dt);
+        meta.append(name,row,dt);
         card.append(wrap, meta);
-        card.addEventListener('click', ()=> openOverlay(idx));
+
+        // >>> Globaler Player: direkt Item übergeben
+        card.addEventListener('click', ()=> openOverlay(it));
+
         el.grid.append(card);
       });
     }
 
-    function openOverlay(idx){
-      state.idx = idx;
-      const it = state.filtered[idx];
-      el.ovTitle.textContent = it.name;
-      el.ovBadges.innerHTML = '';
-      el.ovBadges.append(chip(it.kind==='video'?'Video':'Bild'), chip(it.nsfw?'NSFW':'SFW'));
-      el.ovInfo.textContent = new Date(it.date).toLocaleString();
-      el.ovDownload.href = it.src;
-      el.ovContent.innerHTML = '';
-      if(it.kind==='video'){
-        const v=document.createElement('video'); v.controls=true; v.autoplay=true; v.src=it.src; el.ovContent.append(v);
-      } else {
-        const i=document.createElement('img'); i.src=it.src; i.alt=it.name; el.ovContent.append(i);
-      }
-      el.overlay.classList.add('active');
+    // Löschen (mit klaren Fallbacks, keine Fake-Ergebnisse)
+    async function deleteItem(id, src){
+      if(!confirm('Datei wirklich löschen?\n'+(src||''))) return;
+      try{
+        await fetchJson(`/api/outputs/${encodeURIComponent(id)}`, { method:'DELETE' });
+        afterDelete(id); return;
+      }catch(_){}
+      try{
+        await fetchJson('/api/outputs/delete', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ id, src })
+        });
+        afterDelete(id); return;
+      }catch(_){}
+      alert('Backend nicht erreichbar – Eintrag wird nur aus der Anzeige entfernt.');
+      afterDelete(id);
+    }
+    function afterDelete(id){
+      state.items = state.items.filter(x=>x.id!==id);
+      state.filtered = state.filtered.filter(x=>x.id!==id);
+      renderGrid();
     }
 
-    function chip(t){ const s=document.createElement('span'); s.className='chip'; s.textContent=t; return s; }
-
-    el.ovClose.addEventListener('click', ()=> el.overlay.classList.remove('active'));
-    el.overlay.addEventListener('click', (e)=> { if(e.target===el.overlay) el.overlay.classList.remove('active'); });
-    el.ovPrev.addEventListener('click', ()=> { if(state.idx==null) return; openOverlay((state.idx-1+state.filtered.length)%state.filtered.length); });
-    el.ovNext.addEventListener('click', ()=> { if(state.idx==null) return; openOverlay((state.idx+1)%state.filtered.length); });
-
+    // Bindings
     [el.q, el.kind, el.sfw, el.sort].forEach(x=> x.addEventListener('input', apply));
     loadOutputs();
   </script>

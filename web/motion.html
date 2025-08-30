@@ -1,189 +1,518 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Motion – AndioMediaStudio</title>
-<link rel="stylesheet" href="assets/styles.css"/>
-<style>
-  .page-grid{display:grid;grid-template-columns:320px 1fr 380px;gap:12px}
-  .card{background:#1112;border:1px solid #333;border-radius:12px;padding:12px}
-  .grid{display:grid;gap:8px}
-  .grid-2{grid-template-columns:1fr 1fr}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .canvas-wrap{position:relative;aspect-ratio:1/1;background:#000;border-radius:12px;overflow:hidden}
-  .canvas-wrap canvas{width:100%;height:100%;display:block}
-  .kp{position:absolute;width:12px;height:12px;border-radius:50%;border:2px solid #fff;background:#00aaff;cursor:grab;transform:translate(-6px,-6px)}
-  .kp.drag{cursor:grabbing}
-  .list{display:flex;flex-direction:column;gap:8px;max-height:42vh;overflow:auto}
-  .hud{font-size:.9em;opacity:.9}
-</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AndioMediaStudio – Motion</title>
+
+  <!-- Einheitliche Topbar (global) -->
+  <link rel="stylesheet" href="assets/ui.css">
+
+  <!-- Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <style>
+    /* ==== Seitenstil für Motion (unverändert gelassen, wo möglich) ==== */
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--g1:#667eea;--g2:#764ba2;--glass:rgba(255,255,255,.95);--glass2:rgba(255,255,255,.9);--stroke:rgba(255,255,255,.2);--ink:#333;--muted:#666;--shadow:0 8px 32px rgba(0,0,0,.12);--radius:20px}
+    body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,var(--g1),var(--g2));min-height:100vh;color:var(--ink)}
+    .container{max-width:1700px;margin:0 auto;padding:20px}
+
+    /* Page Panels */
+    .panel{background:var(--glass);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid var(--stroke)}
+    .panel h3{display:flex;align-items:center;gap:10px;font-size:1.1rem;margin-bottom:8px}
+    .sub{color:var(--muted);font-size:.9rem;margin:-2px 0 10px}
+
+    .workspace{display:grid;gap:18px;grid-template-columns:300px 1fr 420px}
+    @media (max-width:1280px){.workspace{grid-template-columns:1fr}}
+
+    /* LEFT */
+    .mode-list{display:grid;gap:8px}
+    .mode-btn{padding:10px 12px;border-radius:12px;border:1px solid var(--stroke);background:#fff;cursor:pointer;text-align:left;font-weight:700;display:flex;gap:8px;align-items:center;transition:.2s}
+    .mode-btn.active,.mode-btn:hover{background:#f6f6ff}
+    .toolbox{margin-top:10px;display:grid;gap:12px}
+    .tool-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    label{font-weight:600;font-size:.92rem;color:#333}
+    select,input[type="number"],input[type="text"]{width:100%;padding:9px;border:2px solid #e0e0e0;border-radius:10px;background:#fff}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{padding:6px 10px;border-radius:999px;background:#eef2ff;border:1px solid #e5e7ff;cursor:pointer;font-weight:700;font-size:.9rem}
+    .chip.active{background:#c7d2fe}
+    .nsfw-only{display:none}
+    .seq{background:rgba(102,126,234,.06);border:1px dashed rgba(102,126,234,.25);border-radius:12px;padding:10px;min-height:160px}
+    .seq-item{display:flex;align-items:center;gap:8px;justify-content:space-between;background:#fff;border:1px solid var(--stroke);border-radius:10px;padding:8px;margin:6px 0;cursor:grab}
+    .seq-item small{color:#666}
+    .seq-item input{width:70px}
+
+    /* MIDDLE */
+    .stage{display:grid;grid-template-rows:auto 1fr auto;gap:10px}
+    .stage-toolbar{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{padding:9px 12px;border-radius:10px;border:1px solid var(--stroke);background:#fff;cursor:pointer;font-weight:700}
+    .btn.primary{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border:0}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .canvas-wrap{position:relative;background:#0b0b0b;border-radius:12px;border:1px solid #222;min-height:520px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    canvas{max-width:100%;max-height:100%}
+    .overlay{position:absolute;inset:0;pointer-events:none}
+    .marker{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid #fff;background:#ffb703;box-shadow:0 0 10px rgba(255,183,3,.6);transform:translate(-50%,-50%);pointer-events:auto;cursor:grab}
+    .path{position:absolute;inset:0;pointer-events:none}
+    .timeline{background:rgba(102,126,234,.08);border-radius:12px;padding:10px;margin-top:8px}
+    .track{height:60px;background:#fff;border:1px solid var(--stroke);border-radius:10px;position:relative;overflow:hidden}
+    .playhead{position:absolute;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--g1),var(--g2))}
+    .kf{position:absolute;top:50%;width:10px;height:10px;background:#667eea;border-radius:50%;transform:translate(-50%,-50%);border:2px solid #fff;cursor:pointer}
+
+    /* Player (Seitenplayer – zusätzlich zum globalen Overlay-Player) */
+    .player{display:none;background:#111;color:#fff;border-radius:12px;overflow:hidden;border:1px solid #222;margin-top:10px}
+    .player header,.player footer{background:#1a1a1a;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+    .player video{width:100%;height:100%;max-height:60vh;object-fit:contain;background:#000}
+
+    .progress{display:none;background:rgba(102,126,234,.1);padding:12px;border-radius:10px;margin-top:8px}
+    .bar{height:8px;background:rgba(102,126,234,.2);border-radius:4px;overflow:hidden;margin-top:6px}
+    .bar i{display:block;height:100%;background:linear-gradient(135deg,var(--g1),var(--g2));width:0%;transition:width .4s}
+
+    /* RIGHT */
+    .box{background:#fff;border:1px solid var(--stroke);border-radius:12px;padding:12px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  </style>
 </head>
 <body>
-<script src="assets/app.js"></script>
-<script>window.Andio?.navbar?.('motion');</script>
+  <!-- Globale Navbar -->
+  <header class="andio-navbar" role="banner">
+    <nav class="andio-nav" role="navigation" aria-label="Hauptnavigation">
+      <!-- Brand -->
+      <a href="index.html" class="brand-link" aria-label="Startseite">
+        <img src="assets/logo/logo.png" alt="AndioMediaStudio Logo" />
+        <span class="wordmark">Andio Media Studio</span>
+      </a>
 
-<div class="container">
-  <h1>Motion</h1>
-  <div class="page-grid">
-    <aside class="card">
-      <h3>Quelle & Modus</h3>
-      <div class="grid">
-        <label class="row"><span>Bild</span><input id="file" type="file" accept="image/*"/></label>
-        <label class="row"><span>Audio (für Lip-Sync)</span><input id="audio" type="file" accept="audio/*"/></label>
-        <div class="grid grid-2">
-          <label>Modus
-            <select id="mode"><option value="action">Aktion</option><option value="pose">Pose</option><option value="lipsync">Lip-Sync</option><option value="camera">Kamera</option></select>
-          </label>
-          <label>Preview
-            <select id="preview"><option value="off">Aus</option><option value="low">Low-Res</option></select>
-          </label>
-        </div>
-        <label>Prompt global <input id="prompt" placeholder="z. B. idle subtle sway"/></label>
-        <div class="grid grid-2">
-          <label>Dauer (s) <input id="dur" type="number" min="1" max="30" value="6"/></label>
-          <label>FPS <input id="fps" type="number" min="6" max="30" value="12"/></label>
-        </div>
-        <div class="grid grid-2">
-          <label>Geschw. <input id="speed" type="range" min="0.2" max="2" step="0.1" value="1"/></label>
-          <label>Loop <select id="loop"><option value="true">An</option><option value="false">Aus</option></select></label>
-        </div>
-        <div class="row">
-          <button id="random">Random</button>
-          <button id="run" class="primary">Ausführen</button>
-          <span id="hud" class="hud"></span>
-        </div>
+      <!-- Links -->
+      <div class="nav-links" role="menubar">
+        <a role="menuitem" href="index.html"      data-link="index">Übersicht</a>
+        <a role="menuitem" href="images.html"     data-link="images">Image Studio</a>
+        <a role="menuitem" href="video-gen.html"  data-link="video-gen">Video Studio</a>
+        <a role="menuitem" href="wandrobe.html"   data-link="wardrobe">Wardrobe</a>
+        <a role="menuitem" href="avatar.html"     data-link="avatar">Avatar Studio</a>
+        <a role="menuitem" href="motion.html"     data-link="motion" aria-current="page" class="active">Motion</a>
+        <a role="menuitem" href="gallery.html"    data-link="gallery">Gallery</a>
+        <a role="menuitem" href="catalog.html"    data-link="catalog">Store</a>
+        <a role="menuitem" href="editor.html"     data-link="editor">Editor</a>
       </div>
-    </aside>
 
-    <main class="card">
-      <div class="row" style="margin-bottom:6px">
-        <button id="showKp" class="secondary">Keypoints umschalten</button>
-        <button id="clear" class="secondary">Regionen löschen</button>
+      <!-- Rechts: globaler SFW/NSFW-Schalter -->
+      <div class="nav-actions">
+        <label class="modechip" title="SFW/NSFW umschalten">
+          <span id="navModeLabel">SFW</span>
+          <input id="navModeToggle" type="checkbox" />
+          <span>NSFW</span>
+        </label>
       </div>
-      <div class="canvas-wrap" id="stage">
-        <canvas id="canvas" width="1024" height="1024"></canvas>
-      </div>
-    </main>
+    </nav>
+  </header>
 
-    <aside class="card">
-      <h3>Spuren & Ergebnisse</h3>
-      <div class="list" id="results"></div>
-    </aside>
+  <div class="container">
+    <div class="workspace">
+      <!-- LEFT: Modi + Sequencer -->
+      <aside class="panel">
+        <h3><i class="fas fa-list"></i> Modi</h3>
+        <div class="mode-list" id="modeList">
+          <button class="mode-btn active" data-mode="action"><i class="fa-solid fa-bolt"></i> Aktion</button>
+          <button class="mode-btn" data-mode="pose"><i class="fa-solid fa-person"></i> Pose</button>
+          <button class="mode-btn" data-mode="transfer"><i class="fa-solid fa-right-left"></i> Transfer</button>
+          <button class="mode-btn" data-mode="camera"><i class="fa-solid fa-video"></i> Kamera</button>
+          <button class="mode-btn nsfw-only" data-mode="nsfw"><i class="fa-solid fa-eye-slash"></i> NSFW-Erweiterungen</button>
+        </div>
+
+        <div class="toolbox" id="toolbox"></div>
+
+        <div style="margin-top:10px">
+          <label>Sequencer (Bausteine)</label>
+          <div class="chips" id="seqPresets">
+            <span class="chip" data-move="hiphop">Hip-Hop</span>
+            <span class="chip" data-move="turn">Turn</span>
+            <span class="chip" data-move="spin">Spin</span>
+            <span class="chip" data-move="kneel">Kneel</span>
+            <span class="chip" data-move="walk">Walk-Loop</span>
+            <span class="chip" data-move="pose">Pose-Loop</span>
+            <span class="chip nsfw-only" data-move="twerk">Twerk</span>
+            <span class="chip nsfw-only" data-move="shirt_open">Shirt-Open</span>
+          </div>
+          <div class="seq" id="seqList" aria-label="Bewegungssequenz"></div>
+        </div>
+      </aside>
+
+      <!-- MIDDLE: Canvas & Timeline & Player -->
+      <main class="panel">
+        <h3><i class="fas fa-wand-magic-sparkles"></i> Canvas & Vorschau</h3>
+        <div class="stage">
+          <div class="stage-toolbar">
+            <input type="file" id="imgInput" accept="image/*" style="display:none">
+            <button class="btn" id="btnLoad"><i class="fas fa-cloud-upload-alt"></i> Referenz laden</button>
+            <button class="btn" id="btnPose"><i class="fas fa-street-view"></i> Keypoints anzeigen</button>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn" id="btnAddTurn"><i class="fas fa-undo"></i> Drehen-Marker</button>
+              <button class="btn" id="btnAddKneel"><i class="fas fa-arrow-down"></i> Knie-Marker</button>
+              <button class="btn" id="btnAddLook"><i class="fas fa-eye"></i> Look-At</button>
+            </div>
+          </div>
+
+          <div class="canvas-wrap" id="canvasWrap">
+            <canvas id="canvas"></canvas>
+            <div class="overlay" id="overlay"></div>
+            <svg class="path" id="pathSvg"></svg>
+          </div>
+
+          <div class="timeline">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div class="sub"><i class="fas fa-film"></i> Timeline</div>
+              <div class="sub"><span id="tmNow">00:00</span> / <span id="tmTotal">00:06</span></div>
+            </div>
+            <div class="track" id="track"><div class="playhead" id="playhead" style="left:0%"></div></div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn" id="btnKF"><i class="fas fa-plus-circle"></i> Keyframe</button>
+              <button class="btn" id="btnPreview"><i class="fas fa-eye"></i> Preview</button>
+              <button class="btn primary" id="btnRender"><i class="fas fa-play"></i> Render</button>
+              <button class="btn" id="btnOverlay" disabled><i class="fa-solid fa-up-right-from-square"></i> Im Overlay öffnen</button>
+            </div>
+
+            <div class="progress" id="progressBox">
+              <div><strong>Status:</strong> <span id="statusTxt">–</span></div>
+              <div class="bar"><i id="bar"></i></div>
+            </div>
+
+            <!-- Seitenplayer (bleibt bestehen); globales Overlay kommt zusätzlich über assets/overlay-player.js -->
+            <div class="player" id="playerBox" aria-label="Player">
+              <header>
+                <strong id="plTitle">Generierter Clip</strong>
+                <div>
+                  <button class="btn" id="btnOpenFile" disabled><i class="fas fa-arrow-up-right-from-square"></i> Öffnen</button>
+                  <button class="btn" id="btnOpenFolder" disabled><i class="fas fa-folder-open"></i> Ordner</button>
+                </div>
+              </header>
+              <video id="video" controls></video>
+              <footer>
+                <span id="plMeta" class="sub">—</span>
+                <button class="btn" id="btnSave" disabled><i class="fas fa-floppy-disk"></i> In Galerie</button>
+              </footer>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- RIGHT: Parameter + Audio/Lip-Sync -->
+      <aside class="panel">
+        <h3><i class="fas fa-sliders"></i> Parameter</h3>
+        <div class="box" style="margin-bottom:12px">
+          <div class="row">
+            <div><label>Dauer (s)</label><input type="number" id="dur" value="6" min="1" max="20"></div>
+            <div><label>FPS</label><input type="number" id="fps" value="16" min="8" max="30"></div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div><label>Breite</label><input type="number" id="w" value="576" min="256" step="64"></div>
+            <div><label>Höhe</label><input type="number" id="h" value="1024" min="256" step="64"></div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div><label>Seed</label><input type="number" id="seed" placeholder="Random"></div>
+            <div><label>Model</label><select id="model"><option value="svd">SVD</option><option value="latte">Latte</option></select></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <h3 style="margin:0 0 6px 0"><i class="fa-solid fa-microphone"></i> Audio & Lip-Sync</h3>
+          <div class="sub">Optional: Audio hochladen, Lip-Sync aktivieren – funktioniert mit allen Bewegungen.</div>
+          <input type="file" id="audioInput" accept="audio/*" />
+          <div class="row" style="margin-top:8px">
+            <div><label><input type="checkbox" id="lipEnable"> Lip-Sync aktivieren</label></div>
+            <div><label>Emotion</label>
+              <select id="lipEmotion"><option value="neutral">Neutral</option><option value="warm">Warm</option><option value="serious">Serious</option></select>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div><label>Viseme-Glättung</label><input type="number" id="lipSmooth" value="0.6" min="0" max="1" step="0.05"></div>
+            <div><label>Latenz (ms)</label><input type="number" id="lipLatency" value="80" min="0" max="300" step="10"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
   </div>
-</div>
 
-<footer>© AndioMediaStudio</footer>
+  <!-- Globaler Overlay-Player für Bilder/Videos -->
+  <script src="assets/overlay-player.js"></script>
 
-<div id="ov" style="position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000">
-  <div style="background:#111;max-width:90vw;max-height:90vh;border-radius:12px;padding:12px;border:1px solid #222;display:flex;flex-direction:column">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>Player</strong><button id="ov-close">✕</button></div>
-    <video id="ov-video" controls playsinline style="max-width:86vw;max-height:72vh;border-radius:8px"></video>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><a id="ov-dl" class="secondary" download>Download</a><button id="ov-close2">Schließen</button></div>
-  </div>
-</div>
+  <script>
+    /**************
+     * Globaler Mode-Toggle der Navbar (sync mit localStorage)
+     **************/
+    (function initNavMode(){
+      const label = document.getElementById('navModeLabel');
+      const toggle = document.getElementById('navModeToggle');
+      let mode = localStorage.getItem('andio_mode') || 'sfw';
+      document.documentElement.setAttribute('data-mode', mode);
+      if(label) label.textContent = mode.toUpperCase();
+      if(toggle){ toggle.checked = (mode === 'nsfw'); }
+      function apply(m){
+        localStorage.setItem('andio_mode', m);
+        document.documentElement.setAttribute('data-mode', m);
+        if(label) label.textContent = m.toUpperCase();
+        // NSFW-UI sichtbar/unsichtbar
+        document.querySelectorAll('.nsfw-only').forEach(el=>{ el.style.display = (m==='nsfw') ? '' : 'none'; });
+      }
+      if(toggle){
+        toggle.addEventListener('change', ()=> apply(toggle.checked ? 'nsfw' : 'sfw'));
+      }
+      apply(mode);
+    })();
 
-<script>
-(()=> {
-  const $=s=>document.querySelector(s);
-  const hud=$('#hud');
-  const canvas=$('#canvas'), ctx=canvas.getContext('2d'), stage=$('#stage');
-  let img=null, showKp=true;
-  const kp=[ // simple body rig
-    {id:'head',x:512,y:220},{id:'l_shoulder',x:420,y:320},{id:'r_shoulder',x:604,y:320},
-    {id:'l_elbow',x:370,y:420},{id:'r_elbow',x:654,y:420},{id:'hip',x:512,y:520},
-    {id:'l_knee',x:470,y:680},{id:'r_knee',x:554,y:680},{id:'l_ankle',x:450,y:820},{id:'r_ankle',x:574,y:820}
-  ];
+    /**************
+     * Seite: State/Helpers
+     **************/
+    const store={k:{mode:'andio.mode',consent:'andio.consent'},getMode(){return localStorage.getItem(this.k.mode)||'sfw'},consentOK(){try{return !!(JSON.parse(localStorage.getItem(this.k.consent)||'{}')).ok}catch{return false}}};
 
-  function draw(){
-    ctx.clearRect(0,0,1024,1024);
-    if(img) ctx.drawImage(img,0,0,1024,1024);
-    if(showKp){
-      ctx.strokeStyle='#0ff'; ctx.lineWidth=2;
-      const J=id=>kp.find(k=>k.id===id);
-      [['head','l_shoulder'],['head','r_shoulder'],['l_shoulder','l_elbow'],['r_shoulder','r_elbow'],['l_shoulder','hip'],['r_shoulder','hip'],['hip','l_knee'],['hip','r_knee'],['l_knee','l_ankle'],['r_knee','r_ankle']]
-        .forEach(([a,b])=>{const A=J(a),B=J(b); if(A&&B){ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();}});
-    }
-  }
-  function placeKp(){
-    [...stage.querySelectorAll('.kp')].forEach(e=>e.remove());
-    if(!showKp) return;
-    kp.forEach(k=>{
-      const dot=document.createElement('div'); dot.className='kp'; dot.style.left=k.x+'px'; dot.style.top=k.y+'px';
-      let drag=false;
-      dot.addEventListener('mousedown',e=>{drag=true;dot.classList.add('drag');e.preventDefault();});
-      window.addEventListener('mousemove',e=>{
-        if(!drag) return; const r=canvas.getBoundingClientRect();
-        const x=(e.clientX-r.left)*1024/r.width, y=(e.clientY-r.top)*1024/r.height;
-        k.x=Math.max(0,Math.min(1024,x)); k.y=Math.max(0,Math.min(1024,y));
-        dot.style.left=k.x+'px'; dot.style.top=k.y+'px'; draw();
-      });
-      window.addEventListener('mouseup',()=>{ if(drag){drag=false;dot.classList.remove('drag');} });
-      stage.appendChild(dot);
-    });
-  }
-
-  $('#file').addEventListener('change', ()=>{
-    const f=$('#file').files?.[0]; if(!f) return;
-    const im=new Image(); im.onload=()=>{ img=im; draw(); placeKp(); }; im.src=URL.createObjectURL(f);
-  });
-  $('#showKp').addEventListener('click', ()=>{ showKp=!showKp; draw(); placeKp(); });
-  $('#clear').addEventListener('click', ()=>{ draw(); }); // (keine Regionen hier)
-
-  $('#random').addEventListener('click', ()=>{
-    const ideas=['idle subtle sway','small head nods','walk-in-place soft','dance tiny loop','camera slow dolly in'];
-    $('#prompt').value = ($('#prompt').value.trim()? $('#prompt').value+'\n':'') + ideas[Math.floor(Math.random()*ideas.length)];
-  });
-
-  // API Helpers
-  const pickUrl=o=>o?.url||o?.result?.url||o?.data?.url||null;
-  async function postMultipart(endpoint,payload,files){
-    const fd=new FormData(); fd.append('payload', new Blob([JSON.stringify(payload)],{type:'application/json'}));
-    for(const [n,f] of Object.entries(files||{})){ if(f) fd.append(n,f,f.name||n); }
-    const r=await fetch(endpoint,{method:'POST',body:fd}); if(!r.ok) throw new Error(`HTTP ${r.status}`); return await r.json();
-  }
-  async function pollJob(id,{interval=1000,timeout=10*60*1000}={}){
-    const t0=Date.now(); while(true){
-      const r=await fetch(`/api/jobs/${id}`); if(!r.ok) throw new Error(`Job ${id}: HTTP ${r.status}`);
-      const d=await r.json(); const st=(d.status||d.state||'').toLowerCase();
-      if(['succeeded','success','done','finished'].includes(st)) return d;
-      if(['failed','error'].includes(st)) throw new Error(d.error||'Job fehlgeschlagen');
-      if(Date.now()-t0>timeout) throw new Error('Timeout'); await new Promise(rs=>setTimeout(rs,interval));
-    }
-  }
-  function setBusy(b,msg){ $('#run').disabled=b; hud.textContent=msg||''; }
-
-  $('#run').addEventListener('click', async ()=>{
-    if(!img){ alert('Bitte Bild laden.'); return; }
-    const mode=$('#mode').value;
-    const audio=$('#audio').files?.[0];
-    if(mode==='lipsync' && !audio){ alert('Bitte eine Audiodatei für Lip-Sync wählen.'); return; }
-
-    const payload={
-      mode, prompt: $('#prompt').value.trim(),
-      duration:+$('#dur').value, fps:+$('#fps').value, speed:+$('#speed').value, loop: $('#loop').value==='true',
-      kp, canvas_size:{w:canvas.width,h:canvas.height}, preview: $('#preview').value
+    // Modes & Tools
+    const modes={
+      action:{tools:`
+        <div class="tool-row">
+          <div><label>Aktion</label>
+            <select id="act_type">
+              <option value="idle">Idle</option>
+              <option value="walk">Walk</option>
+              <option value="dance_hiphop">Dance – Hip-Hop</option>
+              <option value="turn">Turn</option>
+              <option value="spin">Spin</option>
+              <option value="kneel">Kneel</option>
+              <option class="nsfw-only" value="twerk">Twerk</option>
+              <option class="nsfw-only" value="shirt_open">Shirt-Open</option>
+            </select>
+          </div>
+          <div><label>Intensität</label><input type="number" id="act_int" value="0.7" min="0" max="1" step="0.05"></div>
+        </div>
+        <div class="tool-row">
+          <div><label>Speed</label><input type="number" id="act_speed" value="1.0" min="0.1" max="3" step="0.1"></div>
+          <div><label>Physik-Weichheit</label><input type="number" id="act_soft" value="0.5" min="0" max="1" step="0.05"></div>
+        </div>`},
+      pose:{tools:`<div class="tool-row">
+          <div><label>Snapping</label><select id="pose_snap"><option value="off">Aus</option><option value="mild">Mild</option><option value="strong">Stark</option></select></div>
+          <div><label>Soft-IK</label><select id="pose_ik"><option value="on">An</option><option value="off">Aus</option></select></div>
+        </div>
+        <div><label>Pose-Prompt</label><input id="pose_prompt" placeholder="arm slightly raised, relaxed hips"></div>`},
+      transfer:{tools:`<div class="tool-row">
+          <div><label>Quelle</label><input type="file" id="refVid" accept="video/*,image/*"></div>
+          <div><label>Dichte</label><input type="number" id="tr_density" value="0.7" min="0" max="1" step="0.05"></div>
+        </div>
+        <div class="tool-row">
+          <div><label>Amplitude</label><input type="number" id="tr_amp" value="0.8" min="0" max="1" step="0.05"></div>
+          <div><label>Timing</label><select id="tr_timing"><option value="match">Match</option><option value="loose">Loose</option></select></div>
+        </div>`},
+      camera:{tools:`<div class="tool-row">
+          <div><label>Preset</label><select id="cam_preset"><option value="orbit_slow">Orbit slow</option><option value="dolly_in">Dolly-In</option><option value="crane_up">Crane up</option></select></div>
+          <div><label>DOF</label><select id="dof"><option value="off">Aus</option><option value="light">Leicht</option><option value="strong">Stark</option></select></div>
+        </div>
+        <div><label>Keyframes (JSON)</label><input id="cam_kf" placeholder='[{"t":0,"move":"orbit_slow"},{"t":3,"move":"dolly_in"}]'></div>`},
+      nsfw:{tools:`<div class="nsfw-only"><label>Body-Physics</label><select id="nsfw_body"><option value="soft">Soft</option><option value="firm">Firm</option><option value="athletic">Athletic</option></select></div>
+        <div class="nsfw-only"><label>Garment-Toggle (KF)</label><input id="nsfw_garment_kf" placeholder='[{"t":0,"top":"on"},{"t":2,"top":"off"}]'></div>
+        <div class="nsfw-only"><label>Censor-Overlay</label><select id="nsfw_censor"><option value="none">Kein</option><option value="pixel">Pixel</option><option value="bar">Balken</option><option value="blur">Blur</option></select></div>
+        <div class="nsfw-only"><label>Intimacy-Cam</label><select id="nsfw_cam"><option value="none">Aus</option><option value="close_over_shoulder">Close / Over-Shoulder</option><option value="tight_dof">Tight DOF</option></select></div>`}
     };
-    try{
-      setBusy(true,'Starte Job …');
-      const start = await postMultipart('/api/motion/run', payload, {image: $('#file').files?.[0], audio});
-      const direct = pickUrl(start); if(direct){ pushResult(direct); setBusy(false,'Fertig (Direkt)'); return; }
-      const jobId=start.jobId||start.id||start.job; if(!jobId) throw new Error('Kein jobId');
-      setBusy(true,'Warte auf Ergebnis…');
-      const job = await pollJob(jobId);
-      const url = pickUrl(job); if(!url) throw new Error('Kein Ergebnis-URL');
-      pushResult(url); setBusy(false,'Fertig');
-    }catch(e){ console.error(e); setBusy(false,'Fehler'); alert('Motion-Fehler: '+(e?.message||e)); }
-  });
+    const modeList=document.getElementById('modeList');
+    const toolbox=document.getElementById('toolbox');
+    function renderMode(m){toolbox.innerHTML=modes[m].tools;document.querySelectorAll('.nsfw-only').forEach(el=>el.style.display=(store.getMode()==='nsfw')?'':'none')}
+    let currentMode='action'; renderMode(currentMode);
+    modeList.addEventListener('click',(e)=>{
+      const b=e.target.closest('.mode-btn'); if(!b) return;
+      if(b.classList.contains('nsfw-only') && store.getMode()!=='nsfw'){ alert('NSFW-Modus erforderlich.'); return; }
+      document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); currentMode=b.dataset.mode; renderMode(currentMode);
+    });
 
-  function pushResult(url){
-    const a=document.createElement('button'); a.className='btn'; a.textContent='Clip '+new Date().toLocaleTimeString();
-    const item={url,generated:true,type:'video'}; a.addEventListener('click',()=>openOverlay(item));
-    $('#results').prepend(a);
-  }
-  function openOverlay(item){ if(!item.generated) return; $('#ov-video').src=item.url; $('#ov-dl').href=item.url; $('#ov-dl').download='output.mp4'; $('#ov').style.display='flex'; }
-  $('#ov-close').onclick=()=> $('#ov').style.display='none'; $('#ov-close2').onclick=()=> $('#ov').style.display='none';
-})();
-</script>
+    // Sequencer
+    const seqList=document.getElementById('seqList'); const seqPresets=document.getElementById('seqPresets');
+    let sequence=[];
+    seqPresets.addEventListener('click',(e)=>{
+      const c=e.target.closest('.chip'); if(!c) return;
+      if(c.classList.contains('nsfw-only') && store.getMode()!=='nsfw'){ alert('Nur im NSFW-Modus'); return; }
+      addSeqItem(c.dataset.move);
+    });
+    function addSeqItem(type){
+      const item={id:crypto.randomUUID(),type,dur: (type==='walk'||type==='pose')?1.5:1.0};
+      sequence.push(item); drawSeq();
+    }
+    function drawSeq(){
+      seqList.innerHTML='';
+      sequence.forEach(i=>{
+        const row=document.createElement('div');
+        row.className='seq-item'; row.draggable=true;
+        row.innerHTML = `<div><strong>${labelMove(i.type)}</strong> <small>(${i.dur.toFixed(1)}s)</small></div>
+                         <div style="display:flex;gap:6px;align-items:center">
+                           <input type="number" step="0.1" min="0.2" value="${i.dur}" aria-label="Dauer">
+                           <button class="btn" data-act="del">✕</button>
+                         </div>`;
+        row.querySelector('input').oninput=(e)=>{ i.dur=Number(e.target.value||i.dur); row.querySelector('small').textContent=`(${i.dur.toFixed(1)}s)`; updateTime(); };
+        row.querySelector('[data-act="del"]').onclick=()=>{ sequence=sequence.filter(x=>x.id!==i.id); drawSeq(); updateTime(); };
+        row.addEventListener('dragstart',ev=>{ ev.dataTransfer.setData('text/plain',i.id) });
+        row.addEventListener('dragover',ev=>ev.preventDefault());
+        row.addEventListener('drop',ev=>{
+          ev.preventDefault();
+          const from=ev.dataTransfer.getData('text/plain');
+          const a=sequence.findIndex(x=>x.id===from); const b=sequence.findIndex(x=>x.id===i.id);
+          if(a>-1 && b>-1 && a!==b){ const [m]=sequence.splice(a,1); sequence.splice(b,0,m); drawSeq(); }
+        });
+        seqList.appendChild(row);
+      });
+    }
+    function labelMove(t){return ({hiphop:'Hip-Hop',turn:'Turn',spin:'Spin',kneel:'Kneel',walk:'Walk-Loop',pose:'Pose-Loop',twerk:'Twerk',shirt_open:'Shirt-Open'})[t]||t}
+
+    // Canvas / Markers
+    const wrap=document.getElementById('canvasWrap'),canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d'),overlay=document.getElementById('overlay');
+    let baseImg=null; function fitCanvas(){const W=wrap.clientWidth,H=Math.max(520,Math.round(W*0.6));canvas.width=W;canvas.height=H;draw()} window.addEventListener('resize',fitCanvas);
+    document.getElementById('btnLoad').onclick=()=>document.getElementById('imgInput').click();
+    document.getElementById('imgInput').addEventListener('change',e=>{
+      const f=e.target.files?.[0]; if(!f) return;
+      const r=new FileReader();
+      r.onload=ev=>{ baseImg=new Image(); baseImg.onload=()=>{fitCanvas(); draw()}; baseImg.src=ev.target.result; };
+      r.readAsDataURL(f);
+    });
+    function draw(){ ctx.fillStyle='#0b0b0b'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      if(baseImg){ const r=Math.min(canvas.width/baseImg.width,canvas.height/baseImg.height); const w=baseImg.width*r,h=baseImg.height*r,x=(canvas.width-w)/2,y=(canvas.height-h)/2; ctx.drawImage(baseImg,x,y,w,h); }
+    }
+    function addMarker(kind){
+      const el=document.createElement('div'); el.className='marker'; el.dataset.kind=kind; el.style.left='50%'; el.style.top='70%'; overlay.appendChild(el);
+      let drag=null;
+      el.onpointerdown=(ev)=>{ drag={dx:ev.clientX-el.offsetLeft,dy:ev.clientY-el.offsetTop}; el.setPointerCapture(ev.pointerId) };
+      el.onpointermove=(ev)=>{ if(!drag) return; el.style.left=(ev.clientX-drag.dx)+'px'; el.style.top=(ev.clientY-drag.dy)+'px' };
+      el.onpointerup=()=> drag=null;
+    }
+    document.getElementById('btnAddTurn').onclick=()=>addMarker('turn');
+    document.getElementById('btnAddKneel').onclick=()=>addMarker('kneel');
+    document.getElementById('btnAddLook').onclick=()=>addMarker('look');
+
+    // Timeline
+    const track=document.getElementById('track'),playhead=document.getElementById('playhead'),tmTotal=document.getElementById('tmTotal'),tmNow=document.getElementById('tmNow');
+    let kfs=[];
+    document.getElementById('btnKF').onclick=()=>addKF(parseFloat(playhead.style.left)||0);
+    function addKF(percent){
+      const el=document.createElement('div');
+      el.className='kf'; el.style.left=(percent||0)+'%';
+      el.onpointerdown=(ev)=>{
+        const sx=ev.clientX, sl=parseFloat(el.style.left);
+        function mv(e){ const dx=e.clientX-sx; const w=track.clientWidth; let p=sl+(dx/w)*100; p=Math.max(0,Math.min(100,p)); el.style.left=p+'%'; }
+        function up(){ window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up); }
+        window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up);
+      };
+      track.appendChild(el); kfs.push(el);
+    }
+    function fmt(t){const m=Math.floor(t/60),s=Math.floor(t%60);return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
+    function totalDuration(){const base=Number(document.getElementById('dur').value||6);const seqSum=sequence.reduce((a,b)=>a+b.dur,0);return Math.max(base, seqSum>0?seqSum:base)}
+    function updateTime(){tmTotal.textContent=fmt(totalDuration())}
+    document.getElementById('dur').addEventListener('input',updateTime); updateTime();
+
+    // Audio & Lip-Sync
+    let audioData=null; document.getElementById('audioInput').addEventListener('change',e=>{
+      const f=e.target.files?.[0]; if(!f){ audioData=null; return; }
+      const r=new FileReader(); r.onload=ev=>{ audioData=ev.target.result }; r.readAsDataURL(f);
+    });
+
+    // Preview (lokal – Playhead)
+    let previewTimer=null; document.getElementById('btnPreview').onclick=()=>{
+      if(previewTimer){ clearInterval(previewTimer); }
+      const tot=totalDuration(); let t=0;
+      previewTimer=setInterval(()=>{ t+=0.05; const p=Math.min(100,(t/tot)*100); playhead.style.left=p+'%'; tmNow.textContent=fmt(t); if(t>=tot){ clearInterval(previewTimer); } },50);
+    };
+
+    // Build & Render
+    function parseJSONSafe(t){ try{ return JSON.parse(t||'null') }catch{ return null } }
+    function collectMarkers(){ return [...document.querySelectorAll('.marker')].map(m=>({kind:m.dataset.kind,x:parseFloat(m.style.left),y:parseFloat(m.style.top)})) }
+    function buildPayload(){
+      const width=Number(document.getElementById('w').value||576),height=Number(document.getElementById('h').value||1024);
+      const payload={mode:localStorage.getItem('andio_mode')||'sfw',tool:currentMode,params:{
+        width,height,fps:Number(document.getElementById('fps').value||16),duration_s:totalDuration(),
+        seed:document.getElementById('seed').value?Number(document.getElementById('seed').value):null,model:document.getElementById('model').value,
+        keyframes:kfs.map(el=>({t:parseFloat(el.style.left)})), sequence:sequence, markers:collectMarkers(), mode_opts:{}
+      }};
+      if(currentMode==='action'){payload.params.mode_opts={type:document.getElementById('act_type').value,intensity:parseFloat(document.getElementById('act_int').value||0.7),speed:parseFloat(document.getElementById('act_speed').value||1),softness:parseFloat(document.getElementById('act_soft').value||0.5)}}
+      if(currentMode==='pose'){payload.params.mode_opts={snap:document.getElementById('pose_snap').value,ik:document.getElementById('pose_ik').value==='on',prompt:document.getElementById('pose_prompt').value}}
+      if(currentMode==='transfer'){payload.params.mode_opts={density:parseFloat(document.getElementById('tr_density').value||0.7),amplitude:parseFloat(document.getElementById('tr_amp').value||0.8),timing:document.getElementById('tr_timing').value}}
+      if(currentMode==='camera'){payload.params.mode_opts={preset:document.getElementById('cam_preset').value,dof:document.getElementById('dof').value,cam_kf:parseJSONSafe(document.getElementById('cam_kf').value)}}
+      if(currentMode==='nsfw'&&(localStorage.getItem('andio_mode')==='nsfw')){payload.params.mode_opts={body:document.getElementById('nsfw_body')?.value,garment_kf:parseJSONSafe(document.getElementById('nsfw_garment_kf')?.value),censor:document.getElementById('nsfw_censor')?.value,intimacy_cam:document.getElementById('nsfw_cam')?.value}}
+      if(document.getElementById('lipEnable').checked){payload.params.lipsync={enabled:true,emotion:document.getElementById('lipEmotion').value,smooth:Number(document.getElementById('lipSmooth').value||0.6),latency_ms:Number(document.getElementById('lipLatency').value||80)}}
+      return payload;
+    }
+    async function api(path,opts){ try{ const r=await fetch(path,opts); if(!r.ok) return null; return await r.json(); }catch{ return null; } }
+    const progressBox=document.getElementById('progressBox'),statusTxt=document.getElementById('statusTxt'),bar=document.getElementById('bar');
+    const playerBox=document.getElementById('playerBox'),videoEl=document.getElementById('video'),plTitle=document.getElementById('plTitle'),plMeta=document.getElementById('plMeta'),btnOpenFile=document.getElementById('btnOpenFile'),btnOpenFolder=document.getElementById('btnOpenFolder'),btnSave=document.getElementById('btnSave');
+    const btnOverlay=document.getElementById('btnOverlay');
+    let currentJobId=null,pollTimer=null,lastItem=null, lastPath=null;
+
+    document.getElementById('btnRender').onclick=async ()=>{
+      if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+      progressBox.style.display='block'; statusTxt.textContent='Starte …'; bar.style.width='0%';
+      const payload=buildPayload();
+      const form=new FormData();
+      form.append('params',new Blob([JSON.stringify(payload)],{type:'application/json'}));
+      if(baseImg){ form.append('image', dataURLtoBlob(canvas.toDataURL('image/png')),'reference.png'); }
+      if(audioData){ form.append('audio', dataURLtoBlob(audioData),'audio.wav'); }
+      const start=await fetch('/api/motion/render',{method:'POST',body:form}).catch(()=>null);
+      if(!start||!start.ok){ statusTxt.textContent='Fehler beim Start.'; return; }
+      const resp=await start.json().catch(()=>null);
+      currentJobId=resp?.job_id||resp?.id;
+      if(!currentJobId){ statusTxt.textContent='Keine Job-ID.'; return; }
+      pollTimer=setInterval(pollJob,1000);
+    };
+
+    async function pollJob(){
+      const j=await api(`/api/jobs/${currentJobId}`);
+      if(!j){ statusTxt.textContent='Warte auf Server …'; return; }
+      const pct=Math.max(0,Math.min(100,Math.round(j.progress||0)));
+      bar.style.width=pct+'%'; statusTxt.textContent=j.status||'running';
+      if(j.status==='completed'||pct>=100){
+        clearInterval(pollTimer); pollTimer=null;
+        const out=await api(`/api/outputs?id=${encodeURIComponent(currentJobId)}`);
+        const item=Array.isArray(out)?out[0]:out;
+        if(item?.path){
+          playerBox.style.display='grid';
+          videoEl.src=item.path;
+          lastPath=item.path;
+          plTitle.textContent=item.title||'Clip';
+          plMeta.textContent=`${item.model||''} • ${item.duration?Math.round(item.duration)+'s':''}`;
+          btnOpenFile.disabled=false; btnOpenFolder.disabled=false; btnSave.disabled=false; btnOverlay.disabled=false;
+          btnOpenFile.onclick=()=>window.open(item.path,'_blank');
+          btnOpenFolder.onclick=()=> item.folder_url ? window.open(item.folder_url,'_blank') : null;
+          lastItem=item; statusTxt.textContent='Fertig';
+        } else {
+          statusTxt.textContent='Fertig – kein Output.';
+        }
+      }
+      if(j.status==='failed'){ clearInterval(pollTimer); pollTimer=null; statusTxt.textContent='Fehlgeschlagen'; }
+    }
+
+    // In Galerie speichern
+    document.getElementById('btnSave').onclick=async ()=>{ if(!lastItem) return; await api(`/api/outputs/save?id=${encodeURIComponent(lastItem.id||currentJobId)}`); alert('In Galerie gespeichert.'); };
+
+    // Overlay-Player Button: nutzt openOverlay() aus assets/overlay-player.js
+    btnOverlay.addEventListener('click', ()=>{
+      if(!lastPath) return;
+      openOverlay({
+        kind:'video',
+        src:lastPath,
+        thumb:lastPath, // falls der Player Poster generiert, kann gleiches verwendet werden
+        nsfw: (localStorage.getItem('andio_mode')==='nsfw'),
+        name: plTitle.textContent || 'Clip',
+        date: new Date().toISOString(),
+        format:'MP4',
+        gen:'Motion'
+      });
+    });
+
+    function dataURLtoBlob(dataurl){
+      const arr=dataurl.split(','), mime=arr[0].match(/:(.*?);/)[1];
+      const bstr=atob(arr[1]); let n=bstr.length; const u8=new Uint8Array(n);
+      while(n--){ u8[n]=bstr.charCodeAt(n); }
+      return new Blob([u8],{type:mime});
+    }
+
+    // Boot
+    document.addEventListener('DOMContentLoaded', ()=>{ 
+      fitCanvas();
+      // NSFW-sichtbarkeit initial anhand Navbar-Mode
+      const mode = localStorage.getItem('andio_mode') || 'sfw';
+      document.querySelectorAll('.nsfw-only').forEach(el=>{ el.style.display = (mode==='nsfw') ? '' : 'none'; });
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Andio Media Studio — Avatar Builder</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1115; --panel:#171a22; --panel-2:#1e2330; --text:#e7e9ef; --muted:#a7afc0;
+      --accent:#ff4fa3; --ok:#5dd39e; --warn:#ffcf5a; --danger:#ff6b6b;
+      --line:#2a3144; --chip:#2a3242; --chip-active:#3b455b; --shadow:0 10px 30px rgba(0,0,0,.35)
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0e1014,#0c0f14 40%,#0b0e13);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+
+    /* ===== New NAVBAR ===== */
+    header.header{position:sticky;top:0;z-index:60;background:rgba(18,20,26,.85);
+      backdrop-filter:saturate(1.1) blur(8px);border-bottom:1px solid var(--line)}
+    .nav{display:flex;align-items:center;gap:14px;max-width:1400px;margin:0 auto;padding:12px 20px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800}
+    .brand .dot{width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 20px var(--accent)}
+    .brand .wordmark{letter-spacing:.2px}
+    .links{display:flex;gap:6px;margin-left:14px;flex-wrap:wrap}
+    .links a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:10px;border:1px solid transparent;line-height:1}
+    .links a:hover{color:var(--text);background:var(--panel)}
+    .links a.active{color:#fff;background:linear-gradient(180deg,rgba(255,79,163,.2),rgba(255,79,163,.06));border-color:rgba(255,79,163,.35)}
+    .spacer{flex:1}
+    .nsfw-switch{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
+    .switch{--h:22px;position:relative;width:46px;height:var(--h);background:var(--chip);border-radius:999px;cursor:pointer;border:1px solid var(--line)}
+    .switch input{display:none}
+    .switch i{position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:all .18s ease}
+    .switch input:checked + i{left:26px;background:var(--accent)}
+    .badge{padding:4px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--line);font-size:12px;color:var(--muted)}
+
+    .nav-tools{display:flex;align-items:center;gap:10px}
+    .nav-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);
+      color:var(--text);background:#121722;cursor:pointer}
+    .nav-btn:hover{filter:brightness(1.06)}
+    .menu{position:relative}
+    .menu-pane{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:8px;display:none}
+    .menu.open .menu-pane{display:block}
+    .menu-pane a, .menu-pane button{display:flex;align-items:center;gap:8px;width:100%;padding:10px;border-radius:10px;border:1px solid transparent;
+      color:var(--text);background:transparent;text-align:left;cursor:pointer}
+    .menu-pane a:hover, .menu-pane button:hover{background:var(--chip)}
+    .search{position:relative}
+    .search input{background:#111521;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:8px 12px 8px 30px;min-width:200px}
+    .search .fa-search{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
+
+    /* ===== Layout ===== */
+    .container{max-width:1400px;margin:26px auto;padding:0 20px}
+    .grid{display:grid;grid-template-columns:340px 1fr 380px;gap:18px}
+    @media (max-width:1200px){.grid{grid-template-columns:1fr}}
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+    .panel h2{margin:0;padding:16px;border-bottom:1px solid var(--line);font-size:16px}
+    .panel-body{padding:16px}
+
+    /* Uploaders */
+    .uploader{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .drop{position:relative;border:1px dashed #3a4257;border-radius:14px;padding:14px;min-height:140px;background:#12161f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+    .drop input{display:none}
+    .drop .preview{position:absolute;inset:0;border-radius:12px;overflow:hidden;opacity:.95}
+    .drop .preview img{width:100%;height:100%;object-fit:cover}
+    .drop .title{font-weight:600}
+    .drop .hint{color:var(--muted);font-size:12px}
+
+    /* Tabs / Stepper */
+    .tabs{display:flex;gap:8px;margin:6px 0 10px}
+    .tab{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--muted);cursor:pointer}
+    .tab.active{background:var(--chip-active);color:#fff}
+    .stepper{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+    .step{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font-size:13px;cursor:pointer}
+    .step.active{background:var(--chip-active);color:#fff;border-color:#49526a}
+    .step .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+
+    /* Options */
+    .grid-opts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+    @media (max-width:1200px){.grid-opts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    .opt{background:#141823;border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;position:relative}
+    .opt .img{height:100px;background:#0f131c;display:flex;align-items:center;justify-content:center}
+    .opt .img img{width:100%;height:100%;object-fit:cover;display:block}
+    .opt .lbl{padding:8px 10px;font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:6px}
+    .opt.active{outline:2px solid var(--accent);box-shadow:0 0 0 4px rgba(255,79,163,.15)}
+    .opt .nsfw{position:absolute;right:8px;top:8px;font-size:11px;background:rgba(255,79,163,.15);color:#ff9ad0;padding:3px 6px;border-radius:999px;border:1px solid rgba(255,79,163,.4);display:none}
+    .nsfw-on .opt[data-nsfw="true"] .nsfw{display:inline-block}
+
+    /* Color Swatches */
+    .picker { display:grid; grid-template-columns:repeat(10,28px); gap:10px; margin:10px 0 16px }
+    .picker-label{font-weight:700;margin:6px 0 4px}
+    .swatch{ width:28px; height:28px; border-radius:8px; border:2px solid var(--line); cursor:pointer; box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+    .swatch.active{ outline:2px solid var(--accent); box-shadow:0 0 0 4px rgba(255,79,163,.18) }
+
+    /* Preview & Slots */
+    .preview{position:relative;aspect-ratio:3/4;border-radius:16px;background:#10131a;border:1px solid var(--line);overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .preview img{width:100%;height:100%;object-fit:cover}
+    .color-badge{position:absolute;right:8px;bottom:8px;display:flex;gap:6px}
+    .color-dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.35)}
+
+    .slots{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+    .slot{display:grid;grid-template-columns:84px 1fr;gap:10px;align-items:center;background:#141a23;border:1px solid var(--line);border-radius:14px;padding:8px}
+    .slot .thumb{position:relative;width:84px;height:84px;border-radius:10px;background:#0e1219;overflow:hidden;border:1px solid var(--line);cursor:pointer}
+    .slot .thumb img{width:100%;height:100%;object-fit:cover}
+    .slot .thumb .play{position:absolute;inset:auto 0 0 0;height:26px;display:flex;align-items:center;justify-content:center;background:linear-gradient(to top,rgba(0,0,0,.55),transparent);color:#fff;font-size:12px}
+
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid transparent;cursor:pointer;background:#1a2030;color:#fff}
+    .btn:hover{filter:brightness(1.08)}
+    .btn.secondary{background:#121722;color:var(--text);border-color:var(--line)}
+    .btn.ghost{background:transparent;border-color:var(--line);color:var(--muted)}
+    .btn.accent{background:linear-gradient(180deg,#ff63b2,#ff4fa3)}
+    .btn.warning{background:#2a2415;border-color:#4f3e16}
+    .btn.danger{background:#2a171b;border-color:#4f1820}
+    .btn.small{padding:7px 10px;border-radius:10px;font-size:12px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+    .toolbar .grow{flex:1}
+    .toast{position:fixed;right:16px;bottom:16px;background:#141a23;border:1px solid var(--line);padding:10px 12px;border-radius:12px;box-shadow:var(--shadow);display:none;z-index:70}
+    .toast.show{display:block}
+    .note{font-size:12px;color:var(--muted)}
+    .hardline{height:1px;background:var(--line);margin:14px 0}
+    .hide{display:none!important}
+
+    /* ===== Overlay Player ===== */
+    .overlay{position:fixed;inset:0;background:rgba(7,8,12,.86);backdrop-filter:blur(6px) saturate(1.2);
+      display:none;z-index:80}
+    .overlay.show{display:flex}
+    .overlay .stage{position:relative;display:flex;flex:1;min-height:0}
+    .overlay .media-wrap{margin:auto;max-width:92vw;max-height:88vh;position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0b0f16}
+    .overlay img.viewer{display:block;max-width:100%;max-height:88vh;transform-origin:center center;cursor:grab}
+    .overlay video.viewer{max-width:92vw;max-height:88vh;background:#000}
+    .overlay .topbar{position:absolute;left:0;right:0;top:0;display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:8px}
+    .overlay .bar-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(23,26,34,.85);color:#fff;cursor:pointer}
+    .overlay .bar-btn:hover{filter:brightness(1.07)}
+    .overlay .close{position:absolute;right:12px;top:12px}
+    .overlay .footer{position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;align-items:center;justify-content:center;padding:10px}
+    .overlay .hint{color:#cbd2e2;font-size:12px;opacity:.8}
+    .overlay .left, .overlay .right{
+      position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:999px;border:1px solid var(--line);
+      display:flex;align-items:center;justify-content:center;background:rgba(23,26,34,.85);cursor:pointer;color:#fff}
+    .overlay .left{left:16px}.overlay .right{right:16px}
+    .overlay .left:hover,.overlay .right:hover{filter:brightness(1.07)}
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <header class="header" role="banner">
+    <div class="nav" role="navigation" aria-label="Hauptnavigation">
+      <div class="brand"><div class="dot"></div><span class="wordmark">Andio Media Studio</span></div>
+
+      <nav class="links" aria-label="Seiten">
+        <a href="index.html" data-link="index">Übersicht</a>
+        <a href="images.html" data-link="images">Image Studio</a>
+        <a href="video-gen.html" data-link="video-gen">Video Studio</a>
+        <a href="editor.html" data-link="editor">Editor</a>
+        <a href="wandrobe.html" data-link="wardrobe">Wardrobe</a>
+        <a href="motion.html" data-link="motion">Motion</a>
+        <a href="avatar.html" class="active" data-link="avatar" aria-current="page">Avatar</a>
+      </nav>
+
+      <div class="spacer"></div>
+
+      <div class="nav-tools">
+        <div class="search" role="search">
+          <i class="fa-solid fa-search" aria-hidden="true"></i>
+          <input id="quickSearch" type="search" placeholder="Suchen… (Slots/Avatare)">
+        </div>
+
+        <div class="nsfw-switch" title="SFW/NSFW Umschaltung">
+          <span class="badge">SFW</span>
+          <label class="switch"><input id="nsfwToggle" type="checkbox"/><i></i></label>
+          <span class="badge" style="color:#ff9ad0;background:rgba(255,79,163,.12);border-color:rgba(255,79,163,.35)">NSFW</span>
+        </div>
+
+        <div class="menu" id="profileMenu">
+          <button class="nav-btn" aria-haspopup="true" aria-expanded="false"><i class="fa-regular fa-user"></i> <span>Profil</span></button>
+          <div class="menu-pane" role="menu">
+            <button role="menuitem" id="btnSettings"><i class="fa-solid fa-gear"></i> Einstellungen</button>
+            <button role="menuitem" id="btnTheme"><i class="fa-regular fa-moon"></i> Theme</button>
+            <a role="menuitem" href="gallery.html"><i class="fa-regular fa-images"></i> Gallery</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="container">
+    <div class="grid" id="root">
+      <!-- LEFT: Refs -->
+      <section class="panel">
+        <h2><i class="fa-solid fa-image"></i> Referenzen</h2>
+        <div class="panel-body">
+          <p class="note">Character Pflicht. Pose / Background / Outfit optional. Bilder werden als Guidance verwendet.</p>
+          <div class="uploader">
+            <label class="drop" data-field="character">
+              <input type="file" accept="image/*"><div class="preview"><img alt="Character"></div>
+              <div class="title">Character (erforderlich)</div><div class="hint">JPG/PNG ziehen oder klicken</div>
+            </label>
+            <label class="drop" data-field="pose">
+              <input type="file" accept="image/*"><div class="preview"><img alt="Pose"></div>
+              <div class="title">Pose (optional)</div><div class="hint">z.B. Ganzkörper</div>
+            </label>
+            <label class="drop" data-field="background">
+              <input type="file" accept="image/*"><div class="preview"><img alt="Background"></div>
+              <div class="title">Background (optional)</div><div class="hint">Szene/Location</div>
+            </label>
+            <label class="drop" data-field="outfit">
+              <input type="file" accept="image/*"><div class="preview"><img alt="Outfit"></div>
+              <div class="title">Outfit (optional)</div><div class="hint">Kleidung/Style</div>
+            </label>
+          </div>
+          <div class="hardline"></div>
+          <div class="toolbar">
+            <input id="avatarName" class="btn grow" style="background:#111521;border:1px solid var(--line)" placeholder="Name des Avatars" />
+            <button id="btnGenerate" class="btn accent"><i class="fa-solid fa-wand-magic-sparkles"></i> Avatar zusammenstellen</button>
+          </div>
+          <p class="note" style="margin-top:8px"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warn)"></i> Max. <b>5</b> Haupt-Avatare. Davon <b>4 Female</b> + <b>1 Male</b>.</p>
+        </div>
+      </section>
+
+      <!-- MIDDLE: Attributes -->
+      <section class="panel" id="attrPanel">
+        <h2><i class="fa-solid fa-sliders"></i> Attribute</h2>
+        <div class="panel-body">
+          <!-- Gender: nur Female/Male -->
+          <div class="tabs" id="genderTabs">
+            <div class="tab active" data-gender="female"><i class="fa-solid fa-venus"></i> Female</div>
+            <div class="tab" data-gender="male"><i class="fa-solid fa-mars"></i> Male</div>
+          </div>
+
+          <div class="stepper" id="stepper">
+            <div class="step active" data-step="style"><span class="dot"></span> Style</div>
+            <div class="step" data-step="face"><span class="dot"></span> Face</div>
+            <div class="step" data-step="body"><span class="dot"></span> Body</div>
+            <div class="step" data-step="details"><span class="dot"></span> Details</div>
+            <div class="step" data-step="image"><span class="dot"></span> Image</div>
+          </div>
+
+          <!-- STYLE -->
+          <div class="section" data-section="style">
+            <div class="chips" id="styleChips">
+              <div class="chip active" data-field="style" data-value="photoreal">Photoreal</div>
+              <div class="chip" data-field="style" data-value="cinematic">Cinematic</div>
+              <div class="chip" data-field="style" data-value="glamour">Glamour</div>
+              <div class="chip" data-field="style" data-value="soft-portrait">Soft Portrait</div>
+              <div class="chip" data-field="style" data-value="comic">Comic</div>
+            </div>
+            <div class="hardline"></div>
+            <div class="grid-opts" id="ethnicityGrid"></div>
+          </div>
+
+          <!-- FACE -->
+          <div class="section" data-section="face" hidden>
+            <div class="picker-label">Eye Color</div>
+            <div id="eyePicker" class="picker"></div>
+
+            <div class="picker-label">Hair Color</div>
+            <div id="hairPicker" class="picker"></div>
+
+            <div class="picker-label">Skin Tone</div>
+            <div id="skinPicker" class="picker"></div>
+
+            <div class="hardline"></div>
+            <div class="grid-opts" id="hairGrid"></div>
+          </div>
+
+          <!-- BODY -->
+          <div class="section" data-section="body" hidden>
+            <div class="grid-opts" id="bodyTypeGrid"></div>
+            <div class="hardline"></div>
+            <div class="grid-opts" id="breastGrid"></div>
+            <div class="hardline"></div>
+            <div class="grid-opts" id="buttGrid"></div>
+          </div>
+
+          <!-- DETAILS -->
+          <div class="section" data-section="details" hidden>
+            <div class="grid-opts" id="outfitGrid"></div>
+            <div class="hardline"></div>
+            <div class="grid-opts hide" id="poseGrid"></div> <!-- NSFW-only -->
+          </div>
+
+          <!-- IMAGE -->
+          <div class="section" data-section="image" hidden>
+            <textarea id="customPrompt" rows="6" class="btn grow" style="width:100%;background:#111521;border:1px solid var(--line)" placeholder="Optionaler Custom Prompt (Stil, Licht, Kamera, Pose-Hinweise...)"></textarea>
+            <p class="note" style="margin-top:8px">Der Prompt wird mit den ausgewählten Attributen zusammengeführt.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Preview & Slots -->
+      <section class="panel">
+        <h2><i class="fa-solid fa-eye"></i> Vorschau & Slots</h2>
+        <div class="panel-body">
+          <div class="preview" id="livePreview" role="button" title="Klicken für Overlay-Player">
+            <img id="liveImg" alt="preview" src="assets/bilderprompt/custom.webp" onerror="this.src='assets/bilderprompt/custom.webp'">
+            <div class="color-badge" id="colorBadge">
+              <div class="color-dot" id="dotEye"></div>
+              <div class="color-dot" id="dotHair"></div>
+              <div class="color-dot" id="dotSkin"></div>
+            </div>
+          </div>
+          <div class="hardline"></div>
+          <div class="toolbar" style="margin-bottom:8px">
+            <button id="btnSaveMain" class="btn accent"><i class="fa-solid fa-floppy-disk"></i> In Haupt-Slot speichern</button>
+            <button id="btnCopyToGallery" class="btn secondary"><i class="fa-solid fa-clone"></i> Kopie → Gallery</button>
+            <button id="btnReset" class="btn ghost"><i class="fa-solid fa-rotate-left"></i> Zurücksetzen</button>
+          </div>
+          <p class="note">Haupt-Slots sind lokal fix (max. 5; <b>4 Female + 1 Male</b>). Kopien können in der Gallery weiterbearbeitet werden.</p>
+          <div class="slots" id="slots"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- OVERLAY PLAYER -->
+  <div class="overlay" id="overlay" aria-hidden="true" aria-label="Medienanzeige">
+    <div class="stage">
+      <button class="left" id="ovPrev" title="Vorheriges (←)"><i class="fa-solid fa-chevron-left"></i></button>
+      <div class="media-wrap" id="ovMediaWrap">
+        <div class="topbar">
+          <a id="ovDownload" class="bar-btn" download><i class="fa-solid fa-download"></i> <span>Download</span></a>
+          <button id="ovFit" class="bar-btn" title="Fit/Füllung umschalten"><i class="fa-solid fa-maximize"></i> Fit</button>
+          <button id="ovClose" class="bar-btn close" title="Schließen (Esc)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <!-- Media element wird dynamisch eingesetzt -->
+      </div>
+      <button class="right" id="ovNext" title="Nächstes (→)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="footer">
+      <span class="hint">ESC schließen · Mausrad = Zoom (Bild) · Ziehen = Pan</span>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ------------ Helpers ------------
+    const $=(q,r=document)=>r.querySelector(q); const $$=(q,r=document)=>Array.from(r.querySelectorAll(q));
+    const toast=(m,k='info')=>{const t=$('#toast');t.textContent=m;t.style.borderColor=k==='error'?'var(--danger)':k==='warn'?'var(--warn)':'var(--line)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);};
+    const readFile=f=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(f);});
+    const imgPath = (name) => `assets/bilderprompt/${name}`;
+
+    // ------------ Navbar interactions ------------
+    const profileMenu = $('#profileMenu');
+    profileMenu.querySelector('button').addEventListener('click', () => {
+      const open = profileMenu.classList.toggle('open');
+      profileMenu.querySelector('button').setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click', (e) => {
+      if(!profileMenu.contains(e.target)) profileMenu.classList.remove('open');
+    });
+    $('#quickSearch').addEventListener('input', (e)=>{
+      const q = e.target.value.trim().toLowerCase();
+      $$('.slots .slot').forEach(card=>{
+        const txt = card.innerText.toLowerCase();
+        card.style.display = txt.includes(q) ? '' : 'none';
+      });
+    });
+
+    // ------------ State ------------
+    const MAX_SLOTS=5, STORAGE_KEY='andio.avatarBank.v1';
+    const state = {
+      gender:'female',
+      nsfw:false,
+      refs:{character:null,pose:null,background:null,outfit:null},
+      attrs:{style:'photoreal',ethnicity:null,eye:null,hairColor:null,hairStyle:null,bodyType:null,breast:null,butt:null,skin:null,personality:null,voice:null,prompt:''},
+      name:''
+    };
+
+    // ------------ Assets (Auswahl) ------------
+    const ASSETS = {
+      ethnicity: [
+        {id:'asian',   label:'Asian',    src:imgPath('asian.avif')},
+        {id:'black',   label:'Black',    src:imgPath('black.avif')},
+        {id:'white',   label:'White',    src:imgPath('caucasian.avif')},
+        {id:'latina',  label:'Latina',   src:imgPath('latina1.avif')},
+        {id:'arab',    label:'Arab',     src:imgPath('arab.avif')},
+        {id:'indian',  label:'Indian',   src:imgPath('southasian1.avif')},
+        {id:'elf',     label:'Elf',      src:imgPath('elf3.avif')},
+        {id:'alien',   label:'Alien',    src:imgPath('alien1.avif')},
+        {id:'demon',   label:'Demon',    src:imgPath('demon1.avif'), nsfw:true},
+        {id:'custom',  label:'Custom',   src:imgPath('custom.webp')}
+      ],
+      hairStyle: [
+        {id:'long-straight',label:'Long Straight',src:imgPath('longstraight.avif')},
+        {id:'braided',      label:'Braided',      src:imgPath('braided.avif')},
+        {id:'bangs',        label:'Bangs',        src:imgPath('bangs.avif')},
+        {id:'ponytail',     label:'Ponytail',     src:imgPath('ponytail.avif')},
+        {id:'short',        label:'Short',        src:imgPath('short.avif')},
+        {id:'bun',          label:'Bun',          src:imgPath('bun.avif')},
+        {id:'two-buns',     label:'Two Buns',     src:imgPath('twobuns.avif')},
+        {id:'wavy',         label:'Wavy',         src:imgPath('wavy.avif')},
+        {id:'pixie',        label:'Pixie',        src:imgPath('pixie.avif')},
+        {id:'buzzcut',      label:'Buzzcut',      src:imgPath('buzzcut.avif')},
+        {id:'pompadour',    label:'Pompadour',    src:imgPath('pompadour.avif')}
+      ],
+      bodyType: [
+        {id:'slim',        label:'Slim',        src:imgPath('slim.avif')},
+        {id:'athletic',    label:'Athletic',    src:imgPath('athletic.avif')},
+        {id:'voluptuous',  label:'Voluptuous',  src:imgPath('voluptuous.avif')},
+        {id:'curvy',       label:'Curvy',       src:imgPath('curvy.avif')},
+        {id:'muscular',    label:'Muscular',    src:imgPath('muscular.avif')}
+      ],
+      breast: [
+        {id:'flat',   label:'Flat',   src:imgPath('flat.avif')},
+        {id:'small',  label:'Small',  src:imgPath('small.avif')},
+        {id:'medium', label:'Medium', src:imgPath('medium.avif')},
+        {id:'large',  label:'Large',  src:imgPath('large.avif')},
+        {id:'xl',     label:'XL',     src:imgPath('xl.avif'), nsfw:true}
+      ],
+      butt: [
+        {id:'small',   label:'Small',   src:imgPath('small.avif')},
+        {id:'skinny',  label:'Skinny',  src:imgPath('skinny.avif')},
+        {id:'athletic',label:'Athletic',src:imgPath('athletic.webp')},
+        {id:'medium',  label:'Medium',  src:imgPath('medium.avif')},
+        {id:'large',   label:'Large',   src:imgPath('ass.webp'), nsfw:true}
+      ],
+      outfits: [
+        {id:'casual',     label:'Casual',      src:imgPath('casual.webp')},
+        {id:'bikini',     label:'Bikini',      src:imgPath('bikini.webp')},
+        {id:'microbikini',label:'Microbikini', src:imgPath('microbikini.avif'), nsfw:true},
+        {id:'minidress',  label:'Mini Dress',  src:imgPath('minidress.avif')},
+        {id:'sundress',   label:'Sundress',    src:imgPath('sundress.avif')},
+        {id:'yoga',       label:'Yoga',        src:imgPath('yoga-outfit.avif')},
+        {id:'hoodie',     label:'Hoodie',      src:imgPath('hoodie.avif')},
+        {id:'jeans',      label:'Jeans',       src:imgPath('jeans.avif')},
+        {id:'turtleneck', label:'Turtleneck',  src:imgPath('turtleneck.avif')},
+        {id:'topless',    label:'Topless',     src:imgPath('topless.avif'), nsfw:true},
+        {id:'naked',      label:'Naked',       src:imgPath('naked.webp'), nsfw:true}
+      ],
+      nsfwPoses: [
+        {id:'downblouse',label:'Downblouse',src:imgPath('downblouse.avif'),nsfw:true},
+        {id:'upskirt',   label:'Upskirt',   src:imgPath('upskirt.avif'),  nsfw:true},
+        {id:'spread',    label:'Spread',    src:imgPath('spread-ass.avif'),nsfw:true},
+        {id:'doggystyle',label:'Doggystyle',src:imgPath('doggystyle.avif'),nsfw:true},
+        {id:'missionary',label:'Missionary',src:imgPath('threesome-missionary.avif'),nsfw:true},
+        {id:'face-sit',  label:'Face Sitting',src:imgPath('face-sitting.avif'),nsfw:true}
+      ]
+    };
+
+    // ------------ Color Palettes ------------
+    const PALETTES = {
+      eye:  ['#1b1f24','#53331a','#b13a33','#ffd23f','#3ad97a','#5aa8ff','#b375ff','#ff8bd9','#f0f3f6','#cfd6df'],
+      hair: ['#0e0e0f','#6b3b16','#c24a39','#f3c63b','#35d47a','#5aa8ff','#b375ff','#ff8bd9','#f5f6f7','#cfd6df'],
+      skin: ['#f6e1d1','#f0c7a6','#dfa67f','#b87451','#8e533a','#5e3726','#2a1a14']
+    };
+
+    function mountPicker(rootId, field, colors){
+      const root = document.getElementById(rootId);
+      root.innerHTML = '';
+      colors.forEach(hex=>{
+        const sw = document.createElement('button');
+        sw.type='button'; sw.className='swatch'; sw.style.background = hex; sw.title = hex;
+        sw.addEventListener('click', ()=>{
+          $$(`#${rootId} .swatch`).forEach(x=>x.classList.remove('active'));
+          sw.classList.add('active');
+          state.attrs[field] = hex;
+          if(field==='eye')  $('#dotEye').style.background = hex;
+          if(field==='hairColor') $('#dotHair').style.background = hex;
+          if(field==='skin') $('#dotSkin').style.background = hex;
+        });
+        root.appendChild(sw);
+      });
+    }
+
+    // ------------ UI builders ------------
+    const mountGrid = (rootSel, group, items)=> {
+      const root = $(rootSel); root.innerHTML='';
+      items.forEach(it=>{
+        if(it.nsfw && !state.nsfw) return; // NSFW filtern
+        const el=document.createElement('div'); el.className='opt'; el.dataset.group=group; el.dataset.value=it.id; el.dataset.nsfw=String(!!it.nsfw);
+        el.innerHTML = `<div class="img"><img src="${it.src}" alt="${it.label}" onerror="this.src='assets/bilderprompt/custom.webp'"></div>
+                        <div class="lbl"><span>${it.label}</span><i class="fa-regular fa-circle-check"></i></div>
+                        <span class="nsfw">NSFW</span>`;
+        el.addEventListener('click', ()=>{
+          $$('.opt', el.parentElement).forEach(o=>o.classList.toggle('active',o===el));
+          if(group==='ethnicity') state.attrs.ethnicity = it.id;
+          if(group==='hairStyle') state.attrs.hairStyle = it.id;
+          if(group==='bodyType') state.attrs.bodyType = it.id;
+          if(group==='breast') state.attrs.breast = it.id;
+          if(group==='butt') state.attrs.butt = it.id;
+          if(group==='outfit') state.refs.outfit = {dataUrl: it.src, name: it.id};
+          if(group==='pose')   state.refs.pose   = {dataUrl: it.src, name: it.id};
+        });
+        root.appendChild(el);
+      });
+    };
+
+    function mountAllGrids(){
+      mountGrid('#ethnicityGrid','ethnicity',ASSETS.ethnicity);
+      mountGrid('#hairGrid','hairStyle',ASSETS.hairStyle);
+      mountGrid('#bodyTypeGrid','bodyType',ASSETS.bodyType);
+      mountGrid('#breastGrid','breast',ASSETS.breast);
+      mountGrid('#buttGrid','butt',ASSETS.butt);
+      mountGrid('#outfitGrid','outfit',ASSETS.outfits);
+      if(state.nsfw){ mountGrid('#poseGrid','pose',ASSETS.nsfwPoses); $('#poseGrid').classList.remove('hide'); }
+      else { $('#poseGrid').classList.add('hide'); }
+    }
+    mountAllGrids();
+
+    // NSFW toggle
+    const nsfwCheckbox = $('#nsfwToggle');
+    // Restore from localStorage for persistente UX
+    try{
+      const savedNSFW = localStorage.getItem('andio.nsfwMode') === 'true';
+      nsfwCheckbox.checked = savedNSFW;
+      state.nsfw = savedNSFW;
+      document.body.classList.toggle('nsfw-on', state.nsfw);
+      mountAllGrids();
+    }catch{}
+    nsfwCheckbox.addEventListener('change',e=>{
+      state.nsfw=e.target.checked; document.body.classList.toggle('nsfw-on',state.nsfw);
+      localStorage.setItem('andio.nsfwMode', String(state.nsfw));
+      mountAllGrids(); toast('Modus: '+(state.nsfw?'NSFW':'SFW'));
+    });
+
+    // Gender Tabs
+    $$('#genderTabs .tab').forEach(t=>{
+      t.addEventListener('click',()=>{
+        $$('#genderTabs .tab').forEach(x=>x.classList.remove('active'));
+        t.classList.add('active'); state.gender = t.dataset.gender;
+      });
+    });
+
+    // Uploaders
+    const dropDefaults = {
+      character: imgPath('custom.webp'),
+      pose: imgPath('custom_input_icon2.avif'),
+      background: imgPath('dreamland.avif'),
+      outfit: imgPath('custom.webp'),
+    };
+    $$('.drop').forEach(drop=>{
+      const input=$('input',drop), preview=$('.preview',drop), imgEl=$('img',preview), field=drop.dataset.field;
+      imgEl.src = dropDefaults[field];
+      const setPreview = async (file)=>{ if(!file) return; const dataUrl = await readFile(file); imgEl.src=dataUrl; state.refs[field]={name:file.name,type:file.type,dataUrl}; if(field==='character') $('#liveImg').src=dataUrl; };
+      input.addEventListener('change', e=> setPreview(e.target.files[0]));
+      ['dragenter','dragover'].forEach(ev=> drop.addEventListener(ev, e=>{e.preventDefault();drop.style.borderColor='var(--accent)';}));
+      ['dragleave','drop'].forEach(ev=> drop.addEventListener(ev, e=>{e.preventDefault();drop.style.borderColor='#3a4257';}));
+      drop.addEventListener('drop', e=>{const f=e.dataTransfer.files?.[0]; if(f) setPreview(f);});
+    });
+
+    // Stepper
+    const switchSection=k=>{$$('.step').forEach(s=>s.classList.toggle('active',s.dataset.step===k)); $$('.section').forEach(sec=>sec.hidden=sec.dataset.section!==k);};
+    $$('.step').forEach(s=>s.addEventListener('click',()=>switchSection(s.dataset.step)));
+    switchSection('style');
+
+    // Color Pickers
+    mountPicker('eyePicker','eye',  PALETTES.eye);
+    mountPicker('hairPicker','hairColor', PALETTES.hair);
+    mountPicker('skinPicker','skin', PALETTES.skin);
+    document.querySelector('#eyePicker .swatch')?.click();
+    document.querySelector('#hairPicker .swatch')?.click();
+    document.querySelector('#skinPicker .swatch:nth-child(2)')?.click();
+
+    // Chips (style single-select)
+    $$('.chip').forEach(ch=>{
+      ch.addEventListener('click',()=>{
+        const field=ch.dataset.field; $$('.chip[data-field="'+field+'"]').forEach(x=>x.classList.remove('active'));
+        ch.classList.add('active'); state.attrs[field]=ch.dataset.value;
+      });
+    });
+
+    // Generate (UI only)
+    $('#btnGenerate').addEventListener('click',()=>{
+      state.name = $('#avatarName').value?.trim() || 'Unbenannt';
+      state.attrs.prompt = $('#customPrompt').value?.trim() || '';
+      if(!state.refs.character){ toast('Bitte Character-Bild laden', 'warn'); return; }
+      $('#liveImg').src = state.refs.character?.dataUrl || $('#liveImg').src;
+      toast('Avatar Parameter gesammelt — Vorschau aktualisiert.');
+    });
+
+    // Persistenz / Slots
+    const loadSlots=()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch(e){return[]}};
+    const saveSlots=v=>localStorage.setItem(STORAGE_KEY,JSON.stringify(v));
+    const genderCounts = (arr)=>({ female: arr.filter(a=>a.gender==='female').length, male: arr.filter(a=>a.gender==='male').length });
+
+    const renderSlots=()=>{
+      const root=$('#slots'); root.innerHTML=''; const items=loadSlots();
+      items.forEach((av,i)=>{
+        const thumb = av.refs?.character?.dataUrl || imgPath('custom.webp');
+        const el=document.createElement('div'); el.className='slot';
+        el.innerHTML=`<div class="thumb" data-idx="${i}" title="In Overlay öffnen">
+            <img src="${thumb}" alt="">
+            <div class="play"><i class="fa-regular fa-eye"></i>&nbsp;Anzeigen</div>
+          </div>
+          <div class="meta">
+            <div class="name">${av.name||'Avatar'} <span class="badge">${av.gender}</span></div>
+            <div class="tags">
+              <span class="badge">${av.attrs?.ethnicity||'-'}</span>
+              <span class="badge">${av.attrs?.bodyType||'-'}</span>
+              <span class="badge">${av.attrs?.hairStyle||'-'}</span>
+              <span class="badge">${av.nsfw?'NSFW':'SFW'}</span>
+            </div>
+            <div class="actions">
+              <button class="btn small secondary" data-act="use"><i class="fa-solid fa-eye"></i> Anzeigen</button>
+              <button class="btn small" data-act="copy"><i class="fa-solid fa-clone"></i> Kopie → Gallery</button>
+              <button class="btn small danger" data-act="del"><i class="fa-solid fa-trash"></i> Entfernen</button>
+            </div>
+          </div>`;
+        // Overlay öffnen bei Klick auf Thumb
+        el.querySelector('.thumb').addEventListener('click',()=>openOverlayFromIndex(i));
+        el.querySelector('[data-act="use"]').addEventListener('click',()=>{
+          $('#liveImg').src = thumb; $('#avatarName').value = av.name||''; $('#customPrompt').value = av.attrs?.prompt||'';
+          $('#dotEye').style.background = av.attrs?.eye||'';
+          $('#dotHair').style.background = av.attrs?.hairColor||'';
+          $('#dotSkin').style.background = av.attrs?.skin||'';
+          toast('Avatar in Vorschau geladen');
+        });
+        el.querySelector('[data-act="copy"]').addEventListener('click',()=>exportToGallery(av));
+        el.querySelector('[data-act="del"]').addEventListener('click',()=>{
+          const arr=loadSlots(); arr.splice(i,1); saveSlots(arr); renderSlots();
+        });
+        root.appendChild(el);
+      });
+      $('#btnSaveMain').disabled = items.length>=MAX_SLOTS;
+    };
+    renderSlots();
+
+    const buildCurrentAvatar=()=>({
+      id:'av_'+Date.now(),
+      name: state.name || ($('#avatarName').value?.trim()||'Avatar'),
+      gender: state.gender,
+      nsfw: state.nsfw,
+      refs: state.refs,
+      attrs:{...state.attrs, prompt: $('#customPrompt').value?.trim()||''},
+      createdAt:new Date().toISOString()
+    });
+
+    $('#btnSaveMain').addEventListener('click', async ()=>{
+      const items=loadSlots(); if(items.length>=MAX_SLOTS){toast('Limit 5 erreicht — bitte einen Slot löschen','error');return;}
+      if(!state.refs.character){toast('Bitte Character-Bild laden','warn');return;}
+      const counts = genderCounts(items);
+      if(state.gender==='male' && counts.male>=1){ toast('Es ist bereits 1 Male gespeichert — zuerst löschen', 'error'); return; }
+      if(state.gender==='female' && counts.female>=4){ toast('Schon 4 Female — zuerst einen löschen', 'error'); return; }
+
+      const avatar=buildCurrentAvatar();
+      try{
+        const r=await fetch('/api/avatars',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(avatar)});
+        if(!r.ok) throw 0; toast('Auf Server gespeichert (Haupt-Slot).');
+      }catch{
+        const arr=loadSlots(); arr.unshift(avatar); saveSlots(arr); renderSlots(); toast('Lokal gespeichert (Haupt-Slot).');
+      }
+    });
+
+    $('#btnCopyToGallery').addEventListener('click',()=>exportToGallery(buildCurrentAvatar()));
+    $('#btnReset').addEventListener('click',()=>{
+      state.refs={character:null,pose:null,background:null,outfit:null};
+      $('#liveImg').src = imgPath('custom.webp');
+      $$('.drop .preview img').forEach((im)=>{const fld=im.closest('.drop').dataset.field; im.src = (dropDefaults[fld]||imgPath('custom.webp'));});
+      ['dotEye','dotHair','dotSkin'].forEach(id=>$('#'+id).style.background='transparent');
+      toast('Zurückgesetzt');
+    });
+
+    async function exportToGallery(avatar){
+      try{
+        const r=await fetch('/api/gallery/import-avatar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(avatar)});
+        if(!r.ok) throw 0; toast('Kopie in Gallery exportiert.');
+      }catch{
+        const key='andio.galleryQueue.v1'; const q=JSON.parse(localStorage.getItem(key)||'[]'); q.push(avatar); localStorage.setItem(key,JSON.stringify(q));
+        toast('Server nicht erreichbar — Kopie lokal gequeued.');
+      }
+    }
+
+    // ============ OVERLAY PLAYER LOGIK ============
+    const overlay = $('#overlay');
+    const mediaWrap = $('#ovMediaWrap');
+    const dlBtn = $('#ovDownload');
+    const fitBtn = $('#ovFit');
+    const prevBtn = $('#ovPrev');
+    const nextBtn = $('#ovNext');
+    const closeBtn = $('#ovClose');
+
+    let overlayIndex = 0;  // Index innerhalb der Slots
+    let zoom = 1;
+    let pan = {x:0, y:0};
+    let isPanning = false;
+    let panStart = {x:0, y:0};
+
+    function getAllSources(){
+      // Reihenfolge: Live-Preview (ganz vorn) + Slots
+      const list = [];
+      const liveSrc = $('#liveImg')?.src;
+      if(liveSrc) list.push({type: detectType(liveSrc), src: liveSrc, label: 'Preview'});
+      loadSlots().forEach(a=>{
+        const src = a.refs?.character?.dataUrl;
+        if(src) list.push({type: detectType(src), src, label: a.name||'Avatar'});
+      });
+      return list;
+    }
+
+    function detectType(url){
+      const u = (url||'').toLowerCase();
+      if(u.endsWith('.mp4')||u.endsWith('.webm')||u.startsWith('blob:video')||u.includes('video')) return 'video';
+      return 'image';
+    }
+
+    function clearMedia(){
+      mediaWrap.querySelectorAll('.viewer').forEach(n=>n.remove());
+      zoom = 1; pan = {x:0,y:0};
+    }
+
+    function renderMedia(item){
+      clearMedia();
+      dlBtn.href = item.src;
+
+      if(item.type === 'video'){
+        const v = document.createElement('video');
+        v.src = item.src;
+        v.className='viewer';
+        v.controls = true;
+        v.autoplay = true;
+        v.playsInline = true;
+        mediaWrap.appendChild(v);
+        fitBtn.style.display = 'none';
+      }else{
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.alt = item.label || 'Bild';
+        img.className='viewer';
+        img.style.transform = `translate(0px,0px) scale(1)`;
+        mediaWrap.appendChild(img);
+        fitBtn.style.display = 'inline-flex';
+        attachImagePanZoom(img);
+      }
+    }
+
+    function openOverlayFromIndex(idx){
+      const list = getAllSources();
+      overlayIndex = Math.min(Math.max(0, idx+1), list.length-1); // +1, da 0 die Preview ist
+      openOverlay();
+    }
+    function openOverlay(usePreview=false){
+      const list = getAllSources();
+      if(list.length===0) return;
+      if(usePreview) overlayIndex = 0;
+      renderMedia(list[overlayIndex]);
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden','false');
+    }
+    function closeOverlay(){
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden','true');
+      clearMedia();
+    }
+    function step(dir){
+      const list = getAllSources(); if(list.length<=1) return;
+      overlayIndex = (overlayIndex + dir + list.length) % list.length;
+      renderMedia(list[overlayIndex]);
+    }
+
+    // Bild Pan/Zoom
+    function attachImagePanZoom(img){
+      img.addEventListener('mousedown',(e)=>{isPanning=true; img.style.cursor='grabbing'; panStart={x:e.clientX - pan.x, y:e.clientY - pan.y};});
+      window.addEventListener('mousemove',(e)=>{if(!isPanning) return; pan.x = e.clientX - panStart.x; pan.y = e.clientY - panStart.y; img.style.transform = `translate(${pan.x}px,${pan.y}px) scale(${zoom})`;});
+      window.addEventListener('mouseup',()=>{isPanning=false; img.style.cursor='grab';});
+      img.addEventListener('wheel',(e)=>{e.preventDefault(); const delta = Math.sign(e.deltaY)*-0.1; zoom = Math.min(Math.max(0.2, zoom + delta), 5); img.style.transform = `translate(${pan.x}px,${pan.y}px) scale(${zoom})`;},{passive:false});
+      fitBtn.onclick = ()=>{ if(zoom!==1||pan.x!==0||pan.y!==0){ zoom=1; pan={x:0,y:0}; } else { zoom=1.4; } img.style.transform = `translate(${pan.x}px,${pan.y}px) scale(${zoom})`; };
+    }
+
+    // Overlay Controls
+    $('#livePreview').addEventListener('click', ()=>openOverlay(true));
+    prevBtn.addEventListener('click',()=>step(-1));
+    nextBtn.addEventListener('click',()=>step(1));
+    closeBtn.addEventListener('click', closeOverlay);
+    overlay.addEventListener('click',(e)=>{ if(e.target===overlay) closeOverlay(); });
+    window.addEventListener('keydown',(e)=>{
+      if(overlay.classList.contains('show')){
+        if(e.key==='Escape') closeOverlay();
+        if(e.key==='ArrowLeft') step(-1);
+        if(e.key==='ArrowRight') step(1);
+      }
+    });
+  </script>
+</body>
+</html>
